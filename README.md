@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
+[![Tests](https://github.com/mu-triv/sny-copyright-check/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-check/actions)
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
 
@@ -204,9 +205,27 @@ pip install -e .
 ### Running Tests
 
 ```bash
-# Run tests (when available)
+# Run all tests
 pytest tests/
+
+# Run with coverage
+pytest tests/ --cov=scripts --cov-report=term
+
+# Run specific test file
+pytest tests/test_copyright_checker.py -v
 ```
+
+### Continuous Integration
+
+The project uses GitHub Actions for CI/CD:
+
+- **Tests**: Runs on Python 3.7-3.12 across Ubuntu, Windows, and macOS
+- **Code Quality**: Checks with flake8, black, and isort
+- **Coverage**: Generates test coverage reports
+
+The workflow automatically runs on:
+- Every push to the `main` branch
+- Every pull request targeting `main`
 
 ### Project Structure
 

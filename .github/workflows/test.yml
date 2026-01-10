@@ -1,0 +1,134 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run tests on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Create virtual environment and install dependencies
+      run: |
+        uv venv
+        uv sync --extra dev
+        uv pip install pytest-html
+    
+    - name: Run tests
+      run: |
+        uv run pytest tests/ -v --tb=short --junitxml=test-results-${{ matrix.os }}-${{ matrix.python-version }}.xml --html=test-report-${{ matrix.os }}-${{ matrix.python-version }}.html --self-contained-html
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          test-results-*.xml
+          test-report-*.html
+    
+    - name: Publish test report
+      uses: mikepenz/action-junit-report@v4
+      if: always()
+      with:
+        report_paths: 'test-results-*.xml'
+        check_name: Test Report (${{ matrix.os }}, Python ${{ matrix.python-version }})
+        fail_on_failure: true
+    
+    - name: Test installation
+      run: |
+        uv run sny-copyright-check --help
+
+  lint:
+    name: Code quality checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv sync --extra dev
+        uv pip install flake8 black isort
+    
+    - name: Run flake8
+      run: |
+        uv run flake8 scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        uv run flake8 scripts/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Check code formatting with black
+      run: |
+        uv run black --check scripts/ tests/
+      continue-on-error: true
+    
+    - name: Check import ordering with isort
+      run: |
+        uv run isort --check-only scripts/ tests/
+      continue-on-error: true
+
+  coverage:
+    name: Test coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Puv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv sync --extra dev
+        uv pip install pytest-cov
+    
+    - name: Run tests with coverage
+      run: |
+        uv run pytest tests/ --cov=scripts --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false

@@ -78,12 +78,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # Print summary
         if modified:
-            print(f"\n✓ Added copyright notice to {len(modified)} file(s):")
+            print(f"\nAdded copyright notice to {len(modified)} file(s):")
             for filepath in modified:
                 print(f"  - {filepath}")
 
         if failed:
-            print(f"\n✗ Failed to add copyright notice to {len(failed)} file(s):")
+            print(f"\nFailed to add copyright notice to {len(failed)} file(s):")
             for filepath in failed:
                 print(f"  - {filepath}")
             return 1
