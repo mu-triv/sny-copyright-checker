@@ -25,7 +25,7 @@ Add the following to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/yourusername/sny-copyright-check
+  - repo: https://github.com/mu-triv/sny-copyright-check
     rev: v1.0.0  # Use the latest release
     hooks:
       - id: sony-copyright-check
@@ -41,7 +41,7 @@ pre-commit install
 ### Manual Installation
 
 ```bash
-git clone https://github.com/yourusername/sny-copyright-check.git
+git clone https://github.com/mu-triv/sny-copyright-check.git
 cd sny-copyright-check
 pip install -e .
 ```
@@ -182,7 +182,7 @@ And {regex:\d{4}} for year matching
 Customize the pre-commit hook behavior:
 
 ```yaml
-- repo: https://github.com/yourusername/sny-copyright-check
+- repo: https://github.com/mu-triv/sny-copyright-check
   rev: v1.0.0
   hooks:
     - id: sony-copyright-check
@@ -196,7 +196,7 @@ Customize the pre-commit hook behavior:
 ### Setting Up Development Environment
 
 ```bash
-git clone https://github.com/yourusername/sny-copyright-check.git
+git clone https://github.com/mu-triv/sny-copyright-checker.git
 cd sny-copyright-check
 pip install -e .
 ```
@@ -264,4 +264,4 @@ R&D Center Europe Brussels Laboratory
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/yourusername/sny-copyright-check).
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/mu-triv/sny-copyright-checker).
