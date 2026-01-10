@@ -1,0 +1,267 @@
+# Sony Copyright Check - Pre-commit Hook
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
+
+A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
+
+## Features
+
+✨ **Multi-Format Support**: Define different copyright formats for different file extensions (`.py`, `.c`, `.sql`, etc.)
+
+🔍 **Regex Pattern Matching**: Use regex patterns in your copyright templates to match year ranges (e.g., `2024`, `2024-2026`)
+
+🔧 **Auto-Fix**: Automatically adds missing copyright notices with the current year
+
+📝 **Flexible Templates**: Section-based template file for easy maintenance
+
+🎯 **Smart Insertion**: Respects shebang lines and file structure
+
+## Installation
+
+### As a pre-commit hook (Recommended)
+
+Add the following to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/yourusername/sny-copyright-check
+    rev: v1.0.0  # Use the latest release
+    hooks:
+      - id: sony-copyright-check
+        args: [--notice=copyright.txt]
+```
+
+Then install the hook:
+
+```bash
+pre-commit install
+```
+
+### Manual Installation
+
+```bash
+git clone https://github.com/yourusername/sny-copyright-check.git
+cd sny-copyright-check
+pip install -e .
+```
+
+## Usage
+
+### As a Pre-commit Hook
+
+Once installed, the hook will automatically run when you commit files:
+
+```bash
+git add my_file.py
+git commit -m "Add new feature"
+# Hook will check and add copyright notice if missing
+```
+
+### Command Line
+
+You can also run the tool directly:
+
+```bash
+# Check and auto-fix files
+sny-copyright-check file1.py file2.sql file3.c
+
+# Check only (no modifications)
+sny-copyright-check --no-fix file1.py
+
+# Specify custom template file
+sny-copyright-check --notice=my_copyright.txt *.py
+
+# Verbose output
+sny-copyright-check -v file1.py
+```
+
+### Command Line Options
+
+- `filenames`: Files to check for copyright notices
+- `--notice PATH`: Path to copyright template file (default: `copyright.txt`)
+- `--fix`: Automatically add missing copyright notices (default: enabled)
+- `--no-fix`: Only check without modifying files
+- `--verbose, -v`: Enable verbose output
+
+## Copyright Template Format
+
+The template file uses a section-based format with regex support:
+
+```
+[.py]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+[.sql]
+-- Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+-- Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+-- License: For licensing see the License.txt file
+
+[.c]
+/**************************************************************************
+* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
+* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* License: For licensing see the License.txt file                         *
+**************************************************************************/
+```
+
+### Template Syntax
+
+- **Section Headers**: `[.extension]` defines the file extension (e.g., `[.py]`, `[.sql]`)
+- **Regex Patterns**: `{regex:PATTERN}` allows regex matching
+  - Example: `{regex:\d{4}(-\d{4})?}` matches `2024` or `2024-2026`
+- **Auto-insertion**: When adding a copyright, the regex pattern is replaced with the current year
+
+### Supported Regex Patterns
+
+The template includes regex patterns for year matching:
+- `\d{4}`: Matches a single year (e.g., `2024`)
+- `\d{4}-\d{4}`: Matches a year range (e.g., `2024-2026`)
+- `\d{4}(-\d{4})?`: Matches either format
+
+## Example
+
+### Before
+
+```python
+#!/usr/bin/env python
+
+def hello():
+    print("Hello, World!")
+```
+
+### After (Auto-fixed)
+
+```python
+#!/usr/bin/env python
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+def hello():
+    print("Hello, World!")
+```
+
+## How It Works
+
+1. **Template Parsing**: Reads and parses the section-based template file
+2. **File Extension Matching**: Determines which copyright template to use based on file extension
+3. **Pattern Matching**: Uses regex to check if a valid copyright notice exists
+4. **Auto-Insertion**: If missing and `--fix` is enabled, adds the copyright notice with the current year
+5. **Smart Positioning**: Respects shebang lines and inserts the notice appropriately
+
+## File Extensions Support
+
+By default, the included `copyright.txt` supports:
+- Python (`.py`)
+- SQL (`.sql`)
+- C/C++ (`.c`, `.cpp`, `.h`)
+- JavaScript/TypeScript (`.js`, `.ts`)
+- Java (`.java`)
+- Shell scripts (`.sh`)
+
+You can easily add more by editing the `copyright.txt` file.
+
+## Configuration
+
+### Customizing Templates
+
+Edit your `copyright.txt` file to add or modify copyright formats:
+
+```
+[.your_extension]
+Your copyright format here
+With multiple lines
+And {regex:\d{4}} for year matching
+```
+
+### Pre-commit Configuration
+
+Customize the pre-commit hook behavior:
+
+```yaml
+- repo: https://github.com/yourusername/sny-copyright-check
+  rev: v1.0.0
+  hooks:
+    - id: sony-copyright-check
+      args: [--notice=copyright.txt]
+      # Only run on specific file types
+      files: \.(py|sql|c|cpp)$
+```
+
+## Development
+
+### Setting Up Development Environment
+
+```bash
+git clone https://github.com/yourusername/sny-copyright-check.git
+cd sny-copyright-check
+pip install -e .
+```
+
+### Running Tests
+
+```bash
+# Run tests (when available)
+pytest tests/
+```
+
+### Project Structure
+
+```
+sny-copyright-check/
+├── scripts/
+│   ├── __init__.py
+│   ├── main.py                      # Entry point
+│   ├── copyright_checker.py         # Main checker logic
+│   └── copyright_template_parser.py # Template parser
+├── tests/                            # Test files
+├── .pre-commit-hooks.yaml           # Pre-commit hook definition
+├── .pre-commit-config.yaml          # Example pre-commit config
+├── copyright.txt                     # Example copyright template
+├── pyproject.toml                   # Project metadata
+├── setup.py                         # Setup script
+├── LICENSE                          # MIT License
+└── README.md                        # This file
+```
+
+## Comparison with Similar Tools
+
+### vs. copyright_notice_precommit
+
+While inspired by [leoll2/copyright_notice_precommit](https://github.com/leoll2/copyright_notice_precommit), this project adds:
+
+1. **Multi-format support**: Different copyright formats for different file types
+2. **Regex matching**: Flexible year range matching
+3. **Auto-insertion**: Automatically adds missing copyright notices
+4. **Section-based templates**: Easier to maintain multiple formats
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+Sony Group Corporation  
+R&D Center Europe Brussels Laboratory
+
+## Acknowledgments
+
+- Inspired by [leoll2/copyright_notice_precommit](https://github.com/leoll2/copyright_notice_precommit)
+- Built for use with [pre-commit](https://pre-commit.com/)
+
+## Support
+
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/yourusername/sny-copyright-check).

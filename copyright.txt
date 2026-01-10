@@ -1,0 +1,53 @@
+[.py]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+[.sql]
+-- Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+-- Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+-- License: For licensing see the License.txt file
+
+[.c]
+/**************************************************************************
+* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
+* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* License: For licensing see the License.txt file                         *
+**************************************************************************/
+
+[.h]
+/**************************************************************************
+* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
+* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* License: For licensing see the License.txt file                         *
+**************************************************************************/
+
+[.cpp]
+/**************************************************************************
+* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
+* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* License: For licensing see the License.txt file                         *
+**************************************************************************/
+
+[.js]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// License: For licensing see the License.txt file
+
+[.ts]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// License: For licensing see the License.txt file
+
+[.java]
+/*
+ * Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+ * Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+ * License: For licensing see the License.txt file
+ */
+
+[.sh]
+#!/bin/bash
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file

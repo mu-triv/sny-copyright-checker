@@ -1,0 +1,10 @@
+# Core dependencies (none required - uses only Python standard library)
+
+# Development dependencies
+pytest>=7.0.0
+pre-commit>=3.0.0
+
+# Optional: for code quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
