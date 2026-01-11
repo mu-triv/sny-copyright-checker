@@ -34,8 +34,9 @@ dev = [
 sny-copyright-checker = "scripts.main:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/sny-copyright-checker"
-Repository = "https://github.com/yourusername/sny-copyright-checker"
+Homepage = "https://github.com/mu-triv/sny-copyright-checker"
+Repository = "https://github.com/mu-triv/sny-copyright-checker"
+Issues = "https://github.com/mu-triv/sny-copyright-checker/issues"
 
 [tool.setuptools]
 packages = ["scripts"]

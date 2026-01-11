@@ -1,0 +1,14 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include QUICKSTART.md
+include EXAMPLES.md
+include VERSION_MANAGEMENT.md
+include copyright.txt
+include requirements.txt
+include requirements-dev.txt
+include .pre-commit-hooks.yaml
+recursive-include scripts *.py
+recursive-exclude tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
