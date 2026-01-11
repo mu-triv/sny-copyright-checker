@@ -1,4 +1,4 @@
-# Sony Copyright Check
+# SNY Copyright Check
 
 ## Quick Start Guide
 
@@ -34,7 +34,7 @@ repos:
   - repo: local
     hooks:
       - id: sny-copyright-checker
-        name: Sony Copyright Check
+        name: SNY Copyright Check
         entry: python C:/Users/bevuk/Documents/sny-copyright-check/scripts/main.py
         language: system
         types: [text]
@@ -71,8 +71,8 @@ def main():
 
 # After: script.py
 #!/usr/bin/env python
-# Copyright 2026 Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright 2026 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 def main():
@@ -139,7 +139,7 @@ For your `graphle_lib` project:
   - repo: local
     hooks:
       - id: sony-copyright
-        name: Sony Copyright Check
+        name: SNY Copyright Check
         entry: python C:/Users/bevuk/Documents/sny-copyright-checker/scripts/main.py
         language: system
         types: [text]

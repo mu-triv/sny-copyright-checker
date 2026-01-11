@@ -14,7 +14,7 @@ from scripts.copyright_template_parser import CopyrightTemplateParser, Copyright
 def test_parse_simple_template():
     """Test parsing a simple copyright template"""
     content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 # Author: Test Author
 """
     
@@ -38,10 +38,10 @@ def test_parse_simple_template():
 def test_parse_multiple_sections():
     """Test parsing template with multiple sections"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 
 [.sql]
--- Copyright {regex:\\d{4}} Sony
+-- Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -61,7 +61,7 @@ def test_parse_multiple_sections():
 def test_parse_template_with_nested_braces():
     """Test parsing template with nested braces in regex pattern"""
     content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} sny Corporation
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -113,7 +113,7 @@ def test_parse_template_with_multiple_extensions():
 def test_template_matches_with_regex():
     """Test template matching with regex patterns"""
     content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 # Author: Test Author
 """
     
@@ -126,7 +126,7 @@ def test_template_matches_with_regex():
         template = templates['.py']
         
         # Test with single year
-        file_content = """# Copyright 2026 Sony Group Corporation
+        file_content = """# Copyright 2026 SNY Group Corporation
 # Author: Test Author
 
 def main():
@@ -135,7 +135,7 @@ def main():
         assert template.matches(file_content) is True
         
         # Test with year range
-        file_content2 = """# Copyright 2020-2026 Sony Group Corporation
+        file_content2 = """# Copyright 2020-2026 SNY Group Corporation
 # Author: Test Author
 
 def main():
@@ -181,7 +181,7 @@ def test_get_notice_with_year():
     """Test generating notice with specific year"""
     template = CopyrightTemplate(
         extension='.py',
-        lines=['# Copyright {regex:\\d{4}} Sony', '# Author: Test'],
+        lines=['# Copyright {regex:\\d{4}} sny', '# Author: Test'],
         regex_patterns=[None, None]
     )
     
@@ -193,7 +193,7 @@ def test_get_notice_with_year():
 def test_get_notice_with_year_replaces_regex():
     """Test that get_notice_with_year properly replaces regex placeholders"""
     content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} sny Corporation
 # License: MIT
 """
     
@@ -209,7 +209,7 @@ def test_get_notice_with_year_replaces_regex():
         
         assert '2026' in notice
         assert '{regex:' not in notice
-        assert 'Sony Corporation' in notice
+        assert 'sny Corporation' in notice
         assert 'License: MIT' in notice
     finally:
         os.unlink(temp_path)
@@ -218,7 +218,7 @@ def test_get_notice_with_year_replaces_regex():
 def test_parse_template_with_empty_lines():
     """Test parsing template that includes empty lines within sections"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 
 # This is a multi-line notice
 """
@@ -241,7 +241,7 @@ def test_parse_template_with_empty_lines():
 def test_parse_template_strips_trailing_empty_lines():
     """Test that parser removes trailing empty lines from sections"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 
 
 """
@@ -264,7 +264,7 @@ def test_parse_template_strips_trailing_empty_lines():
 def test_template_matches_at_different_positions():
     """Test that template can match copyright at different positions in file"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -276,7 +276,7 @@ def test_template_matches_at_different_positions():
         template = templates['.py']
         
         # Copyright at beginning
-        file_content1 = """# Copyright 2026 Sony
+        file_content1 = """# Copyright 2026 sny
 def main():
     pass
 """
@@ -284,7 +284,7 @@ def main():
         
         # Copyright after shebang
         file_content2 = """#!/usr/bin/env python
-# Copyright 2026 Sony
+# Copyright 2026 sny
 def main():
     pass
 """
@@ -338,7 +338,7 @@ def test_parse_file_without_sections():
 def test_parse_invalid_regex_pattern():
     """Test parsing template with invalid regex pattern"""
     content = """[.py]
-# Copyright {regex:[[[invalid} Sony
+# Copyright {regex:[[[invalid} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -355,7 +355,7 @@ def test_parse_invalid_regex_pattern():
 def test_parse_unmatched_braces():
     """Test parsing template with unmatched braces in regex"""
     content = """[.py]
-# Copyright {regex:\\d{4 Sony
+# Copyright {regex:\\d{4 sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -372,7 +372,7 @@ def test_parse_unmatched_braces():
 def test_template_no_match_different_text():
     """Test that template doesn't match when text is different"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony Corporation
+# Copyright {regex:\\d{4}} sny Corporation
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -402,7 +402,7 @@ def main():
 def test_template_no_match_wrong_year_format():
     """Test that template doesn't match when year format is wrong"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -414,14 +414,14 @@ def test_template_no_match_wrong_year_format():
         template = templates['.py']
         
         # Wrong year format (3 digits instead of 4)
-        file_content = """# Copyright 202 Sony
+        file_content = """# Copyright 202 sny
 def main():
     pass
 """
         assert template.matches(file_content) is False
         
         # No year at all
-        file_content2 = """# Copyright Sony
+        file_content2 = """# Copyright sny
 def main():
     pass
 """
@@ -433,7 +433,7 @@ def main():
 def test_template_no_match_incomplete_lines():
     """Test that template doesn't match when file has incomplete copyright"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 # Author: Test Author
 # License: MIT
 """
@@ -447,7 +447,7 @@ def test_template_no_match_incomplete_lines():
         template = templates['.py']
         
         # Only first line present
-        file_content = """# Copyright 2026 Sony
+        file_content = """# Copyright 2026 sny
 def main():
     pass
 """
@@ -490,7 +490,7 @@ def test_parse_template_with_leading_empty_lines():
     content = """
 
 [.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -534,7 +534,7 @@ def test_template_matches_content_shorter_than_template():
 def test_template_with_whitespace_variations():
     """Test template matching with various whitespace patterns"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -546,14 +546,14 @@ def test_template_with_whitespace_variations():
         template = templates['.py']
         
         # Trailing whitespace should be handled
-        file_content1 = """# Copyright 2026 Sony   
+        file_content1 = """# Copyright 2026 sny   
 def main():
     pass
 """
         assert template.matches(file_content1) is True
         
         # Tab characters
-        file_content2 = """# Copyright 2026 Sony\t
+        file_content2 = """# Copyright 2026 sny\t
 def main():
     pass
 """
@@ -565,7 +565,7 @@ def main():
 def test_template_single_line():
     """Test template with only one line"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -577,7 +577,7 @@ def test_template_single_line():
         template = templates['.py']
         
         assert len(template.lines) == 1
-        file_content = """# Copyright 2026 Sony"""
+        file_content = """# Copyright 2026 sny"""
         assert template.matches(file_content) is True
     finally:
         os.unlink(temp_path)
@@ -587,7 +587,7 @@ def test_get_notice_with_year_edge_values():
     """Test get_notice_with_year with edge case year values"""
     template = CopyrightTemplate(
         extension='.py',
-        lines=['# Copyright {regex:\\d{4}} Sony'],
+        lines=['# Copyright {regex:\\d{4}} sny'],
         regex_patterns=[None]
     )
     
@@ -607,7 +607,7 @@ def test_get_notice_with_year_edge_values():
 def test_template_with_special_regex_characters():
     """Test template with special regex characters in literal text"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony (R&D)
+# Copyright {regex:\\d{4}} sny (R&D)
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -619,14 +619,14 @@ def test_template_with_special_regex_characters():
         template = templates['.py']
         
         # Parentheses should be matched literally, not as regex groups
-        file_content = """# Copyright 2026 Sony (R&D)
+        file_content = """# Copyright 2026 sny (R&D)
 def main():
     pass
 """
         assert template.matches(file_content) is True
         
         # Should not match without parentheses
-        file_content2 = """# Copyright 2026 Sony R&D
+        file_content2 = """# Copyright 2026 sny R&D
 def main():
     pass
 """
@@ -661,7 +661,7 @@ def test_template_with_very_long_line():
     """Test template with very long copyright line"""
     long_text = "A" * 500
     content = f"""[.py]
-# Copyright {{regex:\\d{{4}}}} Sony - {long_text}
+# Copyright {{regex:\\d{{4}}}} sny - {long_text}
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -672,7 +672,7 @@ def test_template_with_very_long_line():
         templates = CopyrightTemplateParser.parse(temp_path)
         template = templates['.py']
         
-        file_content = f"""# Copyright 2026 Sony - {long_text}
+        file_content = f"""# Copyright 2026 sny - {long_text}
 def main():
     pass
 """
@@ -717,7 +717,7 @@ def test_parse_section_header_variations():
 def test_template_matches_with_line_endings():
     """Test template matching with different line ending styles"""
     content = """[.py]
-# Copyright {regex:\\d{4}} Sony
+# Copyright {regex:\\d{4}} sny
 """
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -729,11 +729,11 @@ def test_template_matches_with_line_endings():
         template = templates['.py']
         
         # Unix line endings (LF)
-        file_content_lf = "# Copyright 2026 Sony\ndef main():\n    pass"
+        file_content_lf = "# Copyright 2026 sny\ndef main():\n    pass"
         assert template.matches(file_content_lf) is True
         
         # Windows line endings (CRLF) - will be handled as LF after split
-        file_content_crlf = "# Copyright 2026 Sony\r\ndef main():\r\n    pass"
+        file_content_crlf = "# Copyright 2026 sny\r\ndef main():\r\n    pass"
         assert template.matches(file_content_crlf) is True
     finally:
         os.unlink(temp_path)

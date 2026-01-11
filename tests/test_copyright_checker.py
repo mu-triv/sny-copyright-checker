@@ -12,14 +12,14 @@ from scripts.copyright_checker import CopyrightChecker
 def temp_copyright_template():
     """Create a temporary copyright template file"""
     content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 # Author: Test Author
 
 [.sql]
--- Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+-- Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 
 [.js]
-// Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+// Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 // License: MIT
 """
     
@@ -56,7 +56,7 @@ All Rights Reserved
 def test_check_file_with_valid_copyright(temp_copyright_template):
     """Test checking a file that already has a valid copyright"""
     # Create a test file with copyright
-    content = """# Copyright 2026 Sony Group Corporation
+    content = """# Copyright 2026 SNY Group Corporation
 # Author: Test Author
 
 def hello():
@@ -100,7 +100,7 @@ def test_check_file_missing_copyright(temp_copyright_template):
             updated_content = f.read()
         
         assert 'Copyright' in updated_content
-        assert 'Sony Group Corporation' in updated_content
+        assert 'SNY Group Corporation' in updated_content
     finally:
         os.unlink(temp_file)
 
@@ -136,7 +136,7 @@ def hello():
 
 def test_check_file_with_year_range(temp_copyright_template):
     """Test checking a file with year range copyright"""
-    content = """# Copyright 2020-2026 Sony Group Corporation
+    content = """# Copyright 2020-2026 SNY Group Corporation
 # Author: Test Author
 
 def hello():
@@ -159,7 +159,7 @@ def hello():
 
 def test_check_file_sql_extension(temp_copyright_template):
     """Test checking SQL file with correct copyright"""
-    content = """-- Copyright 2026 Sony Group Corporation
+    content = """-- Copyright 2026 SNY Group Corporation
 
 SELECT * FROM users;
 """
@@ -198,7 +198,7 @@ def test_check_file_adds_copyright_to_sql(temp_copyright_template):
             updated_content = f.read()
         
         assert '-- Copyright' in updated_content
-        assert 'Sony Group Corporation' in updated_content
+        assert 'SNY Group Corporation' in updated_content
     finally:
         os.unlink(temp_file)
 
@@ -206,7 +206,7 @@ def test_check_file_adds_copyright_to_sql(temp_copyright_template):
 def test_check_files_multiple(temp_copyright_template):
     """Test checking multiple files at once"""
     # Create test files
-    file1_content = """# Copyright 2026 Sony Group Corporation
+    file1_content = """# Copyright 2026 SNY Group Corporation
 # Author: Test Author
 
 def func1():
@@ -308,7 +308,7 @@ def test_check_file_adds_current_year(temp_copyright_template):
 
 def test_check_file_multiline_template(temp_copyright_template):
     """Test file with multi-line copyright template"""
-    content = """// Copyright 2026 Sony Group Corporation
+    content = """// Copyright 2026 SNY Group Corporation
 // License: MIT
 
 function hello() {
@@ -467,7 +467,7 @@ def test_check_files_with_nonexistent(temp_copyright_template):
 def test_check_file_incomplete_copyright(temp_copyright_template):
     """Test file with incomplete copyright notice"""
     # Only first line of copyright present
-    content = """# Copyright 2026 Sony Group Corporation
+    content = """# Copyright 2026 SNY Group Corporation
 
 def hello():
     pass
@@ -639,7 +639,7 @@ def test_check_file_with_very_long_lines(temp_copyright_template):
 
 def test_check_file_with_mixed_line_endings(temp_copyright_template):
     """Test file with mixed line endings (CRLF and LF)"""
-    content = "# Copyright 2026 Sony Group Corporation\r\n# Author: Test Author\n\ndef hello():\r\n    pass"
+    content = "# Copyright 2026 SNY Group Corporation\r\n# Author: Test Author\n\ndef hello():\r\n    pass"
     
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py', newline='') as f:
         f.write(content)
@@ -689,7 +689,7 @@ def test_check_files_all_unsupported(temp_copyright_template):
 
 def test_check_file_preserves_exact_content(temp_copyright_template):
     """Test that check_file preserves file content when copyright is valid"""
-    content = """# Copyright 2026 Sony Group Corporation
+    content = """# Copyright 2026 SNY Group Corporation
 # Author: Test Author
 
 def hello():
@@ -750,7 +750,7 @@ def test_check_file_copyright_at_wrong_position(temp_copyright_template):
     content = """def hello():
     pass
 
-# Copyright 2026 Sony Group Corporation
+# Copyright 2026 SNY Group Corporation
 # Author: Test Author
 
 def world():

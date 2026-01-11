@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Entry point for the Sony copyright check pre-commit hook"""
+"""Entry point for the sny copyright check pre-commit hook"""
 
 import argparse
 import logging

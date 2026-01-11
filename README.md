@@ -1,7 +1,7 @@
-# Sony Copyright Check - Pre-commit Hook
+# SNY Copyright Check - Pre-commit Hook
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Tests](https://github.com/mu-triv/sny-copyright-checker/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-checker/actions)
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
@@ -91,19 +91,19 @@ The template file uses a section-based format with regex support:
 
 ```
 [.py]
-# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 [.sql]
--- Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
--- Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+-- Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
+-- Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 -- License: For licensing see the License.txt file
 
 [.c]
 /**************************************************************************
-* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
-* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation                 *
+* Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation   *
 * License: For licensing see the License.txt file                         *
 **************************************************************************/
 ```
@@ -137,8 +137,8 @@ def hello():
 
 ```python
 #!/usr/bin/env python
-# Copyright 2026 Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright 2026 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 def hello():
@@ -219,7 +219,7 @@ pytest tests/test_copyright_checker.py -v
 
 The project uses GitHub Actions for CI/CD:
 
-- **Tests**: Runs on Python 3.7-3.12 across Ubuntu, Windows, and macOS
+- **Tests**: Runs on Python 3.10-3.12 across Ubuntu, Windows, and macOS
 - **Code Quality**: Checks with flake8, black, and isort
 - **Coverage**: Generates test coverage reports
 
@@ -273,7 +273,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-Sony Group Corporation  
+SNY Group Corporation  
 R&D Center Europe Brussels Laboratory
 
 ## Acknowledgments

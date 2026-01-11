@@ -79,7 +79,7 @@ For your `graphle_lib` project:
    - repo: local
      hooks:
        - id: sny-copyright-checker
-         name: Sony Copyright Check
+         name: SNY Copyright Check
          entry: python /path/to/sny-copyright-checker/scripts/main.py
          language: system
          types: [text]
@@ -99,13 +99,13 @@ Edit `copyright.txt` to customize for your needs:
 
 ```
 [.py]
-# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 [.sql]
--- Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
--- Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+-- Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
+-- Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 -- License: For licensing see the License.txt file
 ```
 
@@ -127,8 +127,8 @@ def main():
 **After running** `python -m scripts.main script.py`:
 ```python
 #!/usr/bin/env python
-# Copyright 2026 Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright 2026 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 def main():

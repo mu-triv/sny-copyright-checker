@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Demo script to test the Sony Copyright Check tool"""
+"""Demo script to test the SNY Copyright Check tool"""
 
 import os
 import tempfile
@@ -34,8 +34,8 @@ int main() {
 def main():
     pass
 """,
-        "test_with_copyright.py": """# Copyright 2026 Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+        "test_with_copyright.py": """# Copyright 2026 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 def already_has_copyright():
@@ -57,7 +57,7 @@ def already_has_copyright():
 def demo_checker():
     """Run demo of the copyright checker"""
     print("=" * 70)
-    print("Sony Copyright Check - Demo")
+    print("SNY Copyright Check - Demo")
     print("=" * 70)
     print()
     

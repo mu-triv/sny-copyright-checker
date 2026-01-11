@@ -125,11 +125,11 @@ class CopyrightTemplateParser:
 
         The template file should have sections like:
         [.py]
-        # Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+        # Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
         # Author: ...
 
         [.sql]
-        -- Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+        -- Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
         -- Author: ...
 
         :param template_path: Path to the template file

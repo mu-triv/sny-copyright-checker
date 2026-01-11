@@ -2,8 +2,8 @@
 
 ```python
 #!/usr/bin/env python
-# Copyright 2026 Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# Copyright 2026 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
 
 """Example Python module"""

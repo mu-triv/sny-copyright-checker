@@ -1,3 +1,3 @@
-"""Sony copyright check pre-commit hook"""
+"""sny copyright check pre-commit hook"""
 
 __version__ = "1.0.0"

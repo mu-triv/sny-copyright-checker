@@ -16,14 +16,14 @@ def temp_project_dir():
         
         # Create copyright template
         template_content = """[.py]
-# Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+# Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 # Author: Test Lab
 
 [.js]
-// Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+// Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 
 [.sql]
--- Copyright {regex:\\d{4}(-\\d{4})?} Sony Group Corporation
+-- Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
 """
         (project_dir / "copyright.txt").write_text(template_content)
         
@@ -35,7 +35,7 @@ def temp_project_dir():
         (project_dir / "file5.txt").write_text("This is a text file\n")  # Unsupported
         
         # Create file with copyright
-        with_copyright = """# Copyright 2026 Sony Group Corporation
+        with_copyright = """# Copyright 2026 SNY Group Corporation
 # Author: Test Lab
 
 def existing():
@@ -100,7 +100,7 @@ def test_cli_single_file_check(temp_project_dir):
     # Verify copyright was added
     content = file_path.read_text()
     assert "Copyright" in content
-    assert "Sony Group Corporation" in content
+    assert "SNY Group Corporation" in content
 
 
 def test_cli_single_file_no_fix(temp_project_dir):
