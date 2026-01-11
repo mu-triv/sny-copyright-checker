@@ -196,7 +196,7 @@ For your `graphle_lib` project:
 ```yaml
   - repo: local
     hooks:
-      - id: sony-copyright
+      - id: sny-copyright-checker
         name: SNY Copyright Check
         entry: python sny-copyright-checker/scripts/main.py
         language: system
