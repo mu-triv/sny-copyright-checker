@@ -66,14 +66,18 @@ class CopyrightChecker:
 
         template = self.templates[file_ext]
 
-        # Read file content
+        # Read file content (preserve line endings for later)
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                content = f.read()
+            with open(filepath, "rb") as f:
+                raw_content = f.read()
+            content = raw_content.decode("utf-8")
         except UnicodeDecodeError:
             # Try with different encoding or skip binary files
             logging.warning(f"Cannot read file (binary or encoding issue): {filepath}")
             return True, False
+
+        # Detect line ending style
+        line_ending = self._detect_line_ending(content)
 
         # Check if copyright notice exists
         if template.matches(content):
@@ -84,7 +88,7 @@ class CopyrightChecker:
         if auto_fix:
             logging.info(f"Adding copyright notice to: {filepath}")
             try:
-                self._add_copyright_notice(filepath, template, content)
+                self._add_copyright_notice(filepath, template, content, line_ending)
                 return True, True
             except Exception as e:
                 logging.error(f"Failed to add copyright notice to {filepath}: {e}")
@@ -93,8 +97,19 @@ class CopyrightChecker:
             logging.warning(f"Missing copyright notice in: {filepath}")
             return False, False
 
+    def _detect_line_ending(self, content: str) -> str:
+        """
+        Detect the line ending style used in content.
+
+        :param content: File content
+        :return: Line ending string ("\r\n" for Windows, "\n" for Unix)
+        """
+        if "\r\n" in content:
+            return "\r\n"
+        return "\n"
+
     def _add_copyright_notice(
-        self, filepath: str, template: CopyrightTemplate, content: str
+        self, filepath: str, template: CopyrightTemplate, content: str, line_ending: str = "\n"
     ) -> None:
         """
         Add copyright notice to a file.
@@ -102,12 +117,14 @@ class CopyrightChecker:
         :param filepath: Path to the file
         :param template: Copyright template to use
         :param content: Current file content
+        :param line_ending: Line ending style to use ("\r\n" or "\n")
         """
         current_year = datetime.now().year
         copyright_notice = template.get_notice_with_year(current_year)
 
-        # Handle shebang lines - keep them at the top
-        lines = content.split("\n")
+        # Normalize content to LF for processing
+        normalized_content = content.replace("\r\n", "\n")
+        lines = normalized_content.split("\n")
         insert_position = 0
 
         if lines and lines[0].startswith("#!"):
@@ -118,7 +135,7 @@ class CopyrightChecker:
         
         # Add newlines around copyright notice
         if insert_position == 0:
-            new_content = copyright_notice + "\n\n" + content
+            new_content = copyright_notice + "\n\n" + normalized_content
         else:
             new_content = (
                 lines[0]
@@ -128,9 +145,13 @@ class CopyrightChecker:
                 + "\n".join(lines[insert_position:])
             )
 
-        # Write back to file
-        with open(filepath, "w", encoding="utf-8", newline="\n") as f:
-            f.write(new_content)
+        # Convert to the original line ending style
+        if line_ending == "\r\n":
+            new_content = new_content.replace("\n", "\r\n")
+
+        # Write back to file in binary mode to preserve exact line endings
+        with open(filepath, "wb") as f:
+            f.write(new_content.encode("utf-8"))
 
     def check_files(
         self, filepaths: List[str], auto_fix: bool = True

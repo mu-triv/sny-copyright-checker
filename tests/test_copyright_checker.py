@@ -847,5 +847,291 @@ def test_template_with_no_extensions(temp_simple_template):
     assert len(extensions) == 1
 
 
+def test_file_with_crlf_line_endings(temp_copyright_template):
+    """Test that CRLF (Windows) line endings are preserved"""
+    # Create a test file with CRLF line endings
+    content = "def hello():\r\n    pass\r\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        assert has_notice is True
+        assert was_modified is True
+        
+        # Read file in binary mode to check line endings
+        with open(temp_file, 'rb') as f:
+            updated_content = f.read().decode('utf-8')
+        
+        # Verify CRLF line endings are preserved
+        assert '\r\n' in updated_content, "CRLF line endings should be preserved"
+        assert updated_content.count('\r\n') > 0
+        
+        # Verify copyright was added
+        assert 'Copyright' in updated_content
+        assert 'SNY Group Corporation' in updated_content
+    finally:
+        os.unlink(temp_file)
+
+
+def test_file_with_lf_line_endings(temp_copyright_template):
+    """Test that LF (Unix/Linux) line endings are preserved"""
+    # Create a test file with LF line endings only
+    content = "def hello():\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        assert has_notice is True
+        assert was_modified is True
+        
+        # Read file in binary mode to check line endings
+        with open(temp_file, 'rb') as f:
+            updated_content = f.read().decode('utf-8')
+        
+        # Verify no CRLF, only LF
+        assert '\r\n' not in updated_content, "Should not have CRLF line endings"
+        assert '\n' in updated_content, "Should have LF line endings"
+        
+        # Verify copyright was added
+        assert 'Copyright' in updated_content
+        assert 'SNY Group Corporation' in updated_content
+    finally:
+        os.unlink(temp_file)
+
+
+def test_file_with_crlf_existing_copyright(temp_copyright_template):
+    """Test that files with existing copyright and CRLF endings are left unchanged"""
+    # Create a test file with copyright and CRLF line endings
+    content = "# Copyright 2025 SNY Group Corporation\r\n# Author: Test Author\r\n\r\ndef hello():\r\n    pass\r\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        # Should detect existing copyright and not modify
+        assert has_notice is True
+        assert was_modified is False
+        
+        # Read file in binary mode to check line endings
+        with open(temp_file, 'rb') as f:
+            updated_content = f.read().decode('utf-8')
+        
+        # Verify CRLF line endings are still present
+        assert '\r\n' in updated_content, "CRLF line endings should be preserved"
+        
+        # Verify only one copyright block exists
+        assert updated_content.count('Copyright') == 1
+    finally:
+        os.unlink(temp_file)
+
+
+def test_file_with_lf_existing_copyright(temp_copyright_template):
+    """Test that files with existing copyright and LF endings are left unchanged"""
+    # Create a test file with copyright and LF line endings
+    content = "# Copyright 2025 SNY Group Corporation\n# Author: Test Author\n\ndef hello():\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        # Should detect existing copyright and not modify
+        assert has_notice is True
+        assert was_modified is False
+        
+        # Read file in binary mode to check line endings
+        with open(temp_file, 'rb') as f:
+            updated_content = f.read().decode('utf-8')
+        
+        # Verify no CRLF, only LF
+        assert '\r\n' not in updated_content, "Should not have CRLF line endings"
+        assert '\n' in updated_content, "Should have LF line endings"
+        
+        # Verify only one copyright block exists
+        assert updated_content.count('Copyright') == 1
+    finally:
+        os.unlink(temp_file)
+
+
+def test_mixed_line_endings_treated_as_crlf(temp_copyright_template):
+    """Test that files with mixed line endings (containing any CRLF) are treated as CRLF files"""
+    # Create a test file with mixed line endings (mostly LF but some CRLF)
+    content = "def hello():\r\n    pass\n"  # First line CRLF, second LF
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        assert has_notice is True
+        assert was_modified is True
+        
+        # Read file in binary mode to check line endings
+        with open(temp_file, 'rb') as f:
+            updated_content = f.read().decode('utf-8')
+        
+        # Since original had CRLF, output should use CRLF throughout
+        lines_in_copyright = updated_content.split('\n\n')[0]  # Get copyright section
+        assert '\r\n' in lines_in_copyright, "Copyright should use CRLF when file had any CRLF"
+    finally:
+        os.unlink(temp_file)
+
+
+def test_no_duplicate_copyright_when_run_twice(temp_copyright_template):
+    """Test that running the checker twice doesn't create duplicate copyrights"""
+    # Create a test file without copyright
+    content = "def hello():\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        
+        # First run - should add copyright
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        assert has_notice is True
+        assert was_modified is True
+        
+        # Read file after first run
+        with open(temp_file, 'r', encoding='utf-8') as f:
+            content_after_first = f.read()
+        
+        first_copyright_count = content_after_first.count('Copyright')
+        assert first_copyright_count == 1, "Should have exactly one copyright after first run"
+        
+        # Second run - should detect existing copyright and not add another
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        assert has_notice is True
+        assert was_modified is False, "Second run should not modify the file"
+        
+        # Read file after second run
+        with open(temp_file, 'r', encoding='utf-8') as f:
+            content_after_second = f.read()
+        
+        second_copyright_count = content_after_second.count('Copyright')
+        assert second_copyright_count == 1, "Should still have exactly one copyright after second run"
+        assert content_after_first == content_after_second, "File content should be identical after second run"
+    finally:
+        os.unlink(temp_file)
+
+
+def test_old_year_copyright_not_replaced(temp_copyright_template):
+    """Test that copyrights with old years (e.g., 2025) are not replaced with current year"""
+    # Create a test file with 2025 copyright
+    content = "# Copyright 2025 SNY Group Corporation\n# Author: Test Author\n\ndef hello():\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        
+        # Run checker
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        # Should detect existing copyright and not modify
+        assert has_notice is True
+        assert was_modified is False
+        
+        # Read file and verify
+        with open(temp_file, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        # Verify still has 2025, not replaced with 2026
+        assert '2025' in updated_content, "Original year should be preserved"
+        assert '2026' not in updated_content, "Should not add current year"
+        assert updated_content.count('Copyright') == 1, "Should have exactly one copyright"
+    finally:
+        os.unlink(temp_file)
+
+
+def test_multiple_runs_on_old_copyright_no_duplicates(temp_copyright_template):
+    """Test that running checker multiple times on file with old copyright doesn't create duplicates"""
+    # Create a test file with 2025 copyright
+    content = "# Copyright 2025 SNY Group Corporation\n# Author: Test Author\n\ndef hello():\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        
+        original_content = content
+        
+        # Run checker 3 times
+        for i in range(3):
+            has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+            
+            assert has_notice is True, f"Run {i+1}: Should detect copyright"
+            assert was_modified is False, f"Run {i+1}: Should not modify file"
+            
+            # Read and verify
+            with open(temp_file, 'r', encoding='utf-8') as f:
+                current_content = f.read()
+            
+            assert current_content.count('Copyright') == 1, f"Run {i+1}: Should have exactly one copyright"
+            assert '2025' in current_content, f"Run {i+1}: Should preserve 2025 year"
+            assert '2026' not in current_content, f"Run {i+1}: Should not add 2026"
+    finally:
+        os.unlink(temp_file)
+
+
+def test_copyright_insertion_position(temp_copyright_template):
+    """Test that copyright is inserted at the correct position (beginning of file)"""
+    # Create a test file without copyright
+    content = "def hello():\n    return 'world'\n\nclass MyClass:\n    pass\n"
+    
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.py') as f:
+        f.write(content.encode('utf-8'))
+        temp_file = f.name
+    
+    try:
+        checker = CopyrightChecker(temp_copyright_template)
+        has_notice, was_modified = checker.check_file(temp_file, auto_fix=True)
+        
+        assert has_notice is True
+        assert was_modified is True
+        
+        # Read file and verify copyright is at the beginning
+        with open(temp_file, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        # First lines should contain copyright
+        lines = updated_content.split('\n')
+        assert 'Copyright' in lines[0], "First line should contain copyright"
+        assert 'SNY Group Corporation' in lines[0], "First line should contain company name"
+        assert 'Author:' in lines[1], "Second line should contain Author"
+        
+        # Original code should still be present after copyright
+        assert 'def hello():' in updated_content
+        assert 'class MyClass:' in updated_content
+    finally:
+        os.unlink(temp_file)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
