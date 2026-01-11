@@ -1,9 +1,15 @@
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+
 """Integration tests for the copyright checker"""
 
 import pytest
 import tempfile
 import os
 import logging
+import subprocess
 from pathlib import Path
 from scripts.copyright_checker import CopyrightChecker
 
@@ -1131,6 +1137,276 @@ def test_copyright_insertion_position(temp_copyright_template):
         assert 'class MyClass:' in updated_content
     finally:
         os.unlink(temp_file)
+
+
+def test_get_changed_files_not_in_git_repo(temp_copyright_template):
+    """Test that get_changed_files raises error when not in a git repository"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        checker = CopyrightChecker(temp_copyright_template)
+        
+        with pytest.raises(RuntimeError, match="Failed to get changed files from git"):
+            checker.get_changed_files(repo_path=temp_dir)
+
+
+def test_get_changed_files_in_git_repo(temp_copyright_template):
+    """Test getting changed files from a git repository"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create and commit a file
+        file1 = os.path.join(temp_dir, "file1.py")
+        with open(file1, "w") as f:
+            f.write("# Copyright 2025 SNY Group Corporation\\n# Author: Test Author\\n\\nprint('hello')\\n")
+        
+        subprocess.run(["git", "add", "file1.py"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create a new file (unstaged)
+        file2 = os.path.join(temp_dir, "file2.py")
+        with open(file2, "w") as f:
+            f.write("print('new file')\\n")
+        
+        # Modify existing file
+        with open(file1, "a") as f:
+            f.write("print('modified')\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        
+        # Get changed files
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should find file1.py (modified), but not file2.py (not in git yet)
+        assert any("file1.py" in f for f in changed_files), "Should detect modified file1.py"
+
+
+def test_get_changed_files_filters_by_extension(temp_copyright_template):
+    """Test that get_changed_files only returns files with supported extensions"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create files with different extensions
+        py_file = os.path.join(temp_dir, "test.py")
+        txt_file = os.path.join(temp_dir, "test.txt")
+        
+        with open(py_file, "w") as f:
+            f.write("print('hello')\\n")
+        with open(txt_file, "w") as f:
+            f.write("Some text\\n")
+        
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Modify both files
+        with open(py_file, "a") as f:
+            f.write("print('modified')\\n")
+        with open(txt_file, "a") as f:
+            f.write("More text\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should only return .py file (supported extension)
+        assert any("test.py" in f for f in changed_files), "Should include .py file"
+        assert not any("test.txt" in f for f in changed_files), "Should not include .txt file (unsupported extension)"
+
+
+def test_get_changed_files_with_staged_changes(temp_copyright_template):
+    """Test that get_changed_files detects both staged and unstaged files"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create and commit files
+        file1 = os.path.join(temp_dir, "staged.py")
+        file2 = os.path.join(temp_dir, "unstaged.py")
+        
+        with open(file1, "w") as f:
+            f.write("print('original1')\\n")
+        with open(file2, "w") as f:
+            f.write("print('original2')\\n")
+        
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Modify first file and stage it
+        with open(file1, "a") as f:
+            f.write("print('staged change')\\n")
+        subprocess.run(["git", "add", "staged.py"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Modify second file but don't stage
+        with open(file2, "a") as f:
+            f.write("print('unstaged change')\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should detect both staged and unstaged changes
+        assert any("staged.py" in f for f in changed_files), "Should detect staged file"
+        assert any("unstaged.py" in f for f in changed_files), "Should detect unstaged file"
+
+
+def test_get_changed_files_with_new_staged_file(temp_copyright_template):
+    """Test that get_changed_files detects new files that are staged"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create initial commit
+        file1 = os.path.join(temp_dir, "existing.py")
+        with open(file1, "w") as f:
+            f.write("print('exists')\\n")
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create new file and stage it
+        new_file = os.path.join(temp_dir, "newfile.py")
+        with open(new_file, "w") as f:
+            f.write("print('new')\\n")
+        subprocess.run(["git", "add", "newfile.py"], cwd=temp_dir, check=True, capture_output=True)
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should detect new staged file
+        assert any("newfile.py" in f for f in changed_files), "Should detect new staged file"
+
+
+def test_get_changed_files_no_changes(temp_copyright_template):
+    """Test that get_changed_files returns empty list when no changes"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create and commit a file
+        file1 = os.path.join(temp_dir, "test.py")
+        with open(file1, "w") as f:
+            f.write("print('hello')\\n")
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should return empty list
+        assert len(changed_files) == 0, "Should return no files when nothing changed"
+
+
+def test_get_changed_files_in_subdirectory(temp_copyright_template):
+    """Test that get_changed_files works with files in subdirectories"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create subdirectory with file
+        subdir = os.path.join(temp_dir, "src", "utils")
+        os.makedirs(subdir, exist_ok=True)
+        
+        file1 = os.path.join(subdir, "helper.py")
+        with open(file1, "w") as f:
+            f.write("print('helper')\\n")
+        
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Modify the file in subdirectory
+        with open(file1, "a") as f:
+            f.write("print('modified')\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should detect file in subdirectory
+        assert len(changed_files) == 1, "Should detect one changed file"
+        assert "helper.py" in changed_files[0], "Should detect helper.py in subdirectory"
+        assert os.path.exists(changed_files[0]), "Returned path should be absolute and exist"
+
+
+def test_get_changed_files_multiple_file_types(temp_copyright_template):
+    """Test that get_changed_files handles multiple supported file types"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create files of different supported types
+        py_file = os.path.join(temp_dir, "script.py")
+        js_file = os.path.join(temp_dir, "app.js")
+        sql_file = os.path.join(temp_dir, "schema.sql")
+        
+        with open(py_file, "w") as f:
+            f.write("print('python')\\n")
+        with open(js_file, "w") as f:
+            f.write("console.log('js');\\n")
+        with open(sql_file, "w") as f:
+            f.write("SELECT * FROM table;\\n")
+        
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Modify all files
+        with open(py_file, "a") as f:
+            f.write("print('modified')\\n")
+        with open(js_file, "a") as f:
+            f.write("console.log('modified');\\n")
+        with open(sql_file, "a") as f:
+            f.write("-- comment\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should detect all supported file types
+        assert len(changed_files) == 3, f"Should detect 3 changed files, found {len(changed_files)}"
+        assert any("script.py" in f for f in changed_files), "Should detect .py file"
+        assert any("app.js" in f for f in changed_files), "Should detect .js file"
+        assert any("schema.sql" in f for f in changed_files), "Should detect .sql file"
+
+
+def test_get_changed_files_with_deleted_file(temp_copyright_template):
+    """Test that get_changed_files handles deleted files gracefully"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Initialize git repo
+        subprocess.run(["git", "init"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Create and commit files
+        file1 = os.path.join(temp_dir, "keep.py")
+        file2 = os.path.join(temp_dir, "delete.py")
+        
+        with open(file1, "w") as f:
+            f.write("print('keep')\\n")
+        with open(file2, "w") as f:
+            f.write("print('delete')\\n")
+        
+        subprocess.run(["git", "add", "."], cwd=temp_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=temp_dir, check=True, capture_output=True)
+        
+        # Delete one file and modify the other
+        os.remove(file2)
+        with open(file1, "a") as f:
+            f.write("print('modified')\\n")
+        
+        checker = CopyrightChecker(temp_copyright_template)
+        changed_files = checker.get_changed_files(repo_path=temp_dir)
+        
+        # Should only include the file that still exists
+        assert any("keep.py" in f for f in changed_files), "Should detect modified file"
+        assert not any("delete.py" in f for f in changed_files), "Should not include deleted file"
 
 
 if __name__ == '__main__':

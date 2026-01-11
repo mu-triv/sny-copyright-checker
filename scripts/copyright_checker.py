@@ -1,12 +1,18 @@
 #!/usr/bin/env python
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+
 
 """Main copyright checker with auto-insertion functionality"""
 
 import logging
 import os
+import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from .copyright_template_parser import CopyrightTemplate, CopyrightTemplateParser
 
@@ -192,3 +198,58 @@ class CopyrightChecker:
         :return: Set of file extensions (e.g., {'.py', '.c', '.sql'})
         """
         return set(self.templates.keys())
+
+    def get_changed_files(self, base_ref: str = "HEAD", repo_path: Optional[str] = None) -> List[str]:
+        """
+        Get list of changed files from git.
+
+        :param base_ref: Git reference to compare against (default: HEAD)
+        :param repo_path: Path to git repository (default: current directory)
+        :return: List of changed file paths (absolute paths)
+        :raises RuntimeError: If git command fails
+        """
+        try:
+            # Get the working directory for git commands
+            work_dir = repo_path if repo_path else os.getcwd()
+            
+            # Get staged and unstaged changes
+            cmd = ["git", "diff", "--name-only", base_ref]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=work_dir
+            )
+            
+            changed_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
+            
+            # Also get unstaged changes
+            result_unstaged = subprocess.run(
+                ["git", "diff", "--name-only"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=work_dir
+            )
+            
+            unstaged_files = [f.strip() for f in result_unstaged.stdout.split('\n') if f.strip()]
+            
+            # Combine and deduplicate
+            all_changed = list(set(changed_files + unstaged_files))
+            
+            # Convert to absolute paths and filter to only supported extensions
+            filtered_files = []
+            for f in all_changed:
+                abs_path = os.path.join(work_dir, f) if not os.path.isabs(f) else f
+                if Path(abs_path).suffix in self.templates and os.path.exists(abs_path):
+                    filtered_files.append(abs_path)
+            
+            logging.debug(f"Found {len(filtered_files)} changed files with supported extensions")
+            return filtered_files
+            
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to get changed files from git: {e.stderr}")
+        except FileNotFoundError:
+            raise RuntimeError("Git is not installed or not available in PATH")

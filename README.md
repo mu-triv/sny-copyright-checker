@@ -18,6 +18,12 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 🎯 **Smart Insertion**: Respects shebang lines and file structure
 
+🔄 **Line Ending Preservation**: Automatically detects and preserves CRLF (Windows) or LF (Unix/Linux) line endings
+
+🎯 **Git Integration**: Check only changed files with `--changed-only` flag
+
+✅ **Non-Destructive**: Existing copyrights are preserved, even with old years - no duplicates created
+
 ## Installation
 
 ### As a pre-commit hook (Recommended)
@@ -75,6 +81,12 @@ sny-copyright-checker --notice=my_copyright.txt *.py
 
 # Verbose output
 sny-copyright-checker -v file1.py
+
+# Check only changed files in git
+sny-copyright-checker --changed-only
+
+# Check changed files compared to main branch
+sny-copyright-checker --changed-only --base-ref origin/main
 ```
 
 ### Command Line Options
@@ -84,6 +96,8 @@ sny-copyright-checker -v file1.py
 - `--fix`: Automatically add missing copyright notices (default: enabled)
 - `--no-fix`: Only check without modifying files
 - `--verbose, -v`: Enable verbose output
+- `--changed-only`: Only check files that have been changed in git (ignores filenames argument)
+- `--base-ref REF`: Git reference to compare against when using `--changed-only` (default: HEAD)
 
 ## Copyright Template Format
 
@@ -150,8 +164,11 @@ def hello():
 1. **Template Parsing**: Reads and parses the section-based template file
 2. **File Extension Matching**: Determines which copyright template to use based on file extension
 3. **Pattern Matching**: Uses regex to check if a valid copyright notice exists
-4. **Auto-Insertion**: If missing and `--fix` is enabled, adds the copyright notice with the current year
-5. **Smart Positioning**: Respects shebang lines and inserts the notice appropriately
+4. **Copyright Detection**: If a valid copyright exists (even with an old year like 2025), the file is left unchanged
+5. **Auto-Insertion**: If missing and `--fix` is enabled, adds the copyright notice with the current year
+6. **Smart Positioning**: Respects shebang lines and inserts the notice appropriately
+7. **Line Ending Preservation**: Automatically detects and preserves the original line ending style (CRLF or LF)
+8. **Git Integration**: Optionally checks only files that have been modified in your git repository
 
 ## File Extensions Support
 
@@ -164,6 +181,25 @@ By default, the included `copyright.txt` supports:
 - Shell scripts (`.sh`)
 
 You can easily add more by editing the `copyright.txt` file.
+
+## Important Behavior
+
+### Copyright Preservation
+- **Existing copyrights are never replaced**: If a file already has a valid copyright notice (even from an old year like 2025), it will be left unchanged
+- **No duplicates created**: Running the tool multiple times will not create duplicate copyright notices
+- **Year matching**: The regex pattern `{regex:\d{4}(-\d{4})?}` matches any year or year range, ensuring old copyrights are recognized
+
+### Line Ending Handling
+- **Automatic detection**: The tool automatically detects whether your files use CRLF (Windows) or LF (Unix/Linux) line endings
+- **Preservation**: Original line endings are preserved when adding copyright notices
+- **Cross-platform compatibility**: Works seamlessly on Windows, Linux, and macOS
+
+### Git Integration
+When using `--changed-only`:
+- Only files tracked by git and currently modified (staged or unstaged) are checked
+- Files must have a supported extension
+- Deleted files are automatically excluded
+- Works with files in subdirectories
 
 ## Configuration
 
