@@ -8,6 +8,7 @@ License: For licensing see the License.txt file
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![PyPI version](https://badge.fury.io/py/sny-copyright-checker.svg)](https://badge.fury.io/py/sny-copyright-checker)
 [![Tests](https://github.com/mu-triv/sny-copyright-checker/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-checker/actions)
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
@@ -41,7 +42,15 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 ## Installation
 
-### As a pre-commit hook (Recommended)
+### Via pip (Recommended)
+
+Install directly from PyPI:
+
+```bash
+pip install sny-copyright-checker
+```
+
+### As a pre-commit hook
 
 Add the following to your `.pre-commit-config.yaml`:
 
@@ -60,7 +69,7 @@ Then install the hook:
 pre-commit install
 ```
 
-### Manual Installation
+### From source
 
 ```bash
 git clone https://github.com/mu-triv/sny-copyright-checker.git

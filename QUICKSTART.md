@@ -10,7 +10,16 @@ License: For licensing see the License.txt file
 
 ### 1. Installation
 
+#### Option A: Install from PyPI (Recommended)
+
 ```bash
+pip install sny-copyright-checker
+```
+
+#### Option B: Install from source
+
+```bash
+git clone https://github.com/mu-triv/sny-copyright-checker.git
 cd sny-copyright-checker
 pip install -e .
 ```
@@ -25,7 +34,7 @@ echo "def hello():" > test.py
 echo "    print('Hello')" >> test.py
 
 # Run the checker
-python -m scripts.main test.py
+sny-copyright-checker test.py
 
 # Check the file - it should now have a copyright notice!
 type test.py
@@ -87,21 +96,21 @@ def main():
 
 #### Example 3: Check multiple files
 ```bash
-python -m scripts.main file1.py file2.sql file3.c
+sny-copyright-checker file1.py file2.sql file3.c
 ```
 
 #### Example 4: Check only (no modifications)
 ```bash
-python -m scripts.main --no-fix *.py
+sny-copyright-checker --no-fix *.py
 ```
 
 #### Example 5: Check only changed files in git
 ```bash
 # Check only files you've modified
-python -m scripts.main --changed-only
+sny-copyright-checker --changed-only
 
 # Check changed files compared to main branch
-python -m scripts.main --changed-only --base-ref origin/main
+sny-copyright-checker --changed-only --base-ref origin/main
 ```
 
 #### Example 6: Existing copyrights are preserved
@@ -114,7 +123,7 @@ python -m scripts.main --changed-only --base-ref origin/main
 def main():
     pass
 
-# Run: python -m scripts.main old_file.py
+# Run: sny-copyright-checker old_file.py
 
 # After: old_file.py (UNCHANGED - existing copyright preserved)
 # Copyright 2025 SNY Group Corporation
@@ -165,25 +174,27 @@ Group multiple file extensions that share the same comment style for easier main
 
 ### Troubleshooting
 
-**Issue**: "ModuleNotFoundError: No module named 'scripts'"
-**Solution**: Make sure you're running from the project directory or have installed with `pip install -e .`
+**Issue**: "Command 'sny-copyright-checker' not found"
+**Solution**: Make sure you installed the package: `pip install sny-copyright-checker`
 
 **Issue**: Copyright not being added
 **Solution**: Check that the file extension is defined in `copyright.txt`
 
 **Issue**: Want to see detailed logs
-**Solution**: Use the `-v` flag: `python -m scripts.main -v file.py`
+**Solution**: Use the `-v` flag: `sny-copyright-checker -v file.py`
 
 ### Command Line Options
 
 ```
-python -m scripts.main [OPTIONS] FILES...
+sny-copyright-checker [OPTIONS] FILES...
 
 Options:
   --notice PATH    Path to copyright template (default: copyright.txt)
   --fix           Auto-add missing copyrights (default: True)
   --no-fix        Only check, don't modify files
   -v, --verbose   Show detailed output
+  --changed-only  Check only changed files in git
+  --base-ref REF  Git reference to compare against (default: HEAD)
 ```
 
 ### Integration with Pre-commit
