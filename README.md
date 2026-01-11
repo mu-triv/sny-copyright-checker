@@ -261,7 +261,7 @@ Check only files modified compared to a specific git reference:
   rev: v1.0.1
   hooks:
     - id: sny-copyright-checker
-      args: [--changed-only, --base-ref=origin/main]
+      args: [--changed-only, --base-ref=origin/main, --notice=copyright.txt]
 ```
 
 #### Limit to Specific File Types
