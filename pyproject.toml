@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sny-copyright-check"
+name = "sny-copyright-checker"
 version = "1.0.0"
 description = "Pre-commit hook to check and auto-add copyright notices with multi-format and regex support"
 readme = "README.md"
@@ -34,11 +34,11 @@ dev = [
 ]
 
 [project.scripts]
-sny-copyright-check = "scripts.main:main"
+sny-copyright-checker = "scripts.main:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/sny-copyright-check"
-Repository = "https://github.com/yourusername/sny-copyright-check"
+Homepage = "https://github.com/yourusername/sny-copyright-checker"
+Repository = "https://github.com/yourusername/sny-copyright-checker"
 
 [tool.setuptools]
 packages = ["scripts"]

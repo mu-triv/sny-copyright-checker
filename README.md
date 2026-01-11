@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
-[![Tests](https://github.com/mu-triv/sny-copyright-check/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-check/actions)
+[![Tests](https://github.com/mu-triv/sny-copyright-checker/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-checker/actions)
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
 
@@ -26,10 +26,10 @@ Add the following to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/mu-triv/sny-copyright-check
+  - repo: https://github.com/mu-triv/sny-copyright-checker
     rev: v1.0.0  # Use the latest release
     hooks:
-      - id: sony-copyright-check
+      - id: sny-copyright-checker
         args: [--notice=copyright.txt]
 ```
 
@@ -42,8 +42,8 @@ pre-commit install
 ### Manual Installation
 
 ```bash
-git clone https://github.com/mu-triv/sny-copyright-check.git
-cd sny-copyright-check
+git clone https://github.com/mu-triv/sny-copyright-checker.git
+cd sny-copyright-checker
 pip install -e .
 ```
 
@@ -65,16 +65,16 @@ You can also run the tool directly:
 
 ```bash
 # Check and auto-fix files
-sny-copyright-check file1.py file2.sql file3.c
+sny-copyright-checker file1.py file2.sql file3.c
 
 # Check only (no modifications)
-sny-copyright-check --no-fix file1.py
+sny-copyright-checker --no-fix file1.py
 
 # Specify custom template file
-sny-copyright-check --notice=my_copyright.txt *.py
+sny-copyright-checker --notice=my_copyright.txt *.py
 
 # Verbose output
-sny-copyright-check -v file1.py
+sny-copyright-checker -v file1.py
 ```
 
 ### Command Line Options
@@ -183,10 +183,10 @@ And {regex:\d{4}} for year matching
 Customize the pre-commit hook behavior:
 
 ```yaml
-- repo: https://github.com/mu-triv/sny-copyright-check
+- repo: https://github.com/mu-triv/sny-copyright-checker
   rev: v1.0.0
   hooks:
-    - id: sony-copyright-check
+    - id: sny-copyright-checker
       args: [--notice=copyright.txt]
       # Only run on specific file types
       files: \.(py|sql|c|cpp)$
@@ -198,7 +198,7 @@ Customize the pre-commit hook behavior:
 
 ```bash
 git clone https://github.com/mu-triv/sny-copyright-checker.git
-cd sny-copyright-check
+cd sny-copyright-checker
 pip install -e .
 ```
 
@@ -230,7 +230,7 @@ The workflow automatically runs on:
 ### Project Structure
 
 ```
-sny-copyright-check/
+sny-copyright-checker/
 ├── scripts/
 │   ├── __init__.py
 │   ├── main.py                      # Entry point

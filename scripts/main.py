@@ -21,7 +21,7 @@ def setup_logging(verbose: bool = False) -> None:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """
-    Main entry point for sny-copyright-check.
+    Main entry point for sny-copyright-checker.
 
     :param argv: Command line arguments
     :return: Exit code (0 for success, 1 for failure)

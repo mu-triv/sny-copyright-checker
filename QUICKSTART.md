@@ -5,7 +5,7 @@
 ### 1. Installation
 
 ```bash
-cd sny-copyright-check
+cd sny-copyright-checker
 pip install -e .
 ```
 
@@ -33,7 +33,7 @@ Copy the `copyright.txt` template to your project root, then add to your `.pre-c
 repos:
   - repo: local
     hooks:
-      - id: sony-copyright-check
+      - id: sny-copyright-checker
         name: Sony Copyright Check
         entry: python C:/Users/bevuk/Documents/sny-copyright-check/scripts/main.py
         language: system
@@ -140,7 +140,7 @@ For your `graphle_lib` project:
     hooks:
       - id: sony-copyright
         name: Sony Copyright Check
-        entry: python C:/Users/bevuk/Documents/sny-copyright-check/scripts/main.py
+        entry: python C:/Users/bevuk/Documents/sny-copyright-checker/scripts/main.py
         language: system
         types: [text]
         pass_filenames: true

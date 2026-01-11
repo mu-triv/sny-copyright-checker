@@ -15,7 +15,7 @@ Your new pre-commit hook project has been successfully created!
 ### 📁 Project Structure
 
 ```
-sny-copyright-check/
+sny-copyright-checker/
 ├── scripts/
 │   ├── __init__.py
 │   ├── main.py                      # CLI entry point
@@ -43,7 +43,7 @@ sny-copyright-check/
 #### 1. Test the Tool
 
 ```powershell
-cd sny-copyright-check
+cd sny-copyright-checker
 python demo.py
 ```
 
@@ -71,16 +71,16 @@ For your `graphle_lib` project:
 
 1. **Copy the copyright template**:
    ```powershell
-   copy sny-copyright-check\copyright.txt your-project\
+   copy sny-copyright-checker\copyright.txt your-project\
    ```
 
 2. **Add to `.pre-commit-config.yaml`**:
    ```yaml
    - repo: local
      hooks:
-       - id: sony-copyright-check
+       - id: sny-copyright-checker
          name: Sony Copyright Check
-         entry: python /path/to/sny-copyright-check/scripts/main.py
+         entry: python /path/to/sny-copyright-checker/scripts/main.py
          language: system
          types: [text]
          args: [--notice=copyright.txt]

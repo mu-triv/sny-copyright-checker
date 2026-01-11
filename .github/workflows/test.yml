@@ -62,7 +62,7 @@ jobs:
     
     - name: Test installation
       run: |
-        uv run sny-copyright-check --help
+        uv run sny-copyright-checker --help
 
   lint:
     name: Code quality checks

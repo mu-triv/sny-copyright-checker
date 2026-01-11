@@ -1,4 +1,4 @@
-- id: sony-copyright-check
+- id: sny-copyright-checker
   name: Sony Copyright Notice Check
   description: Check for copyright notices and automatically add them if missing
   entry: python -m scripts.main
