@@ -1,3 +1,9 @@
+<!--
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
 # SNY Copyright Check - Pre-commit Hook
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -188,6 +194,10 @@ By default, the included `copyright.txt` supports:
 - JavaScript/TypeScript (`.js`, `.ts`)
 - Java (`.java`)
 - Shell scripts (`.sh`)
+- Go (`.go`)
+- Rust (`.rs`)
+- YAML (`.yaml`, `.yml`)
+- Markdown (`.md`)
 
 You can easily add more by editing the `copyright.txt` file.
 

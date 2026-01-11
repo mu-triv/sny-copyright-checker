@@ -51,3 +51,30 @@
 # Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
+
+[.go]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// License: For licensing see the License.txt file
+
+[.rs]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// License: For licensing see the License.txt file
+
+[.yaml]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+[.yml]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+[.md]
+<!--
+Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
