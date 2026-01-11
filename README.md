@@ -216,7 +216,9 @@ And {regex:\d{4}} for year matching
 
 ### Pre-commit Configuration
 
-Customize the pre-commit hook behavior:
+Customize the pre-commit hook behavior with various arguments:
+
+#### Basic Configuration
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
@@ -224,8 +226,90 @@ Customize the pre-commit hook behavior:
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
-      # Only run on specific file types
+```
+
+#### Check Only (No Auto-fix)
+
+Run the checker without automatically adding copyright notices:
+
+```yaml
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.1
+  hooks:
+    - id: sny-copyright-checker
+      args: [--no-fix, --notice=copyright.txt]
+```
+
+#### Verbose Output
+
+Enable detailed output for debugging:
+
+```yaml
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.1
+  hooks:
+    - id: sny-copyright-checker
+      args: [--verbose, --notice=copyright.txt]
+```
+
+#### Check Only Changed Files
+
+Check only files modified compared to a specific git reference:
+
+```yaml
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.1
+  hooks:
+    - id: sny-copyright-checker
+      args: [--changed-only, --base-ref=origin/main]
+```
+
+#### Limit to Specific File Types
+
+Only run on specific file types using the `files` regex:
+
+```yaml
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.1
+  hooks:
+    - id: sny-copyright-checker
+      args: [--notice=copyright.txt]
       files: \.(py|sql|c|cpp)$
+```
+
+#### Combined Configuration
+
+Combine multiple options:
+
+```yaml
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.1
+  hooks:
+    - id: sny-copyright-checker
+      args: [--verbose, --notice=config/copyright.txt, --changed-only]
+      files: \.(py|js|ts|java)$
+```
+
+#### Multiple Hooks with Different Configurations
+
+Run separate hooks for different scenarios:
+
+```yaml
+repos:
+  - repo: https://github.com/mu-triv/sny-copyright-checker
+    rev: v1.0.1
+    hooks:
+      # Auto-fix Python files only
+      - id: sny-copyright-checker
+        name: Copyright Check (Python - Auto-fix)
+        args: [--notice=copyright.txt]
+        files: \.py$
+      
+      # Check-only for C/C++ files
+      - id: sny-copyright-checker
+        name: Copyright Check (C/C++ - Check Only)
+        args: [--no-fix, --notice=copyright.txt, --verbose]
+        files: \.(c|cpp|h)$
 ```
 
 ## Development
