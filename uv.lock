@@ -79,7 +79,6 @@ wheels = [
 
 [[package]]
 name = "sny-copyright-checker"
-version = "1.0.1"
 source = { editable = "." }
 
 [package.optional-dependencies]
