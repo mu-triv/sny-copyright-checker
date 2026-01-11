@@ -60,7 +60,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2026-01-10
 
 ### Added
-- Initial release of Sony Copyright Check pre-commit hook
+- Initial release of SNY Copyright Check pre-commit hook
 - Multi-format copyright template support with section-based syntax
 - Regex pattern matching for flexible year validation
 - Automatic copyright notice insertion with current year

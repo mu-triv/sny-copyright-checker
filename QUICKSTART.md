@@ -41,7 +41,7 @@ repos:
     hooks:
       - id: sny-copyright-checker
         name: SNY Copyright Check
-        entry: python C:/Users/bevuk/Documents/sny-copyright-check/scripts/main.py
+        entry: python sny-copyright-check/scripts/main.py
         language: system
         types: [text]
         args: [--notice=copyright.txt]
@@ -198,7 +198,7 @@ For your `graphle_lib` project:
     hooks:
       - id: sony-copyright
         name: SNY Copyright Check
-        entry: python C:/Users/bevuk/Documents/sny-copyright-checker/scripts/main.py
+        entry: python sny-copyright-checker/scripts/main.py
         language: system
         types: [text]
         pass_filenames: true

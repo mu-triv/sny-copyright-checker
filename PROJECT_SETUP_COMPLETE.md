@@ -1,6 +1,12 @@
+<!--
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
 # Project Setup Complete! 🎉
 
-## Sony Copyright Check - Enhanced Pre-commit Hook
+## SNY Copyright Check - Enhanced Pre-commit Hook
 
 Your new pre-commit hook project has been successfully created!
 

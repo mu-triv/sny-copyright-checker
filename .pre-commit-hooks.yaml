@@ -1,5 +1,9 @@
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
 - id: sny-copyright-checker
-  name: Sony Copyright Notice Check
+  name: SNY Copyright Notice Check
   description: Check for copyright notices and automatically add them if missing
   entry: python -m scripts.main
   language: python
