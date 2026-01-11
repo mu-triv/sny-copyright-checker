@@ -1,8 +1,42 @@
+<!--
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1]
+## [1.0.2] - 2026-01-11
+
+### Added
+- **Grouped extensions syntax**: Support for `[.ext1, .ext2, .ext3]` format to group multiple file extensions with the same copyright format
+- Extended language support:
+  - Go (`.go`)
+  - Rust (`.rs`)
+  - YAML (`.yaml`, `.yml`)
+  - Markdown (`.md`)
+- Comprehensive test coverage for grouped extensions feature (9 new tests)
+- VERSION_MANAGEMENT.md documentation for centralized version control
+
+### Changed
+- Consolidated `copyright.txt` from 15 sections to 6 using grouped extensions (easier maintenance)
+- Centralized version management: Version now defined only in `scripts/__init__.py`
+- Updated `pyproject.toml` and `setup.cfg` to use dynamic versioning from `__init__.py`
+- Enhanced README.md with:
+  - Documentation links section
+  - Grouped extensions syntax examples
+  - Comprehensive pre-commit configuration examples
+- Updated QUICKSTART.md and EXAMPLES.md with grouped extensions examples
+
+### Improved
+- Template parser now supports comma-separated extensions in section headers
+- All grouped extensions share the same template instance (memory efficient)
+- Better maintainability: Update copyright format once for multiple file types
+- Documentation section in README with quick links to all guides
+
+## [1.0.1] - 2026-01-11
 
 ### Added
 - Line ending preservation: Automatically detects and preserves CRLF (Windows) or LF (Unix/Linux) line endings
