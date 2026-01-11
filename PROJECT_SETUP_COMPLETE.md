@@ -2,8 +2,7 @@
 
 ## Sony Copyright Check - Enhanced Pre-commit Hook
 
-Your new pre-commit hook project has been successfully created at:
-**C:\Users\bevuk\Documents\sny-copyright-check**
+Your new pre-commit hook project has been successfully created!
 
 ### ✨ Key Features Implemented
 
@@ -44,7 +43,7 @@ sny-copyright-check/
 #### 1. Test the Tool
 
 ```powershell
-cd C:\Users\bevuk\Documents\sny-copyright-check
+cd sny-copyright-check
 python demo.py
 ```
 
@@ -72,7 +71,7 @@ For your `graphle_lib` project:
 
 1. **Copy the copyright template**:
    ```powershell
-   copy C:\Users\bevuk\Documents\sny-copyright-check\copyright.txt C:\Users\bevuk\Documents\graphle_lib\
+   copy sny-copyright-check\copyright.txt your-project\
    ```
 
 2. **Add to `.pre-commit-config.yaml`**:
@@ -81,7 +80,7 @@ For your `graphle_lib` project:
      hooks:
        - id: sony-copyright-check
          name: Sony Copyright Check
-         entry: python C:/Users/bevuk/Documents/sny-copyright-check/scripts/main.py
+         entry: python /path/to/sny-copyright-check/scripts/main.py
          language: system
          types: [text]
          args: [--notice=copyright.txt]
@@ -89,7 +88,7 @@ For your `graphle_lib` project:
 
 3. **Install and test**:
    ```powershell
-   cd C:\Users\bevuk\Documents\graphle_lib
+   cd your-project
    pre-commit install
    pre-commit run --all-files
    ```

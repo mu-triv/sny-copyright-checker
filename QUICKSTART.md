@@ -5,7 +5,7 @@
 ### 1. Installation
 
 ```bash
-cd C:\Users\bevuk\Documents\sny-copyright-check
+cd sny-copyright-check
 pip install -e .
 ```
 
