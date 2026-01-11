@@ -89,6 +89,36 @@ python -m scripts.main file1.py file2.sql file3.c
 python -m scripts.main --no-fix *.py
 ```
 
+#### Example 5: Check only changed files in git
+```bash
+# Check only files you've modified
+python -m scripts.main --changed-only
+
+# Check changed files compared to main branch
+python -m scripts.main --changed-only --base-ref origin/main
+```
+
+#### Example 6: Existing copyrights are preserved
+```python
+# Before: old_file.py (with 2025 copyright)
+# Copyright 2025 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
+# License: For licensing see the License.txt file
+
+def main():
+    pass
+
+# Run: python -m scripts.main old_file.py
+
+# After: old_file.py (UNCHANGED - existing copyright preserved)
+# Copyright 2025 SNY Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
+# License: For licensing see the License.txt file
+
+def main():
+    pass
+```
+
 ### 5. Customize Copyright Template
 
 Edit `copyright.txt` to add more file types or modify the copyright text:

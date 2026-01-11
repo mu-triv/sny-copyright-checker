@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+
 
 """Entry point for the sny copyright check pre-commit hook"""
 
@@ -57,24 +62,47 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action="store_true",
         help="Enable verbose output",
     )
+    parser.add_argument(
+        "--changed-only",
+        action="store_true",
+        help="Only check files that have been changed in git (ignores filenames argument)",
+    )
+    parser.add_argument(
+        "--base-ref",
+        default="HEAD",
+        help="Git reference to compare against when using --changed-only (default: HEAD)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
 
-    if not args.filenames:
-        logging.info("No files to check")
-        return 0
-
     try:
         checker = CopyrightChecker(args.notice)
         
+        # Determine which files to check
+        if args.changed_only:
+            logging.info("Checking only changed files from git")
+            try:
+                files_to_check = checker.get_changed_files(base_ref=args.base_ref)
+                if not files_to_check:
+                    logging.info("No changed files with supported extensions found")
+                    return 0
+            except RuntimeError as e:
+                logging.error(str(e))
+                return 2
+        else:
+            files_to_check = args.filenames
+            if not files_to_check:
+                logging.info("No files to check")
+                return 0
+        
         logging.info(
-            f"Checking {len(args.filenames)} file(s) for copyright notices "
+            f"Checking {len(files_to_check)} file(s) for copyright notices "
             f"(auto-fix: {args.fix})"
         )
         logging.debug(f"Supported extensions: {checker.get_supported_extensions()}")
 
-        passed, failed, modified = checker.check_files(args.filenames, args.fix)
+        passed, failed, modified = checker.check_files(files_to_check, args.fix)
 
         # Print summary
         if modified:
