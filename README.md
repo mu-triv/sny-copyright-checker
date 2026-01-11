@@ -6,6 +6,15 @@
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
 
+## Documentation
+
+📚 **Quick Links:**
+- [Quickstart Guide](QUICKSTART.md) - Get started in minutes
+- [Examples](EXAMPLES.md) - Real-world usage examples
+- [Changelog](CHANGELOG.md) - Version history and updates
+- [Version Management](VERSION_MANAGEMENT.md) - How to update the version
+- [License](LICENSE) - MIT License
+
 ## Features
 
 ✨ **Multi-Format Support**: Define different copyright formats for different file extensions (`.py`, `.c`, `.sql`, etc.)
@@ -304,7 +313,7 @@ repos:
         name: Copyright Check (Python - Auto-fix)
         args: [--notice=copyright.txt]
         files: \.py$
-      
+
       # Check-only for C/C++ files
       - id: sny-copyright-checker
         name: Copyright Check (C/C++ - Check Only)
@@ -393,7 +402,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-SNY Group Corporation  
+SNY Group Corporation
 R&D Center Europe Brussels Laboratory
 
 ## Acknowledgments
