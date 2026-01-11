@@ -33,7 +33,7 @@ Add the following to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.0  # Use the latest release
+    rev: v1.0.1  # Use the latest release
     hooks:
       - id: sny-copyright-checker
         args: [--notice=copyright.txt]
@@ -220,7 +220,7 @@ Customize the pre-commit hook behavior:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.0
+  rev: v1.0.1
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]

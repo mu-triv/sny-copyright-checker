@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sny-copyright-checker"
-version = "1.0.0"
+version = "1.0.1"
 description = "Pre-commit hook to check and auto-add copyright notices with multi-format and regex support"
 readme = "README.md"
 requires-python = ">=3.10"

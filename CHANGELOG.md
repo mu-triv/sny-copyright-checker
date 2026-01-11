@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.1]
 
 ### Added
 - Line ending preservation: Automatically detects and preserves CRLF (Windows) or LF (Unix/Linux) line endings
