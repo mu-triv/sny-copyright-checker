@@ -116,10 +116,10 @@ sny-copyright-checker --changed-only --base-ref origin/main
 
 ## Copyright Template Format
 
-The template file uses a section-based format with regex support:
+The template file uses a section-based format with regex support. You can group multiple file extensions with the same copyright format together for easier maintenance:
 
 ```
-[.py]
+[.py, .yaml, .yml]
 # Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 # License: For licensing see the License.txt file
@@ -129,20 +129,38 @@ The template file uses a section-based format with regex support:
 -- Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
 -- License: For licensing see the License.txt file
 
-[.c]
+[.c, .h, .cpp]
 /**************************************************************************
 * Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation                 *
 * Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation   *
 * License: For licensing see the License.txt file                         *
 **************************************************************************/
+
+[.js, .ts, .go, .rs]
+// Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
+// License: For licensing see the License.txt file
 ```
 
 ### Template Syntax
 
-- **Section Headers**: `[.extension]` defines the file extension (e.g., `[.py]`, `[.sql]`)
+- **Section Headers**:
+  - Single extension: `[.extension]` (e.g., `[.py]`, `[.sql]`)
+  - Multiple extensions: `[.ext1, .ext2, .ext3]` (e.g., `[.js, .ts, .go]`)
+  - All extensions in a grouped header will use the same copyright format
 - **Regex Patterns**: `{regex:PATTERN}` allows regex matching
   - Example: `{regex:\d{4}(-\d{4})?}` matches `2024` or `2024-2026`
 - **Auto-insertion**: When adding a copyright, the regex pattern is replaced with the current year
+
+### Grouping Extensions
+
+To reduce duplication and improve maintainability, group extensions that share the same comment syntax:
+
+- **Hash comments**: `[.py, .yaml, .yml, .sh]` → `#` style
+- **C-style line comments**: `[.js, .ts, .go, .rs, .java]` → `//` style
+- **C block comments**: `[.c, .h, .cpp]` → `/* */` style
+- **SQL comments**: `[.sql]` → `--` style
+- **HTML comments**: `[.md, .html, .xml]` → `<!-- -->` style
 
 ### Supported Regex Patterns
 

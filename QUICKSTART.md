@@ -1,3 +1,9 @@
+<!--
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
 # SNY Copyright Check
 
 ## Quick Start Guide
@@ -121,19 +127,41 @@ def main():
 
 ### 5. Customize Copyright Template
 
-Edit `copyright.txt` to add more file types or modify the copyright text:
+Edit `copyright.txt` to add more file types or modify the copyright text.
 
+#### Single Extension Format:
 ```
 [.rs]
 // Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 // Author: Your Team
 // License: For licensing see the License.txt file
+```
 
-[.go]
+#### Grouped Extensions Format (Recommended):
+
+Group multiple file extensions that share the same comment style for easier maintenance:
+
+```
+[.js, .ts, .go, .rs]
 // Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 // Author: Your Team
 // License: For licensing see the License.txt file
+
+[.py, .yaml, .yml]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: Your Team
+# License: For licensing see the License.txt file
+
+[.c, .h, .cpp]
+/* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+ * Author: Your Team
+ * License: For licensing see the License.txt file */
 ```
+
+**Benefits of grouping:**
+- Less duplication in template file
+- Easier to maintain and update
+- One change applies to all grouped extensions
 
 ### Troubleshooting
 

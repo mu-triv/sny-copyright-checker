@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
 
 """Parser for multi-format copyright template file with regex support"""
 
@@ -53,7 +57,7 @@ class CopyrightTemplate:
         :return: True if content matches the template (with regex patterns)
         """
         content_lines = content.split("\n")
-        
+
         # Try to find the template starting at different positions
         for start_idx in range(len(content_lines)):
             if self._matches_at_position(content_lines, start_idx):
@@ -75,32 +79,32 @@ class CopyrightTemplate:
             zip(self.lines, self.regex_patterns)
         ):
             content_line = content_lines[start_idx + i].rstrip()
-            
+
             if regex_pattern:
                 # Build pattern from template line by replacing {regex:...} with the regex
                 # Find the {regex:...} part and replace it
                 start_marker = "{regex:"
                 start_idx_marker = template_line.find(start_marker)
-                
+
                 if start_idx_marker != -1:
                     # Find the matching closing brace
                     start_pos = start_idx_marker + len(start_marker)
                     depth = 1
                     end_idx_marker = start_pos
-                    
+
                     while end_idx_marker < len(template_line) and depth > 0:
                         if template_line[end_idx_marker] == '{':
                             depth += 1
                         elif template_line[end_idx_marker] == '}':
                             depth -= 1
                         end_idx_marker += 1
-                    
+
                     # Build the pattern: escape the parts before and after, insert regex in between
                     before = re.escape(template_line[:start_idx_marker])
                     after = re.escape(template_line[end_idx_marker:])
                     regex_str = template_line[start_pos:end_idx_marker-1]
                     pattern_str = f"{before}({regex_str}){after}"
-                    
+
                     if not re.match(pattern_str, content_line):
                         return False
                 else:
@@ -144,22 +148,39 @@ class CopyrightTemplateParser:
         with open(template_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
                 line = line.rstrip("\n")
-                
+
                 # Skip empty lines when not inside a section
                 if not line.strip() and current_extension is None:
                     continue
 
-                # Check for section header [.ext]
-                section_match = re.match(r"^\[(\.\w+)\]$", line.strip())
+                # Check for section header [.ext] or [.ext1, .ext2, .ext3]
+                section_match = re.match(r"^\[((?:\.\w+)(?:\s*,\s*\.\w+)*)\]$", line.strip())
                 if section_match:
                     # Save previous section if exists
                     if current_extension is not None:
-                        templates[current_extension] = CopyrightTemplateParser._create_template(
-                            current_extension, current_lines
-                        )
-                    
-                    # Start new section
-                    current_extension = section_match.group(1)
+                        # Remove trailing empty lines
+                        while current_lines and not current_lines[-1]:
+                            current_lines.pop()
+
+                        # Handle both single extension and list of extensions
+                        if isinstance(current_extension, list):
+                            template = CopyrightTemplateParser._create_template(
+                                current_extension[0], current_lines
+                            )
+                            # Map all extensions to the same template
+                            for ext in current_extension:
+                                templates[ext] = template
+                        else:
+                            templates[current_extension] = CopyrightTemplateParser._create_template(
+                                current_extension, current_lines
+                            )
+
+                    # Parse extensions (can be comma-separated)
+                    extensions_str = section_match.group(1)
+                    extensions = [ext.strip() for ext in extensions_str.split(',')]
+
+                    # Start new section with first extension as the key
+                    current_extension = extensions[0] if len(extensions) == 1 else extensions
                     current_lines = []
                 elif current_extension is not None:
                     # Add line to current section (including empty lines within section)
@@ -167,12 +188,20 @@ class CopyrightTemplateParser:
                         current_lines.append(line)
 
         # Save last section
-        if current_extension is not None and current_lines:
+        if current_extension is not None:
             # Remove trailing empty lines
             while current_lines and not current_lines[-1]:
                 current_lines.pop()
-            
-            if current_lines:
+
+            # Handle both single extension and list of extensions
+            if isinstance(current_extension, list):
+                template = CopyrightTemplateParser._create_template(
+                    current_extension[0], current_lines
+                )
+                # Map all extensions to the same template
+                for ext in current_extension:
+                    templates[ext] = template
+            else:
                 templates[current_extension] = CopyrightTemplateParser._create_template(
                     current_extension, current_lines
                 )
@@ -192,26 +221,26 @@ class CopyrightTemplateParser:
         :return: CopyrightTemplate object
         """
         regex_patterns = []
-        
+
         for line in lines:
             # Extract regex patterns from {regex:...}
             # Handle nested braces by finding the matching closing brace
             start_marker = "{regex:"
             start_idx = line.find(start_marker)
-            
+
             if start_idx != -1:
                 # Find the matching closing brace
                 start_pos = start_idx + len(start_marker)
                 depth = 1
                 end_idx = start_pos
-                
+
                 while end_idx < len(line) and depth > 0:
                     if line[end_idx] == '{':
                         depth += 1
                     elif line[end_idx] == '}':
                         depth -= 1
                     end_idx += 1
-                
+
                 if depth == 0:
                     regex_str = line[start_pos:end_idx-1]
                     try:

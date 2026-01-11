@@ -1,3 +1,9 @@
+<!--
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
 # Example: Python file with copyright
 
 ```python
@@ -100,6 +106,30 @@ INFO: Adding copyright notice to: file2.py
 
 # file3.py was not checked since it wasn't modified
 ```
+
+# Example: Grouped Extensions in Template
+
+You can group multiple file extensions that share the same copyright format:
+
+```
+# copyright.txt
+[.js, .ts, .go, .rs]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// License: For licensing see the License.txt file
+
+[.py, .yaml, .yml, .sh]
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+[.c, .h, .cpp]
+/* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+ * Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+ * License: For licensing see the License.txt file */
+```
+
+All extensions in a group will use the same copyright format, making maintenance easier.
 
 # Example: Line ending preservation
 
