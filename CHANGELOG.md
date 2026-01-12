@@ -9,7 +9,7 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.3] - 2026-01-12
 
 ### Added
 - **Template variables feature**: Support for `[VARIABLES]` section to define reusable values
