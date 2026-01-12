@@ -1,4 +1,5 @@
 <!--
+SPDX-License-Identifier: MIT
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -8,18 +9,10 @@ License: For licensing see the License.txt file
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![PyPI version](https://badge.fury.io/py/sny-copyright-checker.svg)](https://badge.fury.io/py/sny-copyright-checker)
 [![Tests](https://github.com/mu-triv/sny-copyright-checker/workflows/Tests/badge.svg)](https://github.com/mu-triv/sny-copyright-checker/actions)
 
 A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and add copyright notices to your source files with support for multiple file formats and regex patterns.
-
-## Documentation
-
-📚 **Quick Links:**
-- [Quickstart Guide](QUICKSTART.md) - Get started in minutes
-- [Examples](EXAMPLES.md) - Real-world usage examples
-- [Changelog](CHANGELOG.md) - Version history and updates
-- [Version Management](VERSION_MANAGEMENT.md) - How to update the version
-- [License](LICENSE) - MIT License
 
 ## Features
 
@@ -41,14 +34,22 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 ## Installation
 
-### As a pre-commit hook (Recommended)
+### Via pip (Recommended)
+
+Install directly from PyPI:
+
+```bash
+pip install sny-copyright-checker
+```
+
+### As a pre-commit hook
 
 Add the following to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.2  # Use the latest release
+    rev: v1.0.3  # Use the latest release
     hooks:
       - id: sny-copyright-checker
         args: [--notice=copyright.txt]
@@ -60,7 +61,7 @@ Then install the hook:
 pre-commit install
 ```
 
-### Manual Installation
+### From source
 
 ```bash
 git clone https://github.com/mu-triv/sny-copyright-checker.git
@@ -116,41 +117,78 @@ sny-copyright-checker --changed-only --base-ref origin/main
 
 ## Copyright Template Format
 
-The template file uses a section-based format with regex support. You can group multiple file extensions with the same copyright format together for easier maintenance:
+The template file uses a section-based format with regex support and template variables for maximum maintainability.
+
+### Using Variables (Recommended)
+
+Define common values once in a `[VARIABLES]` section and reuse them throughout your template:
+
+```
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
+[.py, .yaml, .yml]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
+# License: For licensing see the License.txt file
+
+[.js, .ts, .go, .rs]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
+// License: For licensing see the License.txt file
+```
+
+**Benefits:**
+- ✅ **DRY Principle**: Change company name or license in one place
+- ✅ **SPDX Support**: Easy to add [SPDX License Identifiers](https://spdx.dev/learn/handling-license-info/)
+- ✅ **Consistency**: All file types use the same information
+- ✅ **Flexibility**: Different projects can have different licenses
+
+### Traditional Format (Also Supported)
+
+You can also use the format without variables:
 
 ```
 [.py, .yaml, .yml]
-# Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
-
-[.sql]
--- Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
--- Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
--- License: For licensing see the License.txt file
-
-[.c, .h, .cpp]
-/**************************************************************************
-* Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation                 *
-* Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation   *
-* License: For licensing see the License.txt file                         *
-**************************************************************************/
-
-[.js, .ts, .go, .rs]
-// Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
-// Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
-// License: For licensing see the License.txt file
 ```
 
 ### Template Syntax
 
+- **Variables Section**: `[VARIABLES]` - Define reusable values
+  - Format: `VARIABLE_NAME = value`
+  - Use in templates: `{VARIABLE_NAME}`
+  - Example: `COMPANY = Sony Group Corporation`, then use `{COMPANY}`
 - **Section Headers**:
   - Single extension: `[.extension]` (e.g., `[.py]`, `[.sql]`)
   - Multiple extensions: `[.ext1, .ext2, .ext3]` (e.g., `[.js, .ts, .go]`)
   - All extensions in a grouped header will use the same copyright format
 - **Regex Patterns**: `{regex:PATTERN}` allows regex matching
   - Example: `{regex:\d{4}(-\d{4})?}` matches `2024` or `2024-2026`
+  - Can be stored in a variable: `YEAR_PATTERN = {regex:\d{4}(-\d{4})?}`
 - **Auto-insertion**: When adding a copyright, the regex pattern is replaced with the current year
+
+### SPDX License Identifiers
+
+The tool fully supports [SPDX license identifiers](https://spdx.dev/learn/handling-license-info/). Simply add them to your template:
+
+```
+[VARIABLES]
+SPDX_LICENSE = Apache-2.0 OR MIT
+
+[.py]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {regex:\d{4}} {COMPANY}
+```
+
+Common SPDX identifiers: `MIT`, `Apache-2.0`, `GPL-3.0-only`, `BSD-3-Clause`, etc.
 
 ### Grouping Extensions
 
@@ -259,7 +297,7 @@ Customize the pre-commit hook behavior with various arguments:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -271,7 +309,7 @@ Run the checker without automatically adding copyright notices:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--no-fix, --notice=copyright.txt]
@@ -283,7 +321,7 @@ Enable detailed output for debugging:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--verbose, --notice=copyright.txt]
@@ -295,7 +333,7 @@ Check only files modified compared to a specific git reference:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--changed-only, --base-ref=origin/main, --notice=copyright.txt]
@@ -307,7 +345,7 @@ Only run on specific file types using the `files` regex:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -320,7 +358,7 @@ Combine multiple options:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.2
+  rev: v1.0.3
   hooks:
     - id: sny-copyright-checker
       args: [--verbose, --notice=config/copyright.txt, --changed-only]
@@ -334,7 +372,7 @@ Run separate hooks for different scenarios:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.2
+    rev: v1.0.3
     hooks:
       # Auto-fix Python files only
       - id: sny-copyright-checker
@@ -424,14 +462,53 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Known Issues and Limitations
+
+### Template Changes May Create Duplicate Copyrights
+
+**Issue**: When you update your `copyright.txt` template and re-run the checker on files that already have a copyright, it may add a second copyright notice instead of recognizing the existing one.
+
+**Why**: The checker uses strict template matching. If the copyright format changes (e.g., different company name, license identifier, or text), the old copyright no longer matches the new template and is considered "missing."
+
+**Example Scenario**:
+```python
+# Original copyright (Company A)
+# Copyright 2025 Company A
+# License: MIT
+
+def hello():
+    pass
+```
+
+After updating `copyright.txt` to use Company B and re-running:
+```python
+# Copyright 2026 Company B      # <- New copyright added
+# SPDX-License-Identifier: Apache-2.0
+
+# Copyright 2025 Company A      # <- Old copyright still present
+# License: MIT
+
+def hello():
+    pass
+```
+
+**Workarounds**:
+1. **Manual cleanup**: Before changing templates, manually remove or update existing copyrights
+2. **Test first**: Run checker in check-only mode (`--no-fix`) to see which files would be modified
+3. **Selective application**: Use git to only apply checker to new/modified files
+4. **Batch find-replace**: Use text editor to update existing copyrights before running checker
+
+**Future Enhancement**: A `--replace` mode could be added to detect and replace any copyright-like headers, not just exact template matches.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
-SNY Group Corporation
-R&D Center Europe Brussels Laboratory
+Tri VU Khac (khactri.vu@sony.com)<br>
+SONY Group Corporation<br>
+R&D Center Europe Brussels Laboratory<br>
 
 ## Acknowledgments
 

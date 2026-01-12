@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -128,12 +129,18 @@ class CopyrightTemplateParser:
         Parse a copyright template file.
 
         The template file should have sections like:
+
+        [VARIABLES]
+        SPDX_LICENSE = MIT
+        COMPANY = Sony Group Corporation
+
         [.py]
-        # Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
+        # SPDX-License-Identifier: {SPDX_LICENSE}
+        # Copyright {regex:\\d{4}(-\\d{4})?} {COMPANY}
         # Author: ...
 
         [.sql]
-        -- Copyright {regex:\\d{4}(-\\d{4})?} SNY Group Corporation
+        -- Copyright {regex:\\d{4}(-\\d{4})?} {COMPANY}
         -- Author: ...
 
         :param template_path: Path to the template file
@@ -142,37 +149,70 @@ class CopyrightTemplateParser:
         :raises ValueError: If template file format is invalid
         """
         templates = {}
+        variables = {}
         current_extension = None
         current_lines = []
+        in_variables_section = False
+        variables_section_processed = False  # Track if we've seen [VARIABLES] already
 
         with open(template_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
                 line = line.rstrip("\n")
 
                 # Skip empty lines when not inside a section
-                if not line.strip() and current_extension is None:
+                if not line.strip() and current_extension is None and not in_variables_section:
                     continue
+
+                # Check for [VARIABLES] section - only process the first one
+                if line.strip() == "[VARIABLES]":
+                    if not variables_section_processed:
+                        in_variables_section = True
+                        variables_section_processed = True
+                    continue
+
+                # Parse variable definitions
+                if in_variables_section:
+                    # Check if we hit a new section header
+                    if line.strip().startswith("[") and line.strip().endswith("]"):
+                        in_variables_section = False
+                        # Continue to process this line as a section header below
+                    elif "=" in line:
+                        # Parse variable: VAR_NAME = value
+                        key, value = line.split("=", 1)
+                        variables[key.strip()] = value.strip()
+                        continue
+                    elif not line.strip():
+                        # Empty line in variables section
+                        continue
 
                 # Check for section header [.ext] or [.ext1, .ext2, .ext3]
                 section_match = re.match(r"^\[((?:\.\w+)(?:\s*,\s*\.\w+)*)\]$", line.strip())
                 if section_match:
+                    # Exit variables section if we were in it
+                    in_variables_section = False
+
                     # Save previous section if exists
                     if current_extension is not None:
                         # Remove trailing empty lines
                         while current_lines and not current_lines[-1]:
                             current_lines.pop()
 
+                        # Substitute variables in current_lines before creating template
+                        substituted_lines = CopyrightTemplateParser._substitute_variables(
+                            current_lines, variables
+                        )
+
                         # Handle both single extension and list of extensions
                         if isinstance(current_extension, list):
                             template = CopyrightTemplateParser._create_template(
-                                current_extension[0], current_lines
+                                current_extension[0], substituted_lines
                             )
                             # Map all extensions to the same template
                             for ext in current_extension:
                                 templates[ext] = template
                         else:
                             templates[current_extension] = CopyrightTemplateParser._create_template(
-                                current_extension, current_lines
+                                current_extension, substituted_lines
                             )
 
                     # Parse extensions (can be comma-separated)
@@ -193,23 +233,53 @@ class CopyrightTemplateParser:
             while current_lines and not current_lines[-1]:
                 current_lines.pop()
 
+            # Substitute variables in current_lines before creating template
+            substituted_lines = CopyrightTemplateParser._substitute_variables(
+                current_lines, variables
+            )
+
             # Handle both single extension and list of extensions
             if isinstance(current_extension, list):
                 template = CopyrightTemplateParser._create_template(
-                    current_extension[0], current_lines
+                    current_extension[0], substituted_lines
                 )
                 # Map all extensions to the same template
                 for ext in current_extension:
                     templates[ext] = template
             else:
                 templates[current_extension] = CopyrightTemplateParser._create_template(
-                    current_extension, current_lines
+                    current_extension, substituted_lines
                 )
 
         if not templates:
             raise ValueError(f"No valid sections found in template file: {template_path}")
 
         return templates
+
+    @staticmethod
+    def _substitute_variables(lines: List[str], variables: Dict[str, str]) -> List[str]:
+        """
+        Substitute variable placeholders in template lines with their values.
+
+        Variables are in format {VARIABLE_NAME} (not {regex:...}).
+
+        :param lines: Template lines that may contain variable placeholders
+        :param variables: Dictionary of variable name -> value
+        :return: Lines with variables substituted
+        """
+        if not variables:
+            return lines
+
+        substituted_lines = []
+        for line in lines:
+            substituted_line = line
+            # Find all {VARIABLE_NAME} patterns (but not {regex:...})
+            for var_name, var_value in variables.items():
+                placeholder = "{" + var_name + "}"
+                substituted_line = substituted_line.replace(placeholder, var_value)
+            substituted_lines.append(substituted_line)
+
+        return substituted_lines
 
     @staticmethod
     def _create_template(extension: str, lines: List[str]) -> CopyrightTemplate:

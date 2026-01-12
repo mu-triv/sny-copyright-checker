@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -1029,6 +1030,428 @@ def test_grouped_extensions_empty_section():
         # SQL should have content
         assert '.sql' in templates
         assert len(templates['.sql'].lines) == 1
+    finally:
+        os.unlink(temp_path)
+
+
+# ============================================================================
+# VARIABLES FEATURE TEST CASES
+# ============================================================================
+
+def test_parse_template_with_variables():
+    """Test parsing template with [VARIABLES] section"""
+    content = """[VARIABLES]
+COMPANY = Sony Group Corporation
+AUTHOR = Test Author
+
+[.py]
+# Copyright 2026 {COMPANY}
+# Author: {AUTHOR}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        template = templates['.py']
+        assert 'Sony Group Corporation' in template.lines[0]
+        assert 'Test Author' in template.lines[1]
+        # Variables should be substituted, not remain as placeholders
+        assert '{COMPANY}' not in template.lines[0]
+        assert '{AUTHOR}' not in template.lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_with_spdx_variable():
+    """Test parsing template with SPDX license variable"""
+    content = """[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Corporation
+
+[.py]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright 2026 {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        template = templates['.py']
+        assert 'SPDX-License-Identifier: MIT' in template.lines[0]
+        assert 'Sony Corporation' in template.lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_with_variables_and_regex():
+    """Test that variables and regex patterns can coexist"""
+    content = """[VARIABLES]
+COMPANY = Sony Group Corporation
+YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
+
+[.py]
+# Copyright {YEAR_PATTERN} {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        template = templates['.py']
+        # YEAR_PATTERN variable should be substituted with regex pattern
+        assert '{regex:\\d{4}(-\\d{4})?}' in template.lines[0]
+        assert 'Sony Group Corporation' in template.lines[0]
+        # Variable placeholder should be gone
+        assert '{YEAR_PATTERN}' not in template.lines[0]
+        assert '{COMPANY}' not in template.lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_variables_multiple_sections():
+    """Test variables work across multiple file extension sections"""
+    content = """[VARIABLES]
+COMPANY = Sony Group
+
+[.py]
+# Copyright {COMPANY}
+
+[.js]
+// Copyright {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        assert '.js' in templates
+        # Both should have the variable substituted
+        assert 'Sony Group' in templates['.py'].lines[0]
+        assert 'Sony Group' in templates['.js'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_variables_with_grouped_extensions():
+    """Test variables work with grouped extensions"""
+    content = """[VARIABLES]
+COMPANY = Sony Corporation
+SPDX_LICENSE = Apache-2.0
+
+[.py, .yaml, .yml]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright 2026 {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        assert '.yaml' in templates
+        assert '.yml' in templates
+        # All should have variables substituted
+        for ext in ['.py', '.yaml', '.yml']:
+            assert 'Apache-2.0' in templates[ext].lines[0]
+            assert 'Sony Corporation' in templates[ext].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_no_variables_section():
+    """Test backward compatibility - templates without [VARIABLES] still work"""
+    content = """[.py]
+# Copyright 2026 Sony Group Corporation
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        assert 'Sony Group Corporation' in templates['.py'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_empty_variables_section():
+    """Test template with empty [VARIABLES] section"""
+    content = """[VARIABLES]
+
+[.py]
+# Copyright 2026 Sony
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        assert 'Sony' in templates['.py'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_variable_with_spaces():
+    """Test variable values with spaces are handled correctly"""
+    content = """[VARIABLES]
+COMPANY = Sony Group Corporation Europe
+AUTHOR = R&D Center Europe Brussels Laboratory
+
+[.py]
+# Copyright {COMPANY}
+# Author: {AUTHOR}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Sony Group Corporation Europe' in templates['.py'].lines[0]
+        assert 'R&D Center Europe Brussels Laboratory' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_unused_variables():
+    """Test that unused variables don't cause errors"""
+    content = """[VARIABLES]
+COMPANY = Sony
+UNUSED_VAR = Some Value
+
+[.py]
+# Copyright {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert '.py' in templates
+        assert 'Sony' in templates['.py'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_template_matches_content():
+    """Test that templates with variables can match file content"""
+    content = """[VARIABLES]
+COMPANY = Sony Group Corporation
+YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
+
+[.py]
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: Test
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+        template = templates['.py']
+
+        file_content = """# Copyright 2026 Sony Group Corporation
+# Author: Test
+
+def main():
+    pass
+"""
+        assert template.matches(file_content) is True
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_undefined_variable():
+    """Test that undefined variables remain as placeholders"""
+    content = """[VARIABLES]
+COMPANY = Sony
+
+[.py]
+# Copyright {COMPANY}
+# Author: {UNDEFINED_VAR}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        # Defined variable should be substituted
+        assert 'Sony' in templates['.py'].lines[0]
+        # Undefined variable should remain as placeholder
+        assert '{UNDEFINED_VAR}' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_multiple_variables_sections():
+    """Test that only the first [VARIABLES] section is used"""
+    content = """[VARIABLES]
+COMPANY = First Company
+
+[.py]
+# Copyright {COMPANY}
+
+[VARIABLES]
+COMPANY = Second Company
+
+[.js]
+// Copyright {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        # Both should use the first VARIABLES section
+        assert 'First Company' in templates['.py'].lines[0]
+        assert 'First Company' in templates['.js'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_get_notice_with_year():
+    """Test that variables work correctly in get_notice_with_year"""
+    content = """[VARIABLES]
+COMPANY = Sony Corporation
+YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
+
+[.py]
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: Test Team
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+        template = templates['.py']
+
+        # Generate notice with year
+        notice = template.get_notice_with_year(2026)
+
+        # Should have year substituted and company name
+        assert '2026' in notice
+        assert 'Sony Corporation' in notice
+        assert 'Test Team' in notice
+        # Variable placeholders should be gone
+        assert '{COMPANY}' not in notice
+        assert '{YEAR_PATTERN}' not in notice
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_special_characters():
+    """Test variables with special characters in values"""
+    content = """[VARIABLES]
+COMPANY = Sony & Associates (Europe)
+LICENSE = MIT/Apache-2.0
+
+[.py]
+# Copyright {COMPANY}
+# License: {LICENSE}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Sony & Associates (Europe)' in templates['.py'].lines[0]
+        assert 'MIT/Apache-2.0' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_empty_value():
+    """Test variable with empty value"""
+    content = """[VARIABLES]
+COMPANY = Sony
+OPTIONAL_FIELD =
+
+[.py]
+# Copyright {COMPANY}
+# Optional: {OPTIONAL_FIELD}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Sony' in templates['.py'].lines[0]
+        # Empty variable should result in just the prefix
+        assert 'Optional: ' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_case_sensitive():
+    """Test that variable names are case-sensitive"""
+    content = """[VARIABLES]
+company = Lower Case
+COMPANY = Upper Case
+
+[.py]
+# Copyright {company}
+# Also: {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Lower Case' in templates['.py'].lines[0]
+        assert 'Upper Case' in templates['.py'].lines[1]
     finally:
         os.unlink(temp_path)
 

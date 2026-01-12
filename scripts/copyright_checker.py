@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -138,7 +139,7 @@ class CopyrightChecker:
             # Add empty line after shebang if not present
             if len(lines) > 1 and lines[1].strip():
                 copyright_notice = "\n" + copyright_notice
-        
+
         # Add newlines around copyright notice
         if insert_position == 0:
             new_content = copyright_notice + "\n\n" + normalized_content
@@ -211,10 +212,10 @@ class CopyrightChecker:
         try:
             # Get the working directory for git commands
             work_dir = repo_path if repo_path else os.getcwd()
-            
+
             # Get staged and unstaged changes
             cmd = ["git", "diff", "--name-only", base_ref]
-            
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -222,9 +223,9 @@ class CopyrightChecker:
                 check=True,
                 cwd=work_dir
             )
-            
+
             changed_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
-            
+
             # Also get unstaged changes
             result_unstaged = subprocess.run(
                 ["git", "diff", "--name-only"],
@@ -233,22 +234,22 @@ class CopyrightChecker:
                 check=True,
                 cwd=work_dir
             )
-            
+
             unstaged_files = [f.strip() for f in result_unstaged.stdout.split('\n') if f.strip()]
-            
+
             # Combine and deduplicate
             all_changed = list(set(changed_files + unstaged_files))
-            
+
             # Convert to absolute paths and filter to only supported extensions
             filtered_files = []
             for f in all_changed:
                 abs_path = os.path.join(work_dir, f) if not os.path.isabs(f) else f
                 if Path(abs_path).suffix in self.templates and os.path.exists(abs_path):
                     filtered_files.append(abs_path)
-            
+
             logging.debug(f"Found {len(filtered_files)} changed files with supported extensions")
             return filtered_files
-            
+
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Failed to get changed files from git: {e.stderr}")
         except FileNotFoundError:

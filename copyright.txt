@@ -1,41 +1,54 @@
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
 [.py, .yaml, .yml]
-# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
 # License: For licensing see the License.txt file
 
 [.sql]
--- Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
--- Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+-- SPDX-License-Identifier: {SPDX_LICENSE}
+-- Copyright {YEAR_PATTERN} {COMPANY}
+-- Author: {AUTHOR}
 -- License: For licensing see the License.txt file
 
 [.c, .h, .cpp]
 /**************************************************************************
-* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation                 *
-* Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation   *
+* SPDX-License-Identifier: {SPDX_LICENSE}                                 *
+* Copyright {YEAR_PATTERN} {COMPANY}                                       *
+* Author: {AUTHOR}                                                         *
 * License: For licensing see the License.txt file                         *
 **************************************************************************/
 
 [.js, .ts, .go, .rs]
-// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-// Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
 // License: For licensing see the License.txt file
 
 [.java]
 /*
- * Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
- * Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+ * SPDX-License-Identifier: {SPDX_LICENSE}
+ * Copyright {YEAR_PATTERN} {COMPANY}
+ * Author: {AUTHOR}
  * License: For licensing see the License.txt file
  */
 
 [.sh]
 #!/bin/bash
-# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
 # License: For licensing see the License.txt file
 
 [.md]
 <!--
-Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+SPDX-License-Identifier: {SPDX_LICENSE}
+Copyright {YEAR_PATTERN} {COMPANY}
+Author: {AUTHOR}
 License: For licensing see the License.txt file
 -->

@@ -1,4 +1,5 @@
 <!--
+SPDX-License-Identifier: MIT
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -7,6 +8,32 @@ License: For licensing see the License.txt file
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.0.3] - 2026-01-12
+
+### Added
+- **Template variables feature**: Support for `[VARIABLES]` section to define reusable values
+  - Variable substitution with `{VARIABLE_NAME}` syntax
+  - Support for SPDX license identifiers as variables
+  - Variables can contain any value including regex patterns
+  - Undefined variables remain as placeholders
+- Comprehensive test coverage for variables feature:
+  - 10 unit tests in test_template_parser.py
+  - 4 integration tests in test_integration.py
+  - Edge cases: undefined variables, multiple VARIABLES sections, special characters, case sensitivity
+- Test documenting template change behavior (test_template_change_creates_duplicate_copyright)
+- SPDX-License-Identifier headers added to all project files
+- Bug fix: Only the first `[VARIABLES]` section is processed (subsequent ones are ignored)
+
+### Changed
+- Updated `copyright.txt` to use variables format with SPDX identifiers
+- Enhanced documentation with variables syntax and SPDX examples (README.md, QUICKSTART.md, EXAMPLES.md)
+- Improved template parser to substitute variables before creating templates
+
+### Documentation
+- Added "Known Issues and Limitations" section to README.md
+- Documented template change behavior: changing copyright.txt creates duplicate copyrights (by design)
+- Provided workarounds for template migration scenarios
 
 ## [1.0.2] - 2026-01-11
 

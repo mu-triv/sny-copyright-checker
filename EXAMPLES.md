@@ -1,4 +1,11 @@
 <!--
+SPDX-License-Identifier: MIT
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
+<!--
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -107,12 +114,58 @@ INFO: Adding copyright notice to: file2.py
 # file3.py was not checked since it wasn't modified
 ```
 
+# Example: Using Variables for Maximum Maintainability
+
+The recommended approach uses variables to define common values once:
+
+```
+# copyright.txt with variables
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
+[.js, .ts, .go, .rs]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
+
+[.py, .yaml, .yml, .sh]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
+
+[.c, .h, .cpp]
+/* SPDX-License-Identifier: {SPDX_LICENSE}
+ * Copyright {YEAR_PATTERN} {COMPANY}
+ * Author: {AUTHOR} */
+```
+
+**Benefits:** Change the company name or license once and it applies to all file types!
+
+# Example: SPDX License Identifiers
+
+The tool fully supports SPDX license identifiers for machine-readable licensing:
+
+```python
+# Result after adding copyright with SPDX:
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+
+def hello_world():
+    print("Hello, World!")
+```
+
+You can use any SPDX identifier: `Apache-2.0`, `GPL-3.0-only`, `BSD-3-Clause`, or even complex expressions like `Apache-2.0 OR MIT`.
+
 # Example: Grouped Extensions in Template
 
 You can group multiple file extensions that share the same copyright format:
 
 ```
-# copyright.txt
+# copyright.txt (traditional format without variables)
 [.js, .ts, .go, .rs]
 // Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 // Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
@@ -122,11 +175,6 @@ You can group multiple file extensions that share the same copyright format:
 # Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
-
-[.c, .h, .cpp]
-/* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
- * Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
- * License: For licensing see the License.txt file */
 ```
 
 All extensions in a group will use the same copyright format, making maintenance easier.

@@ -1,4 +1,5 @@
 <!--
+SPDX-License-Identifier: MIT
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -10,7 +11,16 @@ License: For licensing see the License.txt file
 
 ### 1. Installation
 
+#### Option A: Install from PyPI (Recommended)
+
 ```bash
+pip install sny-copyright-checker
+```
+
+#### Option B: Install from source
+
+```bash
+git clone https://github.com/mu-triv/sny-copyright-checker.git
 cd sny-copyright-checker
 pip install -e .
 ```
@@ -25,7 +35,7 @@ echo "def hello():" > test.py
 echo "    print('Hello')" >> test.py
 
 # Run the checker
-python -m scripts.main test.py
+sny-copyright-checker test.py
 
 # Check the file - it should now have a copyright notice!
 type test.py
@@ -87,21 +97,21 @@ def main():
 
 #### Example 3: Check multiple files
 ```bash
-python -m scripts.main file1.py file2.sql file3.c
+sny-copyright-checker file1.py file2.sql file3.c
 ```
 
 #### Example 4: Check only (no modifications)
 ```bash
-python -m scripts.main --no-fix *.py
+sny-copyright-checker --no-fix *.py
 ```
 
 #### Example 5: Check only changed files in git
 ```bash
 # Check only files you've modified
-python -m scripts.main --changed-only
+sny-copyright-checker --changed-only
 
 # Check changed files compared to main branch
-python -m scripts.main --changed-only --base-ref origin/main
+sny-copyright-checker --changed-only --base-ref origin/main
 ```
 
 #### Example 6: Existing copyrights are preserved
@@ -114,7 +124,7 @@ python -m scripts.main --changed-only --base-ref origin/main
 def main():
     pass
 
-# Run: python -m scripts.main old_file.py
+# Run: sny-copyright-checker old_file.py
 
 # After: old_file.py (UNCHANGED - existing copyright preserved)
 # Copyright 2025 SNY Group Corporation
@@ -129,61 +139,75 @@ def main():
 
 Edit `copyright.txt` to add more file types or modify the copyright text.
 
-#### Single Extension Format:
+#### Using Variables (Recommended):
+
+Define common values once and reuse them:
+
 ```
-[.rs]
-// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-// Author: Your Team
-// License: For licensing see the License.txt file
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = Your Team
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
+[.js, .ts, .go, .rs]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
+
+[.py, .yaml, .yml]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
 ```
 
-#### Grouped Extensions Format (Recommended):
+**Benefits:**
+- Change company name or license in ONE place
+- SPDX compliance built-in
+- Consistent across all file types
 
-Group multiple file extensions that share the same comment style for easier maintenance:
+#### Grouped Extensions (Without Variables):
 
 ```
 [.js, .ts, .go, .rs]
 // Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 // Author: Your Team
-// License: For licensing see the License.txt file
 
 [.py, .yaml, .yml]
 # Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 # Author: Your Team
-# License: For licensing see the License.txt file
-
-[.c, .h, .cpp]
-/* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
- * Author: Your Team
- * License: For licensing see the License.txt file */
 ```
 
-**Benefits of grouping:**
-- Less duplication in template file
-- Easier to maintain and update
-- One change applies to all grouped extensions
+#### Single Extension Format:
+```
+[.rs]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: Your Team
+```
 
 ### Troubleshooting
 
-**Issue**: "ModuleNotFoundError: No module named 'scripts'"
-**Solution**: Make sure you're running from the project directory or have installed with `pip install -e .`
+**Issue**: "Command 'sny-copyright-checker' not found"
+**Solution**: Make sure you installed the package: `pip install sny-copyright-checker`
 
 **Issue**: Copyright not being added
 **Solution**: Check that the file extension is defined in `copyright.txt`
 
 **Issue**: Want to see detailed logs
-**Solution**: Use the `-v` flag: `python -m scripts.main -v file.py`
+**Solution**: Use the `-v` flag: `sny-copyright-checker -v file.py`
 
 ### Command Line Options
 
 ```
-python -m scripts.main [OPTIONS] FILES...
+sny-copyright-checker [OPTIONS] FILES...
 
 Options:
   --notice PATH    Path to copyright template (default: copyright.txt)
   --fix           Auto-add missing copyrights (default: True)
   --no-fix        Only check, don't modify files
   -v, --verbose   Show detailed output
+  --changed-only  Check only changed files in git
+  --base-ref REF  Git reference to compare against (default: HEAD)
 ```
 
 ### Integration with Pre-commit
