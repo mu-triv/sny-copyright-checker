@@ -462,6 +462,44 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Known Issues and Limitations
+
+### Template Changes May Create Duplicate Copyrights
+
+**Issue**: When you update your `copyright.txt` template and re-run the checker on files that already have a copyright, it may add a second copyright notice instead of recognizing the existing one.
+
+**Why**: The checker uses strict template matching. If the copyright format changes (e.g., different company name, license identifier, or text), the old copyright no longer matches the new template and is considered "missing."
+
+**Example Scenario**:
+```python
+# Original copyright (Company A)
+# Copyright 2025 Company A
+# License: MIT
+
+def hello():
+    pass
+```
+
+After updating `copyright.txt` to use Company B and re-running:
+```python
+# Copyright 2026 Company B      # <- New copyright added
+# SPDX-License-Identifier: Apache-2.0
+
+# Copyright 2025 Company A      # <- Old copyright still present
+# License: MIT
+
+def hello():
+    pass
+```
+
+**Workarounds**:
+1. **Manual cleanup**: Before changing templates, manually remove or update existing copyrights
+2. **Test first**: Run checker in check-only mode (`--no-fix`) to see which files would be modified
+3. **Selective application**: Use git to only apply checker to new/modified files
+4. **Batch find-replace**: Use text editor to update existing copyrights before running checker
+
+**Future Enhancement**: A `--replace` mode could be added to detect and replace any copyright-like headers, not just exact template matches.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

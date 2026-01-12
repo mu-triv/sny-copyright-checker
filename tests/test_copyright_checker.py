@@ -1410,5 +1410,83 @@ def test_get_changed_files_with_deleted_file(temp_copyright_template):
         assert not any("delete.py" in f for f in changed_files), "Should not include deleted file"
 
 
+def test_template_change_creates_duplicate_copyright():
+    """
+    Test documenting known limitation: changing template creates duplicate copyrights.
+
+    When users update their copyright.txt template (e.g., changing company name or license),
+    the checker adds a new copyright because the old one no longer matches the new template.
+    This is expected behavior given the current strict template matching implementation.
+
+    See README.md "Known Issues and Limitations" for workarounds.
+    """
+    # Create file with original copyright
+    content = "def hello():\n    pass\n"
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py') as f:
+        f.write(content)
+        temp_file = f.name
+
+    # Create first template
+    template_content_v1 = """[.py]
+# Copyright {regex:\\d{4}} Company A
+# License: MIT
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(template_content_v1)
+        template_file_v1 = f.name
+
+    try:
+        # First run - add original copyright
+        checker1 = CopyrightChecker(template_file_v1)
+        has_notice, was_modified = checker1.check_file(temp_file, auto_fix=True)
+        assert has_notice is True
+        assert was_modified is True
+
+        # Read content after first run
+        with open(temp_file, 'r', encoding='utf-8') as f:
+            content_v1 = f.read()
+
+        assert 'Company A' in content_v1
+        assert content_v1.count('Copyright') == 1
+
+        # User updates template - different company and license
+        template_content_v2 = """[.py]
+# Copyright {regex:\\d{4}} Company B
+# SPDX-License-Identifier: Apache-2.0
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+            f.write(template_content_v2)
+            template_file_v2 = f.name
+
+        try:
+            # Second run with new template - creates duplicate (known limitation)
+            checker2 = CopyrightChecker(template_file_v2)
+            has_notice, was_modified = checker2.check_file(temp_file, auto_fix=True)
+
+            # Read content after second run
+            with open(temp_file, 'r', encoding='utf-8') as f:
+                content_v2 = f.read()
+
+            copyright_count = content_v2.count('Copyright')
+
+            # Known limitation: strict template matching creates duplicates
+            assert copyright_count == 2, f"Expected 2 copyrights due to template change, found {copyright_count}"
+            assert 'Company A' in content_v2, "Old copyright still present"
+            assert 'Company B' in content_v2, "New copyright added"
+            assert was_modified is True, "File was modified to add new copyright"
+
+            # Verify new copyright is at the top
+            lines = content_v2.split('\n')
+            assert 'Company B' in lines[0] or 'Company B' in lines[1], "New copyright should be at top"
+        finally:
+            os.unlink(template_file_v2)
+    finally:
+        os.unlink(temp_file)
+        os.unlink(template_file_v1)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
