@@ -3,39 +3,40 @@ SPDX_LICENSE = MIT
 COMPANY = Sony Group Corporation
 AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+LICENSE_NOTICE = For licensing see the License.txt file
 
 [.py, .yaml, .yml]
 # SPDX-License-Identifier: {SPDX_LICENSE}
 # Copyright {YEAR_PATTERN} {COMPANY}
 # Author: {AUTHOR}
-# License: For licensing see the License.txt file
+# License: {LICENSE_NOTICE}
 
 [.sql]
 -- SPDX-License-Identifier: {SPDX_LICENSE}
 -- Copyright {YEAR_PATTERN} {COMPANY}
 -- Author: {AUTHOR}
--- License: For licensing see the License.txt file
+-- License: {LICENSE_NOTICE}
 
 [.c, .h, .cpp]
 /**************************************************************************
 * SPDX-License-Identifier: {SPDX_LICENSE}                                 *
 * Copyright {YEAR_PATTERN} {COMPANY}                                       *
 * Author: {AUTHOR}                                                         *
-* License: For licensing see the License.txt file                         *
+* License: {LICENSE_NOTICE}                                               *
 **************************************************************************/
 
 [.js, .ts, .go, .rs]
 // SPDX-License-Identifier: {SPDX_LICENSE}
 // Copyright {YEAR_PATTERN} {COMPANY}
 // Author: {AUTHOR}
-// License: For licensing see the License.txt file
+// License: {LICENSE_NOTICE}
 
 [.java]
 /*
  * SPDX-License-Identifier: {SPDX_LICENSE}
  * Copyright {YEAR_PATTERN} {COMPANY}
  * Author: {AUTHOR}
- * License: For licensing see the License.txt file
+ * License: {LICENSE_NOTICE}
  */
 
 [.sh]
@@ -43,12 +44,12 @@ YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
 # SPDX-License-Identifier: {SPDX_LICENSE}
 # Copyright {YEAR_PATTERN} {COMPANY}
 # Author: {AUTHOR}
-# License: For licensing see the License.txt file
+# License: {LICENSE_NOTICE}
 
 [.md]
 <!--
 SPDX-License-Identifier: {SPDX_LICENSE}
 Copyright {YEAR_PATTERN} {COMPANY}
 Author: {AUTHOR}
-License: For licensing see the License.txt file
+License: {LICENSE_NOTICE}
 -->
