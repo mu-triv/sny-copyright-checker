@@ -1296,5 +1296,165 @@ def main():
         os.unlink(temp_path)
 
 
+def test_parse_template_undefined_variable():
+    """Test that undefined variables remain as placeholders"""
+    content = """[VARIABLES]
+COMPANY = Sony
+
+[.py]
+# Copyright {COMPANY}
+# Author: {UNDEFINED_VAR}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        # Defined variable should be substituted
+        assert 'Sony' in templates['.py'].lines[0]
+        # Undefined variable should remain as placeholder
+        assert '{UNDEFINED_VAR}' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_parse_template_multiple_variables_sections():
+    """Test that only the first [VARIABLES] section is used"""
+    content = """[VARIABLES]
+COMPANY = First Company
+
+[.py]
+# Copyright {COMPANY}
+
+[VARIABLES]
+COMPANY = Second Company
+
+[.js]
+// Copyright {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        # Both should use the first VARIABLES section
+        assert 'First Company' in templates['.py'].lines[0]
+        assert 'First Company' in templates['.js'].lines[0]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_get_notice_with_year():
+    """Test that variables work correctly in get_notice_with_year"""
+    content = """[VARIABLES]
+COMPANY = Sony Corporation
+YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
+
+[.py]
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: Test Team
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+        template = templates['.py']
+
+        # Generate notice with year
+        notice = template.get_notice_with_year(2026)
+
+        # Should have year substituted and company name
+        assert '2026' in notice
+        assert 'Sony Corporation' in notice
+        assert 'Test Team' in notice
+        # Variable placeholders should be gone
+        assert '{COMPANY}' not in notice
+        assert '{YEAR_PATTERN}' not in notice
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_special_characters():
+    """Test variables with special characters in values"""
+    content = """[VARIABLES]
+COMPANY = Sony & Associates (Europe)
+LICENSE = MIT/Apache-2.0
+
+[.py]
+# Copyright {COMPANY}
+# License: {LICENSE}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Sony & Associates (Europe)' in templates['.py'].lines[0]
+        assert 'MIT/Apache-2.0' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_empty_value():
+    """Test variable with empty value"""
+    content = """[VARIABLES]
+COMPANY = Sony
+OPTIONAL_FIELD =
+
+[.py]
+# Copyright {COMPANY}
+# Optional: {OPTIONAL_FIELD}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Sony' in templates['.py'].lines[0]
+        # Empty variable should result in just the prefix
+        assert 'Optional: ' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
+def test_variables_case_sensitive():
+    """Test that variable names are case-sensitive"""
+    content = """[VARIABLES]
+company = Lower Case
+COMPANY = Upper Case
+
+[.py]
+# Copyright {company}
+# Also: {COMPANY}
+"""
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        f.write(content)
+        temp_path = f.name
+
+    try:
+        templates = CopyrightTemplateParser.parse(temp_path)
+
+        assert 'Lower Case' in templates['.py'].lines[0]
+        assert 'Upper Case' in templates['.py'].lines[1]
+    finally:
+        os.unlink(temp_path)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

@@ -153,6 +153,7 @@ class CopyrightTemplateParser:
         current_extension = None
         current_lines = []
         in_variables_section = False
+        variables_section_processed = False  # Track if we've seen [VARIABLES] already
 
         with open(template_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
@@ -162,9 +163,11 @@ class CopyrightTemplateParser:
                 if not line.strip() and current_extension is None and not in_variables_section:
                     continue
 
-                # Check for [VARIABLES] section
+                # Check for [VARIABLES] section - only process the first one
                 if line.strip() == "[VARIABLES]":
-                    in_variables_section = True
+                    if not variables_section_processed:
+                        in_variables_section = True
+                        variables_section_processed = True
                     continue
 
                 # Parse variable definitions

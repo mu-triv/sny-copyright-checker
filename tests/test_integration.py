@@ -522,5 +522,168 @@ def test_cli_invalid_arguments():
     assert result.returncode != 0
 
 
+def test_integration_with_variables_and_spdx():
+    """Test end-to-end with variables and SPDX identifiers"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir)
+
+        # Create template with variables
+        template_content = """[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = R&D Center Europe Brussels Laboratory
+YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
+
+[.py]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
+
+[.js, .ts]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+"""
+        (project_dir / "copyright.txt").write_text(template_content)
+
+        # Create test files
+        (project_dir / "test1.py").write_text("def foo():\n    pass\n")
+        (project_dir / "test2.js").write_text("function bar() {}\n")
+        (project_dir / "test3.ts").write_text("const baz = () => {};\n")
+
+        # Run checker
+        from scripts.copyright_checker import CopyrightChecker
+
+        checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
+
+        py_file = str(project_dir / "test1.py")
+        js_file = str(project_dir / "test2.js")
+        ts_file = str(project_dir / "test3.ts")
+
+        # Check files (auto_fix=True by default)
+        checker.check_file(py_file)
+        checker.check_file(js_file)
+        checker.check_file(ts_file)
+
+        # Verify variables were substituted
+        py_content = (project_dir / "test1.py").read_text()
+        assert "SPDX-License-Identifier: MIT" in py_content
+        assert "Sony Group Corporation" in py_content
+        assert "R&D Center Europe Brussels Laboratory" in py_content
+        assert "{SPDX_LICENSE}" not in py_content
+        assert "{COMPANY}" not in py_content
+
+        js_content = (project_dir / "test2.js").read_text()
+        assert "SPDX-License-Identifier: MIT" in js_content
+        assert "Sony Group Corporation" in js_content
+        assert "{SPDX_LICENSE}" not in js_content
+
+        ts_content = (project_dir / "test3.ts").read_text()
+        assert "SPDX-License-Identifier: MIT" in ts_content
+        assert "Sony Group Corporation" in ts_content
+
+
+def test_integration_variables_check_mode():
+    """Test check mode with variables - should pass when copyrights match"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir)
+
+        # Create template with variables
+        template_content = """[VARIABLES]
+COMPANY = Test Company
+YEAR_PATTERN = {regex:\\d{4}}
+
+[.py]
+# Copyright {YEAR_PATTERN} {COMPANY}
+"""
+        (project_dir / "copyright.txt").write_text(template_content)
+
+        # Create file with matching copyright
+        file_with_copyright = """# Copyright 2026 Test Company
+
+def foo():
+    pass
+"""
+        (project_dir / "test.py").write_text(file_with_copyright)
+
+        # Run checker in check mode (auto_fix=False)
+        from scripts.copyright_checker import CopyrightChecker
+
+        checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
+
+        # Should pass - copyright matches
+        has_valid, was_modified = checker.check_file(str(project_dir / "test.py"), auto_fix=False)
+        assert has_valid is True
+        assert was_modified is False
+
+
+def test_integration_grouped_extensions_with_variables():
+    """Test grouped extensions combined with variables"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir)
+
+        # Create template with both features
+        template_content = """[VARIABLES]
+COMPANY = Sony
+LICENSE = Apache-2.0
+
+[.c, .cpp, .h]
+/* Copyright {COMPANY}
+ * License: {LICENSE}
+ */
+"""
+        (project_dir / "copyright.txt").write_text(template_content)
+
+        # Create test files with different extensions
+        (project_dir / "test.c").write_text("int main() {}\n")
+        (project_dir / "test.cpp").write_text("int main() {}\n")
+        (project_dir / "test.h").write_text("#define TEST\n")
+
+        from scripts.copyright_checker import CopyrightChecker
+
+        checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
+
+        # Process all files
+        for ext in ['.c', '.cpp', '.h']:
+            checker.check_file(str(project_dir / f"test{ext}"))
+
+        # All should have the same copyright with variables substituted
+        for ext in ['.c', '.cpp', '.h']:
+            content = (project_dir / f"test{ext}").read_text()
+            assert "/* Copyright Sony" in content
+            assert "License: Apache-2.0" in content
+            assert "{COMPANY}" not in content
+            assert "{LICENSE}" not in content
+
+
+def test_integration_undefined_variables_preserved():
+    """Test that undefined variables are preserved in templates"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir)
+
+        # Create template with undefined variable
+        template_content = """[VARIABLES]
+COMPANY = Sony
+
+[.py]
+# Copyright {COMPANY}
+# Contact: {UNDEFINED_EMAIL}
+"""
+        (project_dir / "copyright.txt").write_text(template_content)
+
+        (project_dir / "test.py").write_text("def foo():\n    pass\n")
+
+        from scripts.copyright_checker import CopyrightChecker
+
+        checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
+
+        checker.check_file(str(project_dir / "test.py"))
+
+        content = (project_dir / "test.py").read_text()
+        # Defined variable should be substituted
+        assert "Copyright Sony" in content
+        # Undefined variable should remain as placeholder
+        assert "{UNDEFINED_EMAIL}" in content
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
