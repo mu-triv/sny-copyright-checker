@@ -1,4 +1,5 @@
 <!--
+SPDX-License-Identifier: MIT
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -125,41 +126,78 @@ sny-copyright-checker --changed-only --base-ref origin/main
 
 ## Copyright Template Format
 
-The template file uses a section-based format with regex support. You can group multiple file extensions with the same copyright format together for easier maintenance:
+The template file uses a section-based format with regex support and template variables for maximum maintainability.
+
+### Using Variables (Recommended)
+
+Define common values once in a `[VARIABLES]` section and reuse them throughout your template:
+
+```
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
+[.py, .yaml, .yml]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
+# License: For licensing see the License.txt file
+
+[.js, .ts, .go, .rs]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
+// License: For licensing see the License.txt file
+```
+
+**Benefits:**
+- ✅ **DRY Principle**: Change company name or license in one place
+- ✅ **SPDX Support**: Easy to add [SPDX License Identifiers](https://spdx.dev/learn/handling-license-info/)
+- ✅ **Consistency**: All file types use the same information
+- ✅ **Flexibility**: Different projects can have different licenses
+
+### Traditional Format (Also Supported)
+
+You can also use the format without variables:
 
 ```
 [.py, .yaml, .yml]
-# Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
-# Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
+# Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
-
-[.sql]
--- Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
--- Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
--- License: For licensing see the License.txt file
-
-[.c, .h, .cpp]
-/**************************************************************************
-* Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation                 *
-* Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation   *
-* License: For licensing see the License.txt file                         *
-**************************************************************************/
-
-[.js, .ts, .go, .rs]
-// Copyright {regex:\d{4}(-\d{4})?} SNY Group Corporation
-// Author: R&D Center Europe Brussels Laboratory, SNY Group Corporation
-// License: For licensing see the License.txt file
 ```
 
 ### Template Syntax
 
+- **Variables Section**: `[VARIABLES]` - Define reusable values
+  - Format: `VARIABLE_NAME = value`
+  - Use in templates: `{VARIABLE_NAME}`
+  - Example: `COMPANY = Sony Group Corporation`, then use `{COMPANY}`
 - **Section Headers**:
   - Single extension: `[.extension]` (e.g., `[.py]`, `[.sql]`)
   - Multiple extensions: `[.ext1, .ext2, .ext3]` (e.g., `[.js, .ts, .go]`)
   - All extensions in a grouped header will use the same copyright format
 - **Regex Patterns**: `{regex:PATTERN}` allows regex matching
   - Example: `{regex:\d{4}(-\d{4})?}` matches `2024` or `2024-2026`
+  - Can be stored in a variable: `YEAR_PATTERN = {regex:\d{4}(-\d{4})?}`
 - **Auto-insertion**: When adding a copyright, the regex pattern is replaced with the current year
+
+### SPDX License Identifiers
+
+The tool fully supports [SPDX license identifiers](https://spdx.dev/learn/handling-license-info/). Simply add them to your template:
+
+```
+[VARIABLES]
+SPDX_LICENSE = Apache-2.0 OR MIT
+
+[.py]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {regex:\d{4}} {COMPANY}
+```
+
+Common SPDX identifiers: `MIT`, `Apache-2.0`, `GPL-3.0-only`, `BSD-3-Clause`, etc.
 
 ### Grouping Extensions
 

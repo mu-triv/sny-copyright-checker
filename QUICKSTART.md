@@ -1,4 +1,5 @@
 <!--
+SPDX-License-Identifier: MIT
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -138,39 +139,51 @@ def main():
 
 Edit `copyright.txt` to add more file types or modify the copyright text.
 
-#### Single Extension Format:
+#### Using Variables (Recommended):
+
+Define common values once and reuse them:
+
 ```
-[.rs]
-// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
-// Author: Your Team
-// License: For licensing see the License.txt file
+[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+AUTHOR = Your Team
+YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
+
+[.js, .ts, .go, .rs]
+// SPDX-License-Identifier: {SPDX_LICENSE}
+// Copyright {YEAR_PATTERN} {COMPANY}
+// Author: {AUTHOR}
+
+[.py, .yaml, .yml]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {YEAR_PATTERN} {COMPANY}
+# Author: {AUTHOR}
 ```
 
-#### Grouped Extensions Format (Recommended):
+**Benefits:**
+- Change company name or license in ONE place
+- SPDX compliance built-in
+- Consistent across all file types
 
-Group multiple file extensions that share the same comment style for easier maintenance:
+#### Grouped Extensions (Without Variables):
 
 ```
 [.js, .ts, .go, .rs]
 // Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 // Author: Your Team
-// License: For licensing see the License.txt file
 
 [.py, .yaml, .yml]
 # Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
 # Author: Your Team
-# License: For licensing see the License.txt file
-
-[.c, .h, .cpp]
-/* Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
- * Author: Your Team
- * License: For licensing see the License.txt file */
 ```
 
-**Benefits of grouping:**
-- Less duplication in template file
-- Easier to maintain and update
-- One change applies to all grouped extensions
+#### Single Extension Format:
+```
+[.rs]
+// Copyright {regex:\d{4}(-\d{4})?} Sony Group Corporation
+// Author: Your Team
+```
 
 ### Troubleshooting
 

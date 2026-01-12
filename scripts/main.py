@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -78,7 +79,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     try:
         checker = CopyrightChecker(args.notice)
-        
+
         # Determine which files to check
         if args.changed_only:
             logging.info("Checking only changed files from git")
@@ -95,7 +96,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             if not files_to_check:
                 logging.info("No files to check")
                 return 0
-        
+
         logging.info(
             f"Checking {len(files_to_check)} file(s) for copyright notices "
             f"(auto-fix: {args.fix})"
