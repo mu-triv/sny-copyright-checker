@@ -468,9 +468,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-Tri VU Khac (khactri.vu@sony.com)
-SONY Group Corporation
-R&D Center Europe Brussels Laboratory
+Tri VU Khac (khactri.vu@sony.com)<br>
+SONY Group Corporation<br>
+R&D Center Europe Brussels Laboratory<br>
 
 ## Acknowledgments
 
