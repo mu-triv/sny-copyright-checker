@@ -31,7 +31,7 @@ To release a new version, you only need to update **ONE file**:
 # scripts/__init__.py
 """sny copyright check pre-commit hook"""
 
-__version__ = "1.0.3"  # ← Change only this
+__version__ = "1.0.4"  # ← Change only this
 ```
 
 ## Files That Auto-Update
@@ -66,6 +66,6 @@ When releasing a new version:
 
 ```bash
 # After updating __version__ and committing changes
-git tag -a v1.0.3 -m "Release version 1.0.3"
-git push origin v1.0.3
+git tag -a v1.0.4 -m "Release version 1.0.4"
+git push origin v1.0.4
 ```
