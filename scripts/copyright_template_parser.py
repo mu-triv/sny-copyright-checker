@@ -111,19 +111,19 @@ class CopyrightTemplate:
                 if start_idx_marker != -1:
                     start_pos = start_idx_marker + len(start_marker)
                     depth = 1
-                    end_idx_marker = start_pos
+                    current_pos = start_pos
 
-                    while end_idx_marker < len(template_line) and depth > 0:
-                        if template_line[end_idx_marker] == '{':
+                    while current_pos < len(template_line) and depth > 0:
+                        if template_line[current_pos] == '{':
                             depth += 1
-                        elif template_line[end_idx_marker] == '}':
+                        elif template_line[current_pos] == '}':
                             depth -= 1
-                        end_idx_marker += 1
+                        current_pos += 1
 
                     # Build the pattern
                     before = re.escape(template_line[:start_idx_marker])
-                    after = re.escape(template_line[end_idx_marker:])
-                    regex_str = template_line[start_pos:end_idx_marker-1]
+                    after = re.escape(template_line[current_pos:])
+                    regex_str = template_line[start_pos:current_pos-1]
                     pattern_str = f"{before}({regex_str}){after}"
 
                     match = re.match(pattern_str, content_line)
