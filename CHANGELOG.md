@@ -9,6 +9,21 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-01-14
+
+### Added
+- **Git-aware year management**: Preserves earliest year and extends range only when files are modified (new `--no-git-aware` flag to disable)
+- **Ignore files support**: `.copyrightignore` and `.gitignore` pattern matching (new `--ignore-file` and `--no-gitignore` flags)
+- Comprehensive test coverage: 16 tests for Git-aware years, 26+ tests for ignore patterns
+- Documentation: GIT_AWARE_YEAR_MANAGEMENT.md, IGNORE_FILES.md, EXAMPLES_GIT_AWARE.md, .copyrightignore.example
+
+### Changed
+- `CopyrightTemplate.get_notice_with_year()` now accepts int or string for year ranges
+- Added `pathspec>=0.11.0` dependency for gitignore-style pattern matching
+
+### Fixed
+- Ignore patterns correctly handle absolute paths and symlinks on macOS
+
 ## [1.0.3] - 2026-01-12
 
 ### Added
