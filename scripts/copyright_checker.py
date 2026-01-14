@@ -119,12 +119,18 @@ class CopyrightChecker:
             return False
 
         # Convert to relative path if absolute
+        original_filepath = filepath
         if os.path.isabs(filepath):
             try:
                 filepath = os.path.relpath(filepath)
+                # If the relative path goes outside the current directory tree
+                # (starts with ..), don't apply ignore patterns
+                if filepath.startswith('..'):
+                    logging.debug(f"File outside project directory, not applying ignore patterns: {original_filepath}")
+                    return False
             except ValueError:
                 # Can't get relative path (different drive on Windows)
-                pass
+                return False
 
         # Normalize path separators for matching
         filepath = filepath.replace('\\', '/')
