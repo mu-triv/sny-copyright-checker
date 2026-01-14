@@ -202,7 +202,7 @@ YEAR_PATTERN = {regex:\d{4}(-\d{4})?}
 sny-copyright-checker [OPTIONS] FILES...
 
 Options:
-  --notice PATH    Path to copyright template (default: copyright.txt)
+  --notice FILENAME    Filename of copyright template (default: copyright.txt)
   --fix           Auto-add missing copyrights (default: True)
   --no-fix        Only check, don't modify files
   -v, --verbose   Show detailed output

@@ -43,7 +43,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--notice",
         default="copyright.txt",
-        help="Path to copyright template file (default: copyright.txt)",
+        help="Filename of copyright template to search for (default: copyright.txt). In hierarchical mode, this filename is searched in the directory tree.",
     )
     parser.add_argument(
         "--fix",
@@ -92,6 +92,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=True,
         help="Don't use .gitignore patterns (default: .gitignore is used)",
     )
+    parser.add_argument(
+        "--hierarchical",
+        action="store_true",
+        help="Enable hierarchical copyright templates (looks for --notice file in each directory)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
@@ -101,7 +106,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.notice,
             git_aware=args.git_aware,
             ignore_file=args.ignore_file,
-            use_gitignore=args.use_gitignore
+            use_gitignore=args.use_gitignore,
+            hierarchical=args.hierarchical
         )
 
         # Determine which files to check

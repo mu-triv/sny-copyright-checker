@@ -1,4 +1,11 @@
 <!--
+SPDX-License-Identifier: MIT
+Copyright 2026 Sony Group Corporation
+Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+License: For licensing see the License.txt file
+-->
+
+<!--
 Copyright 2026 Sony Group Corporation
 Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
@@ -147,7 +154,7 @@ def main():
 python -m scripts.main [OPTIONS] FILES...
 
 Options:
-  --notice PATH    Path to copyright template (default: copyright.txt)
+  --notice FILENAME    Filename of copyright template (default: copyright.txt)
   --fix           Auto-add missing copyrights (default: enabled)
   --no-fix        Only check, don't modify files
   -v, --verbose   Show detailed output
