@@ -1,0 +1,217 @@
+# .copyrightignore - Example ignore patterns for sny-copyright-checker
+#
+# This file tells the copyright checker which files to skip.
+# Uses gitignore-style pattern syntax.
+#
+# Usage: Place this file in your project root
+# The tool will automatically detect and use it.
+
+# ============================================================================
+# Generated Files
+# ============================================================================
+
+# Auto-generated code directories
+**/generated/
+**/auto-generated/
+**/__generated__/
+
+# Generated files with naming patterns
+*.generated.js
+*.generated.py
+*.generated.ts
+*_generated.go
+
+# Protocol buffer generated files
+*_pb2.py
+*_pb2_grpc.py
+*.pb.go
+*.pb.h
+*.pb.cc
+
+# GraphQL generated files
+**/graphql/generated/
+
+# ============================================================================
+# Build Artifacts & Compiled Files
+# ============================================================================
+
+# Build directories
+build/
+dist/
+out/
+target/
+bin/
+obj/
+
+# Python compiled files
+*.pyc
+*.pyo
+*.pyd
+**/__pycache__/
+*.egg-info/
+*.egg
+
+# Java compiled files
+*.class
+*.jar
+*.war
+
+# C/C++ compiled files
+*.o
+*.so
+*.dll
+*.dylib
+*.exe
+
+# JavaScript build files
+*.bundle.js
+*.chunk.js
+
+# ============================================================================
+# Vendor/Third-Party Code
+# ============================================================================
+
+# Node.js dependencies
+node_modules/
+bower_components/
+
+# Python dependencies
+venv/
+.venv/
+env/
+.env/
+
+# Go vendor
+vendor/
+
+# Ruby gems
+vendor/bundle/
+
+# Generic vendor directories
+third_party/
+external/
+libs/
+dependencies/
+
+# ============================================================================
+# Minified & Bundled Files
+# ============================================================================
+
+# Minified JavaScript/CSS
+*.min.js
+*.min.css
+*.min.mjs
+
+# Source maps
+*.map
+*.js.map
+*.css.map
+
+# Webpack bundles
+bundle.js
+main.bundle.js
+vendor.bundle.js
+
+# ============================================================================
+# Package Manager Lock Files
+# ============================================================================
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+Gemfile.lock
+Pipfile.lock
+poetry.lock
+composer.lock
+Cargo.lock
+
+# ============================================================================
+# Documentation Build Output
+# ============================================================================
+
+# Sphinx documentation
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Jekyll
+_site/
+
+# MkDocs
+site/
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+# ============================================================================
+# Test Coverage & Reports
+# ============================================================================
+
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.nyc_output/
+
+# ============================================================================
+# Specific File Types
+# ============================================================================
+
+# Images (usually don't need copyrights)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+
+# Data files
+*.json
+*.csv
+*.xml
+*.dat
+
+# Configuration files (optional - project dependent)
+# *.yml
+# *.yaml
+# *.toml
+# *.ini
+
+# ============================================================================
+# Project-Specific Examples
+# ============================================================================
+
+# Uncomment and adjust for your project:
+
+# Frontend build output
+# public/
+# static/build/
+
+# Backend generated files
+# migrations/versions/
+# alembic/versions/
+
+# Database files
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Logs
+# *.log
+# logs/
+
+# Temporary files
+# *.tmp
+# temp/
+# tmp/

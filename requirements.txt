@@ -1,4 +1,5 @@
-# Core dependencies (none required - uses only Python standard library)
+# Core dependencies
+pathspec>=0.11.0  # For gitignore-style pattern matching
 
 # Development dependencies
 pytest>=7.0.0

@@ -24,6 +24,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Quality Assurance",
 ]
+dependencies = [
+    "pathspec>=0.11.0"
+]
 
 [project.optional-dependencies]
 dev = [
