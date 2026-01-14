@@ -122,14 +122,24 @@ class CopyrightChecker:
         original_filepath = filepath
         if os.path.isabs(filepath):
             try:
-                filepath = os.path.relpath(filepath)
+                # Resolve symlinks to get the real path for accurate relative path calculation
+                cwd = os.path.realpath(os.getcwd())
+                real_filepath = os.path.realpath(filepath)
+
+                # Check if file is under the current directory
+                try:
+                    filepath = os.path.relpath(real_filepath, cwd)
+                except ValueError:
+                    # Can't get relative path (different drive on Windows)
+                    return False
+
                 # If the relative path goes outside the current directory tree
                 # (starts with ..), don't apply ignore patterns
                 if filepath.startswith('..'):
                     logging.debug(f"File outside project directory, not applying ignore patterns: {original_filepath}")
                     return False
-            except ValueError:
-                # Can't get relative path (different drive on Windows)
+            except (ValueError, OSError):
+                # Error resolving paths
                 return False
 
         # Normalize path separators for matching
