@@ -21,14 +21,16 @@ from .copyright_template_parser import CopyrightTemplate, CopyrightTemplateParse
 class CopyrightChecker:
     """Copyright checker with support for multiple file formats and auto-insertion"""
 
-    def __init__(self, template_path: str):
+    def __init__(self, template_path: str, git_aware: bool = True):
         """
         Initialize the copyright checker.
 
         :param template_path: Path to the copyright template file
+        :param git_aware: If True, use Git history for year management (default: True)
         """
         self.template_path = template_path
         self.templates: Dict[str, CopyrightTemplate] = {}
+        self.git_aware = git_aware
         self._load_templates()
 
     def _load_templates(self) -> None:
@@ -126,8 +128,8 @@ class CopyrightChecker:
         :param content: Current file content
         :param line_ending: Line ending style to use ("\r\n" or "\n")
         """
-        current_year = datetime.now().year
-        copyright_notice = template.get_notice_with_year(current_year)
+        year_str = self._determine_copyright_year(filepath, template, content)
+        copyright_notice = template.get_notice_with_year(year_str)
 
         # Normalize content to LF for processing
         normalized_content = content.replace("\r\n", "\n")
@@ -254,3 +256,139 @@ class CopyrightChecker:
             raise RuntimeError(f"Failed to get changed files from git: {e.stderr}")
         except FileNotFoundError:
             raise RuntimeError("Git is not installed or not available in PATH")
+
+    def _get_file_creation_year(self, filepath: str) -> Optional[int]:
+        """
+        Get the year when a file was first committed to Git.
+
+        :param filepath: Path to the file
+        :return: Year of first commit, or None if not in Git or error occurred
+        """
+        if not self.git_aware:
+            return None
+
+        try:
+            # Get the first commit year for the file
+            # Use --follow to track file renames and --diff-filter=A to get when it was added
+            result = subprocess.run(
+                ["git", "log", "--follow", "--format=%aI", "--reverse", "--", filepath],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=os.path.dirname(filepath) or os.getcwd()
+            )
+
+            output = result.stdout.strip()
+            if output:
+                # Get first line (earliest commit)
+                first_commit_date = output.split('\n')[0]
+                # Extract year from ISO format (e.g., "2020-03-15T10:30:00+01:00")
+                year = int(first_commit_date.split('-')[0])
+                logging.debug(f"File {filepath} first committed in {year}")
+                return year
+            else:
+                # File not in Git history yet
+                logging.debug(f"File {filepath} not in Git history")
+                return None
+
+        except subprocess.CalledProcessError as e:
+            logging.debug(f"Failed to get Git history for {filepath}: {e.stderr}")
+            return None
+        except (ValueError, IndexError) as e:
+            logging.debug(f"Failed to parse Git date for {filepath}: {e}")
+            return None
+        except FileNotFoundError:
+            logging.debug("Git is not installed or not available")
+            return None
+
+    def _is_file_modified(self, filepath: str) -> bool:
+        """
+        Check if a file has uncommitted changes or is not yet tracked by Git.
+
+        :param filepath: Path to the file
+        :return: True if file is modified/new, False if unchanged
+        """
+        if not self.git_aware:
+            return True  # If not Git-aware, always treat as modified
+
+        try:
+            # Check if file is in working tree with changes
+            result = subprocess.run(
+                ["git", "status", "--porcelain", filepath],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=os.path.dirname(filepath) or os.getcwd()
+            )
+
+            output = result.stdout.strip()
+            # If output is not empty, file has changes or is untracked
+            is_modified = bool(output)
+            logging.debug(f"File {filepath} modified: {is_modified}")
+            return is_modified
+
+        except subprocess.CalledProcessError as e:
+            logging.debug(f"Failed to check Git status for {filepath}: {e.stderr}")
+            return True  # Assume modified if we can't check
+        except FileNotFoundError:
+            logging.debug("Git is not installed or not available")
+            return True  # Assume modified if Git not available
+
+    def _determine_copyright_year(self, filepath: str, template: CopyrightTemplate, content: str) -> str:
+        """
+        Determine the appropriate copyright year or year range for a file.
+
+        Logic:
+        1. If file has existing copyright, extract existing years
+        2. If file is unchanged in Git, preserve existing years
+        3. If file is modified, extend year range to current year
+        4. If no existing copyright:
+           - Use Git creation year as start (if available)
+           - Use current year as end if file is modified
+
+        :param filepath: Path to the file
+        :param template: Copyright template for the file type
+        :param content: Current file content
+        :return: Year string (e.g., "2024" or "2020-2024")
+        """
+        current_year = datetime.now().year
+
+        # Try to extract existing years from copyright notice
+        existing_years = template.extract_years(content)
+
+        if existing_years:
+            start_year, end_year = existing_years
+            logging.debug(f"Existing copyright years: {start_year}-{end_year or start_year}")
+
+            # Check if file is modified
+            if self._is_file_modified(filepath):
+                # File is modified, update end year to current
+                if current_year > start_year:
+                    year_str = f"{start_year}-{current_year}"
+                else:
+                    year_str = str(start_year)
+                logging.debug(f"File modified, updating years to: {year_str}")
+            else:
+                # File unchanged, preserve existing years
+                if end_year:
+                    year_str = f"{start_year}-{end_year}"
+                else:
+                    year_str = str(start_year)
+                logging.debug(f"File unchanged, preserving years: {year_str}")
+        else:
+            # No existing copyright, determine from Git history
+            creation_year = self._get_file_creation_year(filepath)
+
+            if creation_year:
+                # File is in Git, use creation year as start
+                if self._is_file_modified(filepath) and current_year > creation_year:
+                    year_str = f"{creation_year}-{current_year}"
+                else:
+                    year_str = str(creation_year)
+                logging.debug(f"New copyright using Git history: {year_str}")
+            else:
+                # File not in Git or Git not available, use current year
+                year_str = str(current_year)
+                logging.debug(f"New copyright using current year: {year_str}")
+
+        return year_str
