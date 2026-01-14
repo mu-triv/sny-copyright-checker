@@ -28,37 +28,126 @@ class CopyrightChecker:
     """Copyright checker with support for multiple file formats and auto-insertion"""
 
     def __init__(self, template_path: str, git_aware: bool = True,
-                 ignore_file: Optional[str] = None, use_gitignore: bool = True):
+                 ignore_file: Optional[str] = None, use_gitignore: bool = True,
+                 hierarchical: bool = False):
         """
         Initialize the copyright checker.
 
-        :param template_path: Path to the copyright template file
+        :param template_path: Path to the copyright template file (or filename for hierarchical mode)
         :param git_aware: If True, use Git history for year management (default: True)
         :param ignore_file: Path to .copyrightignore file (default: None, auto-detect)
         :param use_gitignore: If True, also respect .gitignore patterns (default: True)
+        :param hierarchical: If True, look for template_path in each directory hierarchy (default: False)
         """
         self.template_path = template_path
         self.templates: Dict[str, CopyrightTemplate] = {}
         self.git_aware = git_aware
         self.use_gitignore = use_gitignore
+        self.hierarchical = hierarchical
         self.ignore_spec = None
-        self._load_templates()
+        # Cache for hierarchical templates: directory -> templates dict
+        self.template_cache: Dict[str, Optional[Dict[str, CopyrightTemplate]]] = {}
+
+        if not hierarchical:
+            self.templates = self._load_templates()
+        else:
+            logging.info(f"Hierarchical mode enabled: looking for '{template_path}' in directory tree")
+
         self._load_ignore_patterns(ignore_file)
 
-    def _load_templates(self) -> None:
-        """Load and parse copyright templates from file."""
+    def _load_templates(self, template_file: Optional[str] = None) -> Dict[str, CopyrightTemplate]:
+        """Load and parse copyright templates from file.
+
+        :param template_file: Path to template file (uses self.template_path if None)
+        :return: Dictionary of templates by extension
+        """
+        template_file = template_file or self.template_path
         try:
-            self.templates = CopyrightTemplateParser.parse(self.template_path)
-            logging.info(
-                f"Loaded {len(self.templates)} copyright templates for extensions: "
-                f"{', '.join(self.templates.keys())}"
+            templates = CopyrightTemplateParser.parse(template_file)
+            logging.debug(
+                f"Loaded {len(templates)} copyright templates from {template_file} "
+                f"for extensions: {', '.join(templates.keys())}"
             )
+            return templates
         except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Copyright template file not found: {self.template_path}"
-            )
+            if not self.hierarchical:
+                raise FileNotFoundError(
+                    f"Copyright template file not found: {template_file}"
+                )
+            return {}
         except ValueError as e:
-            raise ValueError(f"Failed to parse copyright template: {e}")
+            if not self.hierarchical:
+                raise ValueError(f"Failed to parse copyright template: {e}")
+            logging.warning(f"Failed to parse {template_file}: {e}")
+            return {}
+
+    def _find_copyright_file(self, directory: str) -> Optional[str]:
+        """
+        Find the nearest copyright template file by traversing up the directory tree.
+
+        :param directory: Starting directory to search from
+        :return: Path to copyright file, or None if not found
+        """
+        current_dir = os.path.abspath(directory)
+        root = os.path.abspath(os.sep)
+
+        while True:
+            copyright_path = os.path.join(current_dir, self.template_path)
+            if os.path.exists(copyright_path):
+                logging.debug(f"Found copyright file: {copyright_path}")
+                return copyright_path
+
+            # Move up one directory
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir == current_dir or current_dir == root:
+                # Reached the root
+                break
+            current_dir = parent_dir
+
+        return None
+
+    def _get_templates_for_directory(self, directory: str) -> Dict[str, CopyrightTemplate]:
+        """
+        Get copyright templates for a specific directory (hierarchical mode).
+        Uses caching to avoid re-parsing the same file.
+
+        :param directory: Directory to get templates for
+        :return: Dictionary of templates by extension
+        """
+        directory = os.path.abspath(directory)
+
+        # Check cache first
+        if directory in self.template_cache:
+            cached = self.template_cache[directory]
+            return cached if cached is not None else {}
+
+        # Find nearest copyright file
+        copyright_file = self._find_copyright_file(directory)
+
+        if copyright_file:
+            # Load templates from found file
+            templates = self._load_templates(copyright_file)
+            self.template_cache[directory] = templates
+            return templates
+        else:
+            # No copyright file found in hierarchy
+            logging.debug(f"No copyright file found for directory: {directory}")
+            self.template_cache[directory] = None
+            return {}
+
+    def _get_template_for_file(self, filepath: str) -> Dict[str, CopyrightTemplate]:
+        """
+        Get the appropriate templates for a file.
+
+        :param filepath: Path to the file
+        :return: Dictionary of templates by extension
+        """
+        if not self.hierarchical:
+            return self.templates
+
+        # In hierarchical mode, find templates based on file's directory
+        file_dir = os.path.dirname(os.path.abspath(filepath))
+        return self._get_templates_for_directory(file_dir)
 
     def _load_ignore_patterns(self, ignore_file: Optional[str] = None) -> None:
         """
@@ -84,7 +173,7 @@ class CopyrightChecker:
             logging.debug("Loaded patterns from .gitignore")
 
         if patterns:
-            self.ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+            self.ignore_spec = pathspec.PathSpec.from_lines('gitignore', patterns)
             logging.info(f"Loaded {len(patterns)} ignore patterns")
         else:
             logging.debug("No ignore patterns found")
@@ -168,14 +257,22 @@ class CopyrightChecker:
             logging.debug(f"Skipping file without extension: {filepath}")
             return True, False
 
+        # Get appropriate templates for this file
+        templates = self._get_template_for_file(filepath)
+
         # Check if we have a template for this extension
-        if file_ext not in self.templates:
-            logging.debug(
-                f"No copyright template for extension '{file_ext}', skipping: {filepath}"
-            )
+        if file_ext not in templates:
+            if self.hierarchical:
+                logging.debug(
+                    f"No copyright template found for '{file_ext}' in hierarchy for: {filepath}"
+                )
+            else:
+                logging.debug(
+                    f"No copyright template for extension '{file_ext}', skipping: {filepath}"
+                )
             return True, False
 
-        template = self.templates[file_ext]
+        template = templates[file_ext]
 
         # Read file content (preserve line endings for later)
         try:
@@ -305,10 +402,25 @@ class CopyrightChecker:
     def get_supported_extensions(self) -> Set[str]:
         """
         Get the set of supported file extensions.
+        In hierarchical mode, returns extensions from root template if available.
 
         :return: Set of file extensions (e.g., {'.py', '.c', '.sql'})
         """
-        return set(self.templates.keys())
+        if not self.hierarchical:
+            return set(self.templates.keys())
+
+        # In hierarchical mode, try to find a template at current directory
+        cwd_templates = self._get_templates_for_directory(os.getcwd())
+        if cwd_templates:
+            return set(cwd_templates.keys())
+
+        # Fallback: collect all unique extensions from cache
+        all_extensions = set()
+        for templates in self.template_cache.values():
+            if templates:
+                all_extensions.update(templates.keys())
+
+        return all_extensions if all_extensions else set()
 
     def get_changed_files(self, base_ref: str = "HEAD", repo_path: Optional[str] = None) -> List[str]:
         """

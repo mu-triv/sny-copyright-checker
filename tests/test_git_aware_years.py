@@ -313,6 +313,152 @@ print('hello')
         years = template.extract_years(content)
         self.assertEqual(years, (2020, 2024))
 
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_git_not_installed(self, mock_datetime, mock_run):
+        """Test fallback when Git is not installed"""
+        mock_datetime.now.return_value.year = 2026
+
+        # Mock Git command to fail (not installed)
+        mock_run.side_effect = FileNotFoundError("git not found")
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+        with open(test_file, "w") as f:
+            f.write("print('hello')\n")
+
+        year_str = checker._determine_copyright_year(test_file, template, "print('hello')\n")
+
+        # Should fall back to current year
+        self.assertEqual(year_str, "2026")
+
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_file_outside_git_repository(self, mock_datetime, mock_run):
+        """Test behavior for files outside Git repository"""
+        mock_datetime.now.return_value.year = 2026
+
+        # Mock Git log to fail (not a git repo)
+        mock_run.return_value = MagicMock(
+            stdout="",
+            stderr="fatal: not a git repository",
+            returncode=128
+        )
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+        with open(test_file, "w") as f:
+            f.write("print('hello')\n")
+
+        year_str = checker._determine_copyright_year(test_file, template, "print('hello')\n")
+
+        # Should fall back to current year
+        self.assertEqual(year_str, "2026")
+
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_year_range_normalization(self, mock_datetime, mock_run):
+        """Test that same year range is normalized to single year"""
+        mock_datetime.now.return_value.year = 2024
+
+        # Mock Git to return 2024 as creation year
+        mock_run.side_effect = [
+            MagicMock(stdout="2024-01-15T10:30:00+01:00\n", stderr="", returncode=0),
+            MagicMock(stdout="", stderr="", returncode=0),  # unchanged
+        ]
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+        with open(test_file, "w") as f:
+            f.write("print('hello')\n")
+
+        year_str = checker._determine_copyright_year(test_file, template, "print('hello')\n")
+
+        # File created in 2024, current year is 2024 -> should be "2024", not "2024-2024"
+        self.assertEqual(year_str, "2024")
+
+    def test_invalid_year_in_existing_copyright(self):
+        """Test handling of invalid year in existing copyright"""
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        # Copyright with invalid year
+        content = "# Copyright 1899 Test Company\n"
+        years = template.extract_years(content)
+
+        # Should still extract the year even if it seems invalid
+        self.assertEqual(years, (1899, None))
+
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_git_aware_with_renamed_file(self, mock_datetime, mock_run):
+        """Test Git-aware year management for renamed files (git mv)"""
+        mock_datetime.now.return_value.year = 2026
+
+        # Mock Git log with --follow to track file history across renames
+        mock_run.side_effect = [
+            MagicMock(stdout="2020-03-15T10:30:00+01:00\n", stderr="", returncode=0),  # original creation
+            MagicMock(stdout=" M test.py\n", stderr="", returncode=0),  # modified
+        ]
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+        with open(test_file, "w") as f:
+            f.write("print('hello')\n")
+
+        year_str = checker._determine_copyright_year(test_file, template, "print('hello')\n")
+
+        # Should preserve earliest year from before rename
+        self.assertEqual(year_str, "2020-2026")
+
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_existing_copyright_with_future_year(self, mock_datetime, mock_run):
+        """Test handling copyright with future year"""
+        mock_datetime.now.return_value.year = 2026
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        # Existing copyright with future year (2030)
+        content = "# Copyright 2030 Test Company\nprint('hello')\n"
+        years = template.extract_years(content)
+
+        # Should preserve the future year (maybe intentional)
+        self.assertEqual(years, (2030, None))
+
+    @patch("scripts.copyright_checker.subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
+    def test_git_aware_preserves_earliest_year_from_range(self, mock_datetime, mock_run):
+        """Test that earliest year from existing range is preserved"""
+        mock_datetime.now.return_value.year = 2026
+
+        mock_run.side_effect = [
+            MagicMock(stdout="2022-03-15T10:30:00+01:00\n", stderr="", returncode=0),  # git creation
+            MagicMock(stdout=" M test.py\n", stderr="", returncode=0),  # modified
+        ]
+
+        checker = CopyrightChecker(self.template_path, git_aware=True)
+        template = checker.templates[".py"]
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+
+        # Existing copyright with range starting earlier than Git creation
+        existing_content = "# Copyright 2019-2023 Test Company\nprint('old')\n"
+
+        year_str = checker._determine_copyright_year(test_file, template, existing_content)
+
+        # Should preserve 2019 (earliest from existing) and extend to 2026
+        self.assertEqual(year_str, "2019-2026")
+
 
 if __name__ == "__main__":
     unittest.main()

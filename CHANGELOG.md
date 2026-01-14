@@ -9,6 +9,23 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-01-14
+
+### Added
+- **Hierarchical copyright templates**: Support different copyright notices per directory (new `--hierarchical` flag)
+  - Directory-based template discovery (nearest template wins)
+  - Child directories override parent templates
+  - Template caching for performance
+  - Perfect for monorepos and vendor/third-party code
+- Extended test suites: hierarchical templates (20 tests), Git-aware years (23 tests), ignore patterns (28 tests)
+- Documentation: HIERARCHICAL_TEMPLATES.md with examples and best practices
+
+### Changed
+- `CopyrightChecker` now supports hierarchical mode with template discovery and caching
+
+### Fixed
+- Non-hierarchical mode correctly loads templates at initialization
+
 ## [1.0.4] - 2026-01-14
 
 ### Added

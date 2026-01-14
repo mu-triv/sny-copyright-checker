@@ -42,6 +42,11 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
    - Gitignore-style pattern matching
    - Flexible ignore rules per project
 
+📁 **Hierarchical Copyright Templates**: Support different copyrights per directory
+   - Apply different copyright notices to subdirectories
+   - Perfect for monorepos and vendor/third-party code
+   - Child directories override parent templates
+
 ## Installation
 
 ### Via pip (Recommended)
@@ -59,7 +64,7 @@ Add the following to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.4  # Use the latest release
+    rev: v1.0.5  # Use the latest release
     hooks:
       - id: sny-copyright-checker
         args: [--notice=copyright.txt]
@@ -118,7 +123,7 @@ sny-copyright-checker --changed-only --base-ref origin/main
 ### Command Line Options
 
 - `filenames`: Files to check for copyright notices
-- `--notice PATH`: Path to copyright template file (default: `copyright.txt`)
+- `--notice FILENAME`: Filename of copyright template (default: `copyright.txt`). In hierarchical mode, this filename is searched for in the directory tree.
 - `--fix`: Automatically add missing copyright notices (default: enabled)
 - `--no-fix`: Only check without modifying files
 - `--verbose, -v`: Enable verbose output
@@ -127,6 +132,7 @@ sny-copyright-checker --changed-only --base-ref origin/main
 - `--no-git-aware`: Disable Git-aware year management (default: Git-aware is enabled)
 - `--ignore-file PATH`: Path to custom ignore file (default: auto-detect `.copyrightignore`)
 - `--no-gitignore`: Don't use `.gitignore` patterns (default: `.gitignore` is used)
+- `--hierarchical`: Enable hierarchical copyright templates (looks for `--notice` file in each directory)
 
 ### Git-Aware Year Management
 
@@ -136,6 +142,31 @@ By default, the tool uses Git history to intelligently manage copyright years:
 - **Reduces** unnecessary changes to unchanged files
 
 See [GIT_AWARE_YEAR_MANAGEMENT.md](GIT_AWARE_YEAR_MANAGEMENT.md) for detailed information.
+
+### Hierarchical Copyright Templates
+
+Support different copyright notices for different parts of your codebase. Perfect for monorepos, projects with vendor code, or when different teams/components have different licensing.
+
+For detailed documentation, see [HIERARCHICAL_TEMPLATES.md](HIERARCHICAL_TEMPLATES.md).
+
+#### Quick Start
+
+Enable hierarchical mode and place copyright templates in subdirectories:
+
+```bash
+sny-copyright-check --hierarchical --notice=copyright.txt src/
+```
+
+Directory structure:
+```
+project/
+├── copyright.txt              # Root copyright
+├── src/
+│   └── main.py               # Uses root copyright
+└── vendor/
+    ├── copyright.txt          # Vendor-specific copyright
+    └── lib.py                # Uses vendor copyright
+```
 
 ### Ignore Files Support
 
@@ -364,7 +395,7 @@ Customize the pre-commit hook behavior with various arguments:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -376,7 +407,7 @@ Run the checker without automatically adding copyright notices:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
       args: [--no-fix, --notice=copyright.txt]
@@ -388,7 +419,7 @@ Enable detailed output for debugging:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
       args: [--verbose, --notice=copyright.txt]
@@ -400,7 +431,7 @@ Check only files modified compared to a specific git reference:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
       args: [--changed-only, --base-ref=origin/main, --notice=copyright.txt]
@@ -412,7 +443,7 @@ Only run on specific file types using the `files` regex:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -425,10 +456,10 @@ Combine multiple options:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.4
+  rev: v1.0.5
   hooks:
     - id: sny-copyright-checker
-      args: [--verbose, --notice=config/copyright.txt, --changed-only]
+      args: [--verbose, --notice=copyright.txt, --changed-only]
       files: \.(py|js|ts|java)$
 ```
 
@@ -439,7 +470,7 @@ Run separate hooks for different scenarios:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.4
+    rev: v1.0.5
     hooks:
       # Auto-fix Python files only
       - id: sny-copyright-checker

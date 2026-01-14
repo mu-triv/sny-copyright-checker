@@ -192,3 +192,65 @@ The tool automatically preserves your file's line ending style:
 # Before: Uses LF line endings
 # After adding copyright: Still uses LF line endings
 ```
+
+# Example: Hierarchical Copyright Templates
+
+Use different copyright notices for different parts of your codebase:
+
+**Directory structure:**
+```
+project/
+├── copyright.txt              # Root copyright
+├── src/
+│   ├── main.py               # Uses root copyright
+│   └── utils.py              # Uses root copyright
+└── vendor/
+    ├── copyright.txt          # Vendor-specific copyright
+    └── lib.py                # Uses vendor copyright
+```
+
+**Root `copyright.txt`:**
+```
+[.py]
+# Copyright 2026 MyCompany Inc.
+# License: MIT
+```
+
+**`vendor/copyright.txt`:**
+```
+[.py]
+# Copyright 2020-2024 ThirdParty Corp.
+# License: BSD-3-Clause
+```
+
+**Running the checker:**
+```bash
+$ sny-copyright-check --hierarchical --notice=copyright.txt src/ vendor/
+
+INFO: Hierarchical mode enabled: looking for 'copyright.txt' in directory tree
+INFO: Checking 3 file(s) for copyright notices
+INFO: Added copyright notice to: src/main.py
+INFO: Added copyright notice to: src/utils.py
+INFO: Added copyright notice to: vendor/lib.py
+```
+
+**Result in `src/main.py`:**
+```python
+# Copyright 2026 MyCompany Inc.
+# License: MIT
+
+def main():
+    pass
+```
+
+**Result in `vendor/lib.py`:**
+```python
+# Copyright 2020-2024 ThirdParty Corp.
+# License: BSD-3-Clause
+
+def library_function():
+    pass
+```
+
+See [HIERARCHICAL_TEMPLATES.md](HIERARCHICAL_TEMPLATES.md) for detailed documentation.
+```
