@@ -15,23 +15,35 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+try:
+    import pathspec
+    HAS_PATHSPEC = True
+except ImportError:
+    HAS_PATHSPEC = False
+
 from .copyright_template_parser import CopyrightTemplate, CopyrightTemplateParser
 
 
 class CopyrightChecker:
     """Copyright checker with support for multiple file formats and auto-insertion"""
 
-    def __init__(self, template_path: str, git_aware: bool = True):
+    def __init__(self, template_path: str, git_aware: bool = True,
+                 ignore_file: Optional[str] = None, use_gitignore: bool = True):
         """
         Initialize the copyright checker.
 
         :param template_path: Path to the copyright template file
         :param git_aware: If True, use Git history for year management (default: True)
+        :param ignore_file: Path to .copyrightignore file (default: None, auto-detect)
+        :param use_gitignore: If True, also respect .gitignore patterns (default: True)
         """
         self.template_path = template_path
         self.templates: Dict[str, CopyrightTemplate] = {}
         self.git_aware = git_aware
+        self.use_gitignore = use_gitignore
+        self.ignore_spec = None
         self._load_templates()
+        self._load_ignore_patterns(ignore_file)
 
     def _load_templates(self) -> None:
         """Load and parse copyright templates from file."""
@@ -47,6 +59,96 @@ class CopyrightChecker:
             )
         except ValueError as e:
             raise ValueError(f"Failed to parse copyright template: {e}")
+
+    def _load_ignore_patterns(self, ignore_file: Optional[str] = None) -> None:
+        """
+        Load ignore patterns from .copyrightignore and optionally .gitignore.
+
+        :param ignore_file: Path to .copyrightignore file (if None, auto-detect)
+        """
+        if not HAS_PATHSPEC:
+            logging.debug("pathspec not installed, ignore patterns disabled")
+            return
+
+        patterns = []
+
+        # Load .copyrightignore
+        copyright_ignore_path = ignore_file or ".copyrightignore"
+        if os.path.exists(copyright_ignore_path):
+            patterns.extend(self._read_ignore_file(copyright_ignore_path))
+            logging.debug(f"Loaded patterns from {copyright_ignore_path}")
+
+        # Load .gitignore if enabled
+        if self.use_gitignore and os.path.exists(".gitignore"):
+            patterns.extend(self._read_ignore_file(".gitignore"))
+            logging.debug("Loaded patterns from .gitignore")
+
+        if patterns:
+            self.ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+            logging.info(f"Loaded {len(patterns)} ignore patterns")
+        else:
+            logging.debug("No ignore patterns found")
+
+    def _read_ignore_file(self, filepath: str) -> List[str]:
+        """
+        Read and parse an ignore file.
+
+        :param filepath: Path to the ignore file
+        :return: List of pattern strings
+        """
+        patterns = []
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if line and not line.startswith('#'):
+                        patterns.append(line)
+        except Exception as e:
+            logging.warning(f"Failed to read ignore file {filepath}: {e}")
+        return patterns
+
+    def should_ignore(self, filepath: str) -> bool:
+        """
+        Check if a file should be ignored based on ignore patterns.
+
+        :param filepath: Path to the file to check
+        :return: True if file should be ignored
+        """
+        if not self.ignore_spec:
+            return False
+
+        # Convert to relative path if absolute
+        original_filepath = filepath
+        if os.path.isabs(filepath):
+            try:
+                # Resolve symlinks to get the real path for accurate relative path calculation
+                cwd = os.path.realpath(os.getcwd())
+                real_filepath = os.path.realpath(filepath)
+
+                # Check if file is under the current directory
+                try:
+                    filepath = os.path.relpath(real_filepath, cwd)
+                except ValueError:
+                    # Can't get relative path (different drive on Windows)
+                    return False
+
+                # If the relative path goes outside the current directory tree
+                # (starts with ..), don't apply ignore patterns
+                if filepath.startswith('..'):
+                    logging.debug(f"File outside project directory, not applying ignore patterns: {original_filepath}")
+                    return False
+            except (ValueError, OSError):
+                # Error resolving paths
+                return False
+
+        # Normalize path separators for matching
+        filepath = filepath.replace('\\', '/')
+
+        is_ignored = self.ignore_spec.match_file(filepath)
+        if is_ignored:
+            logging.debug(f"File ignored by pattern: {filepath}")
+        return is_ignored
 
     def check_file(self, filepath: str, auto_fix: bool = True) -> Tuple[bool, bool]:
         """
@@ -177,6 +279,12 @@ class CopyrightChecker:
         modified = []
 
         for filepath in filepaths:
+            # Skip ignored files
+            if self.should_ignore(filepath):
+                logging.debug(f"Skipping ignored file: {filepath}")
+                passed.append(filepath)  # Consider ignored files as "passed"
+                continue
+
             try:
                 has_notice, was_modified = self.check_file(filepath, auto_fix)
                 if has_notice:

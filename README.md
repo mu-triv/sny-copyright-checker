@@ -37,6 +37,11 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
    - Extends year range only when files are modified
    - Reduces noise in Git diffs by not updating unchanged files
 
+🚫 **Ignore Files Support**: Respect `.copyrightignore` and `.gitignore` patterns
+   - Skip generated files, vendor code, and build artifacts
+   - Gitignore-style pattern matching
+   - Flexible ignore rules per project
+
 ## Installation
 
 ### Via pip (Recommended)
@@ -120,6 +125,8 @@ sny-copyright-checker --changed-only --base-ref origin/main
 - `--changed-only`: Only check files that have been changed in git (ignores filenames argument)
 - `--base-ref REF`: Git reference to compare against when using `--changed-only` (default: HEAD)
 - `--no-git-aware`: Disable Git-aware year management (default: Git-aware is enabled)
+- `--ignore-file PATH`: Path to custom ignore file (default: auto-detect `.copyrightignore`)
+- `--no-gitignore`: Don't use `.gitignore` patterns (default: `.gitignore` is used)
 
 ### Git-Aware Year Management
 
@@ -129,6 +136,51 @@ By default, the tool uses Git history to intelligently manage copyright years:
 - **Reduces** unnecessary changes to unchanged files
 
 See [GIT_AWARE_YEAR_MANAGEMENT.md](GIT_AWARE_YEAR_MANAGEMENT.md) for detailed information.
+
+### Ignore Files Support
+
+The tool respects ignore patterns to skip generated files, vendor code, and build artifacts.
+
+For detailed documentation on ignore patterns, see [IGNORE_FILES.md](IGNORE_FILES.md).
+
+#### Quick Start
+
+Create a `.copyrightignore` file in your project root:
+
+```
+# Ignore generated files
+**/generated/
+*.min.js
+*.bundle.js
+
+# Ignore vendor/third-party code
+node_modules/
+vendor/
+third_party/
+
+# Ignore build artifacts
+dist/
+build/
+*.pyc
+__pycache__/
+```
+
+#### Using .gitignore
+
+By default, patterns from `.gitignore` are also respected. To disable this:
+
+```bash
+sny-copyright-checker --no-gitignore *.py
+```
+
+#### Pattern Syntax
+
+Supports standard gitignore-style patterns:
+- `*.ext` - Match files with extension
+- `dir/` - Match entire directory
+- `**/pattern` - Match in any directory
+- `path/*.js` - Match files in specific path
+- `# comment` - Comments (ignored)
 
 ## Copyright Template Format
 

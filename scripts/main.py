@@ -80,12 +80,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=True,
         help="Disable Git-aware year management (default: Git-aware is enabled)",
     )
+    parser.add_argument(
+        "--ignore-file",
+        default=None,
+        help="Path to .copyrightignore file (default: auto-detect .copyrightignore)",
+    )
+    parser.add_argument(
+        "--no-gitignore",
+        action="store_false",
+        dest="use_gitignore",
+        default=True,
+        help="Don't use .gitignore patterns (default: .gitignore is used)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
 
     try:
-        checker = CopyrightChecker(args.notice, git_aware=args.git_aware)
+        checker = CopyrightChecker(
+            args.notice,
+            git_aware=args.git_aware,
+            ignore_file=args.ignore_file,
+            use_gitignore=args.use_gitignore
+        )
 
         # Determine which files to check
         if args.changed_only:
