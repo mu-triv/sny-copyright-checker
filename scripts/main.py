@@ -73,12 +73,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default="HEAD",
         help="Git reference to compare against when using --changed-only (default: HEAD)",
     )
+    parser.add_argument(
+        "--no-git-aware",
+        action="store_false",
+        dest="git_aware",
+        default=True,
+        help="Disable Git-aware year management (default: Git-aware is enabled)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
 
     try:
-        checker = CopyrightChecker(args.notice)
+        checker = CopyrightChecker(args.notice, git_aware=args.git_aware)
 
         # Determine which files to check
         if args.changed_only:

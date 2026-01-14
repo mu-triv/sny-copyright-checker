@@ -32,6 +32,11 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 ✅ **Non-Destructive**: Existing copyrights are preserved, even with old years - no duplicates created
 
+🎓 **Git-Aware Year Management**: Intelligently manages copyright years based on Git history
+   - Preserves earliest year from file creation or existing copyright
+   - Extends year range only when files are modified
+   - Reduces noise in Git diffs by not updating unchanged files
+
 ## Installation
 
 ### Via pip (Recommended)
@@ -114,6 +119,16 @@ sny-copyright-checker --changed-only --base-ref origin/main
 - `--verbose, -v`: Enable verbose output
 - `--changed-only`: Only check files that have been changed in git (ignores filenames argument)
 - `--base-ref REF`: Git reference to compare against when using `--changed-only` (default: HEAD)
+- `--no-git-aware`: Disable Git-aware year management (default: Git-aware is enabled)
+
+### Git-Aware Year Management
+
+By default, the tool uses Git history to intelligently manage copyright years:
+- **Preserves** the earliest year from file creation or existing copyright
+- **Extends** the year range only when files are actually modified
+- **Reduces** unnecessary changes to unchanged files
+
+See [GIT_AWARE_YEAR_MANAGEMENT.md](GIT_AWARE_YEAR_MANAGEMENT.md) for detailed information.
 
 ## Copyright Template Format
 

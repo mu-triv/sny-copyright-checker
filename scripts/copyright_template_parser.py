@@ -9,7 +9,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Pattern
+from typing import Dict, List, Optional, Pattern, Tuple
 
 
 @dataclass
@@ -20,13 +20,17 @@ class CopyrightTemplate:
     lines: List[str]
     regex_patterns: List[Optional[Pattern[str]]]
 
-    def get_notice_with_year(self, year: int) -> str:
+    def get_notice_with_year(self, year) -> str:
         """
         Generate the copyright notice with the specified year.
 
-        :param year: Year to insert into the copyright notice
+        :param year: Year to insert into the copyright notice.
+                     Can be an int (e.g., 2024) or str (e.g., "2024" or "2020-2024")
         :return: Complete copyright notice as string
         """
+        # Convert year to string if it's an int
+        year_str = str(year)
+
         result_lines = []
         for line in self.lines:
             #Replace {regex:...} with the actual year
@@ -46,7 +50,7 @@ class CopyrightTemplate:
                             end = i
                             break
                 if end != -1:
-                    result_line = result_line[:start] + str(year) + result_line[end+1:]
+                    result_line = result_line[:start] + year_str + result_line[end+1:]
             result_lines.append(result_line)
         return "\n".join(result_lines)
 
@@ -64,6 +68,81 @@ class CopyrightTemplate:
             if self._matches_at_position(content_lines, start_idx):
                 return True
         return False
+
+    def extract_years(self, content: str) -> Optional[Tuple[int, Optional[int]]]:
+        """
+        Extract the year or year range from the copyright notice in content.
+
+        :param content: Content to search for copyright year
+        :return: Tuple of (start_year, end_year) or None if not found.
+                 end_year is None for single year notices (e.g., "2024")
+                 end_year is set for year ranges (e.g., "2020-2024")
+        """
+        content_lines = content.split("\n")
+
+        # Try to find the template starting at different positions
+        for start_idx in range(len(content_lines)):
+            years = self._extract_years_at_position(content_lines, start_idx)
+            if years:
+                return years
+        return None
+
+    def _extract_years_at_position(self, content_lines: List[str], start_idx: int) -> Optional[Tuple[int, Optional[int]]]:
+        """
+        Extract years from copyright notice at a specific position.
+
+        :param content_lines: Lines of content
+        :param start_idx: Starting line index
+        :return: Tuple of (start_year, end_year) or None
+        """
+        if start_idx + len(self.lines) > len(content_lines):
+            return None
+
+        for i, (template_line, regex_pattern) in enumerate(
+            zip(self.lines, self.regex_patterns)
+        ):
+            content_line = content_lines[start_idx + i].rstrip()
+
+            if regex_pattern:
+                # Build pattern from template line
+                start_marker = "{regex:"
+                start_idx_marker = template_line.find(start_marker)
+
+                if start_idx_marker != -1:
+                    start_pos = start_idx_marker + len(start_marker)
+                    depth = 1
+                    end_idx_marker = start_pos
+
+                    while end_idx_marker < len(template_line) and depth > 0:
+                        if template_line[end_idx_marker] == '{':
+                            depth += 1
+                        elif template_line[end_idx_marker] == '}':
+                            depth -= 1
+                        end_idx_marker += 1
+
+                    # Build the pattern
+                    before = re.escape(template_line[:start_idx_marker])
+                    after = re.escape(template_line[end_idx_marker:])
+                    regex_str = template_line[start_pos:end_idx_marker-1]
+                    pattern_str = f"{before}({regex_str}){after}"
+
+                    match = re.match(pattern_str, content_line)
+                    if match:
+                        year_str = match.group(1)
+                        # Parse year or year range
+                        if '-' in year_str:
+                            parts = year_str.split('-')
+                            try:
+                                return (int(parts[0]), int(parts[1]))
+                            except (ValueError, IndexError):
+                                continue
+                        else:
+                            try:
+                                return (int(year_str), None)
+                            except ValueError:
+                                continue
+
+        return None
 
     def _matches_at_position(self, content_lines: List[str], start_idx: int) -> bool:
         """
