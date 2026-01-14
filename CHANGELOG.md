@@ -9,7 +9,7 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.5] - 2026-01-14
 
 ### Added
 - **Hierarchical copyright templates**: Support different copyright notices per directory (new `--hierarchical` flag)

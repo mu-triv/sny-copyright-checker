@@ -42,7 +42,7 @@ sny-copyright-check --hierarchical --notice=copyright.txt --fix src/
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.4
+    rev: v1.0.5
     hooks:
       - id: sny-copyright-checker
         args: [--hierarchical, --notice=copyright.txt]
