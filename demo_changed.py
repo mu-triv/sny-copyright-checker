@@ -3,4 +3,4 @@
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
 
-﻿print('test')
+print('test')
