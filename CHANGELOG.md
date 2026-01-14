@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
   - Child directories override parent templates
   - Template caching for performance
   - Perfect for monorepos and vendor/third-party code
-- Comprehensive test coverage: 10 tests for hierarchical templates
+- Extended test suites: hierarchical templates (20 tests), Git-aware years (23 tests), ignore patterns (28 tests)
 - Documentation: HIERARCHICAL_TEMPLATES.md with examples and best practices
 
 ### Changed

@@ -293,6 +293,164 @@ class TestIgnoreFilesWithoutPathspec(unittest.TestCase):
         # Should not ignore anything when pathspec is not available
         self.assertFalse(checker.should_ignore("generated.py"))
 
+    def test_unicode_filenames_in_ignore_patterns(self):
+        """Test ignore patterns with Unicode characters"""
+        with open(".copyrightignore", "w", encoding="utf-8") as f:
+            f.write("日本語.py\n")
+            f.write("файл.py\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        self.assertTrue(checker.should_ignore("日本語.py"))
+        self.assertTrue(checker.should_ignore("файл.py"))
+        self.assertFalse(checker.should_ignore("regular.py"))
+
+    def test_patterns_with_spaces(self):
+        """Test ignore patterns with spaces in filenames"""
+        with open(".copyrightignore", "w") as f:
+            f.write("my file.py\n")
+            f.write("path with spaces/*.py\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        self.assertTrue(checker.should_ignore("my file.py"))
+        self.assertTrue(checker.should_ignore("path with spaces/test.py"))
+        self.assertFalse(checker.should_ignore("myfile.py"))
+
+    def test_very_long_paths(self):
+        """Test ignore patterns with very long paths"""
+        # Create deeply nested directory
+        long_path = "/".join(["dir"] * 50)  # 50 levels deep
+
+        with open(".copyrightignore", "w") as f:
+            f.write(f"{long_path}/*.py\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        # Should handle long paths without error
+        long_file = f"{long_path}/test.py"
+        result = checker.should_ignore(long_file)
+        self.assertIsInstance(result, bool)
+
+    def test_corrupted_ignore_file(self):
+        """Test behavior with corrupted .copyrightignore file"""
+        # Create file with binary/invalid content
+        with open(".copyrightignore", "wb") as f:
+            f.write(b"\xff\xfe\x00\x00Invalid\x00\x00")
+
+        # Should not crash, just skip corrupted file
+        try:
+            checker = CopyrightChecker(self.template_path)
+            # Should either work or fail gracefully
+            self.assertIsNotNone(checker)
+        except Exception as e:
+            # If it fails, it should be a handled exception
+            self.assertIsInstance(e, (UnicodeDecodeError, ValueError))
+
+    def test_ignore_with_hierarchical_mode(self):
+        """Test ignore patterns combined with hierarchical templates"""
+        # Root copyright
+        with open("copyright.txt", "w") as f:
+            f.write("[.py]\n# Copyright 2026 Root\n")
+
+        # Root ignore file
+        with open(".copyrightignore", "w") as f:
+            f.write("vendor/**/*.py\n")
+
+        # Create vendor directory with its own copyright
+        os.makedirs("vendor")
+        with open("vendor/copyright.txt", "w") as f:
+            f.write("[.py]\n# Copyright 2026 Vendor\n")
+
+        with open("vendor/lib.py", "w") as f:
+            f.write("pass\n")
+
+        checker = CopyrightChecker("copyright.txt", hierarchical=True)
+
+        # File should be ignored despite hierarchical mode
+        self.assertTrue(checker.should_ignore("vendor/lib.py"))
+
+    def test_gitignore_in_subdirectories(self):
+        """Test that only root .gitignore is respected (current behavior)"""
+        # Root .gitignore
+        with open(".gitignore", "w") as f:
+            f.write("*.pyc\n")
+
+        # Subdirectory .gitignore (should be ignored)
+        os.makedirs("subdir")
+        with open("subdir/.gitignore", "w") as f:
+            f.write("*.log\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        # Root patterns should work
+        self.assertTrue(checker.should_ignore("test.pyc"))
+        self.assertTrue(checker.should_ignore("subdir/test.pyc"))
+
+        # Subdirectory patterns should NOT work (only root .gitignore is read)
+        self.assertFalse(checker.should_ignore("subdir/test.log"))
+
+    def test_case_sensitivity_handling(self):
+        """Test case sensitivity in ignore patterns"""
+        with open(".copyrightignore", "w") as f:
+            f.write("Test.py\n")
+            f.write("UPPER.PY\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        # Exact match should work
+        self.assertTrue(checker.should_ignore("Test.py"))
+        self.assertTrue(checker.should_ignore("UPPER.PY"))
+
+        # Different case depends on platform/pathspec behavior
+        # Just ensure it doesn't crash
+        result = checker.should_ignore("test.py")
+        self.assertIsInstance(result, bool)
+
+    def test_empty_pattern_lines(self):
+        """Test that empty lines in ignore file are handled"""
+        with open(".copyrightignore", "w") as f:
+            f.write("test1.py\n")
+            f.write("\n")
+            f.write("\n")
+            f.write("test2.py\n")
+            f.write("\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        self.assertTrue(checker.should_ignore("test1.py"))
+        self.assertTrue(checker.should_ignore("test2.py"))
+
+    def test_ignore_patterns_with_git_aware(self):
+        """Test ignore patterns combined with Git-aware year management"""
+        with open(".copyrightignore", "w") as f:
+            f.write("generated/*.py\n")
+
+        with open("copyright.txt", "w") as f:
+            f.write("[.py]\n# Copyright {regex:\\d{4}(-\\d{4})?} Company\n")
+
+        os.makedirs("generated")
+        with open("generated/auto.py", "w") as f:
+            f.write("# Auto-generated\n")
+
+        # Enable both features
+        checker = CopyrightChecker("copyright.txt", git_aware=True)
+
+        # Ignored files should be skipped
+        self.assertTrue(checker.should_ignore("generated/auto.py"))
+
+    def test_whitespace_in_patterns(self):
+        """Test patterns with leading/trailing whitespace"""
+        with open(".copyrightignore", "w") as f:
+            f.write("  test.py  \n")
+            f.write("\tindented.py\n")
+
+        checker = CopyrightChecker(self.template_path)
+
+        # Whitespace should be stripped
+        self.assertTrue(checker.should_ignore("test.py"))
+        self.assertTrue(checker.should_ignore("indented.py"))
+
 
 if __name__ == "__main__":
     unittest.main()
