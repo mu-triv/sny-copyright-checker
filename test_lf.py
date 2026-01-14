@@ -8,5 +8,5 @@
 # License: For licensing see the License.txt file
 
 
-﻿print('LF test')
+print('LF test')
 print('more code')
