@@ -173,7 +173,7 @@ class CopyrightChecker:
             logging.debug("Loaded patterns from .gitignore")
 
         if patterns:
-            self.ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+            self.ignore_spec = pathspec.PathSpec.from_lines('gitignore', patterns)
             logging.info(f"Loaded {len(patterns)} ignore patterns")
         else:
             logging.debug("No ignore patterns found")
