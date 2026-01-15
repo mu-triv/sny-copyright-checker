@@ -81,6 +81,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         help="Disable Git-aware year management (default: Git-aware is enabled)",
     )
     parser.add_argument(
+        "--per-file-years",
+        action="store_true",
+        help="Use individual file creation years instead of repository inception year (default: use repository-wide years)",
+    )
+    parser.add_argument(
         "--ignore-file",
         default=None,
         help="Path to .copyrightignore file (default: auto-detect .copyrightignore)",
@@ -113,7 +118,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             ignore_file=args.ignore_file,
             use_gitignore=args.use_gitignore,
             hierarchical=args.hierarchical,
-            replace_mode=args.replace
+            replace_mode=args.replace,
+            per_file_years=args.per_file_years
         )
 
         # Determine which files to check

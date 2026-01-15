@@ -124,6 +124,77 @@ Disables Git-aware year management. When disabled:
 sny-copyright-checker --no-git-aware *.py
 ```
 
+### `--per-file-years` (New)
+Controls whether to use repository-wide or per-file year tracking.
+
+**Default Behavior (Repository-Wide Years)**:
+```bash
+# All files use repository inception year as start
+sny-copyright-checker file1.py file2.py
+
+# Example: Repository created in 2018
+# All files get: Copyright 2018-2026 Company
+```
+
+**Per-File Years Mode**:
+```bash
+# Each file uses its own creation year
+sny-copyright-checker --per-file-years file1.py file2.py
+
+# Example: file1.py created in 2020, file2.py created in 2023
+# file1.py: Copyright 2020-2026 Company
+# file2.py: Copyright 2023-2026 Company
+```
+
+### Repository-Wide vs Per-File Years
+
+#### Repository-Wide Mode (Default)
+
+**Best for**:
+- Projects where all code belongs to the same entity
+- Consistent copyright dates across the entire codebase
+- Simple year management
+
+**Behavior**:
+- Uses the year of the first repository commit as the start year
+- All files show the same start year (repository inception)
+- End year is always the current year for all files
+- Example: If repo created in 2018, all files get `2018-2026`
+
+**Benefits**:
+- ✅ Uniform copyright dates across project
+- ✅ Clearly shows project age/history
+- ✅ Simpler to explain and manage
+- ✅ Less variation in copyright notices
+
+#### Per-File Mode (`--per-file-years`)
+
+**Best for**:
+- Projects with files added at different times by different contributors
+- Monorepos with components created at different dates
+- Accurate per-file historical tracking
+
+**Behavior**:
+- Uses each file's first Git commit year as start
+- Different files can have different start years
+- Unchanged files preserve their existing year ranges
+- Modified files extend to current year
+
+**Benefits**:
+- ✅ Accurate file-level history
+- ✅ Minimal Git diff noise (unchanged files not updated)
+- ✅ Reflects actual file creation dates
+
+#### Comparison Examples
+
+| Scenario | Repository-Wide (Default) | Per-File Mode |
+|----------|---------------------------|---------------|
+| Repository created in 2018 | All files: `2018-2026` | - |
+| file1.py added in 2020 | `2018-2026` | `2020-2026` |
+| file2.py added in 2023 | `2018-2026` | `2023-2026` |
+| file3.py added in 2026 (new) | `2018-2026` | `2026` |
+| Unchanged file from 2020 | `2018-2026` | `2020` (preserved) |
+
 ## Benefits
 
 ### 1. **Accurate Copyright Dates**

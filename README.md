@@ -38,6 +38,8 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 ✅ **Non-Destructive**: Existing copyrights are preserved, even with old years - no duplicates created
 
 🎓 **Git-Aware Year Management**: Intelligently manages copyright years based on Git history
+   - **Repository-wide years (default)**: All files use repository inception year (e.g., `2018-2026`)
+   - **Per-file years**: Each file uses its own creation year with `--per-file-years` flag
    - Preserves earliest year from file creation or existing copyright
    - Extends year range only when files are modified
    - Reduces noise in Git diffs by not updating unchanged files
@@ -141,6 +143,7 @@ sny-copyright-checker --changed-only --base-ref origin/main
 - `--changed-only`: Only check files that have been changed in git (ignores filenames argument)
 - `--base-ref REF`: Git reference to compare against when using `--changed-only` (default: HEAD)
 - `--no-git-aware`: Disable Git-aware year management (default: Git-aware is enabled)
+- `--per-file-years`: Use individual file creation years instead of repository inception year (default: repository-wide years)
 - `--ignore-file PATH`: Path to custom ignore file (default: auto-detect `.copyrightignore`)
 - `--no-gitignore`: Don't use `.gitignore` patterns (default: `.gitignore` is used)
 - `--hierarchical`: Enable hierarchical copyright templates (looks for `--notice` file in each directory)

@@ -134,7 +134,7 @@ COMPANY = Test Company
             MagicMock(stdout="", stderr="", returncode=0),  # git status (unchanged)
         ]
 
-        checker = CopyrightChecker(self.template_path, git_aware=True)
+        checker = CopyrightChecker(self.template_path, git_aware=True, per_file_years=True)
         template = checker.templates[".py"]
 
         test_file = os.path.join(self.temp_dir, "test.py")
@@ -155,7 +155,7 @@ COMPANY = Test Company
         # Mock Git status to show file is unchanged
         mock_run.return_value = MagicMock(stdout="", stderr="", returncode=0)
 
-        checker = CopyrightChecker(self.template_path, git_aware=True)
+        checker = CopyrightChecker(self.template_path, git_aware=True, per_file_years=True)
         template = checker.templates[".py"]
 
         test_file = os.path.join(self.temp_dir, "test.py")

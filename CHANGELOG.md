@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Repository-wide vs per-file year management**: New `--per-file-years` flag to control year tracking
+  - **Default behavior (repository-wide)**: All files use repository inception year (e.g., `2018-2026`)
+  - **Per-file mode**: Each file uses its own creation year with `--per-file-years` flag
+  - Repository year caching for performance
+  - Improved year logic for existing copyrights in project-wide mode
 - **Comprehensive test suite for `--replace` feature**: 98 test cases with extensive coverage
   - 27 unit tests for core functionality (similarity, year extraction, entity matching)
   - 17 positive parametrized tests (same unit variations, year merging, license updates)
@@ -25,13 +30,15 @@ All notable changes to this project will be documented in this file.
 - Performance optimizations for similarity calculations in tests
 
 ### Changed
+- Git-aware year management now defaults to repository-wide years for consistency
 - Test expectations adjusted to match actual algorithm behavior
 - Performance tests now use realistic parameters to avoid hanging
 
 ### Documentation
+- Updated GIT_AWARE_YEAR_MANAGEMENT.md with repository-wide vs per-file comparison
 - Updated REPLACE_FEATURE.md with comprehensive testing section
 - Updated REPLACE_FEATURE_DEMO.md with multi-metric similarity explanation and test coverage
-- Updated README.md with testing guide and `--replace` solution for template changes
+- Updated README.md with testing guide, `--per-file-years` flag, and `--replace` solution for template changes
 - All documentation now references the 98-test comprehensive test suite
 
 ## [1.0.5] - 2026-01-14

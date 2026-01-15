@@ -30,7 +30,8 @@ class CopyrightChecker:
 
     def __init__(self, template_path: str, git_aware: bool = True,
                  ignore_file: Optional[str] = None, use_gitignore: bool = True,
-                 hierarchical: bool = False, replace_mode: bool = False):
+                 hierarchical: bool = False, replace_mode: bool = False,
+                 per_file_years: bool = False):
         """
         Initialize the copyright checker.
 
@@ -40,6 +41,7 @@ class CopyrightChecker:
         :param use_gitignore: If True, also respect .gitignore patterns (default: True)
         :param hierarchical: If True, look for template_path in each directory hierarchy (default: False)
         :param replace_mode: If True, replace similar existing copyrights (default: False)
+        :param per_file_years: If True, use individual file creation years; if False, use repository inception year (default: False)
         """
         self.template_path = template_path
         self.templates: Dict[str, CopyrightTemplate] = {}
@@ -47,9 +49,12 @@ class CopyrightChecker:
         self.use_gitignore = use_gitignore
         self.hierarchical = hierarchical
         self.replace_mode = replace_mode
+        self.per_file_years = per_file_years
         self.ignore_spec = None
         # Cache for hierarchical templates: directory -> templates dict
         self.template_cache: Dict[str, Optional[Dict[str, CopyrightTemplate]]] = {}
+        # Cache for repository creation year
+        self._repo_year_cache: Optional[int] = None
 
         if not hierarchical:
             self.templates = self._load_templates()
@@ -539,6 +544,51 @@ class CopyrightChecker:
             logging.debug("Git is not installed or not available")
             return None
 
+    def _get_repository_creation_year(self, filepath: str) -> Optional[int]:
+        """
+        Get the year when the Git repository was created (first commit).
+
+        :param filepath: Path to any file in the repository (used to find repo root)
+        :return: Year of first repository commit, or None if not in Git or error occurred
+        """
+        if not self.git_aware:
+            return None
+
+        # Return cached value if available
+        if self._repo_year_cache is not None:
+            return self._repo_year_cache
+
+        try:
+            # Get the first commit in the repository
+            result = subprocess.run(
+                ["git", "log", "--reverse", "--format=%aI", "--max-count=1"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=os.path.dirname(filepath) or os.getcwd()
+            )
+
+            output = result.stdout.strip()
+            if output:
+                # Extract year from ISO format (e.g., "2018-01-15T10:30:00+01:00")
+                year = int(output.split('-')[0])
+                logging.debug(f"Repository first committed in {year}")
+                self._repo_year_cache = year
+                return year
+            else:
+                logging.debug("No commits found in repository")
+                return None
+
+        except subprocess.CalledProcessError as e:
+            logging.debug(f"Failed to get repository history: {e.stderr}")
+            return None
+        except (ValueError, IndexError) as e:
+            logging.debug(f"Failed to parse repository date: {e}")
+            return None
+        except FileNotFoundError:
+            logging.debug("Git is not installed or not available")
+            return None
+
     def _is_file_modified(self, filepath: str) -> bool:
         """
         Check if a file has uncommitted changes or is not yet tracked by Git.
@@ -598,16 +648,30 @@ class CopyrightChecker:
             start_year, end_year = existing_years
             logging.debug(f"Existing copyright years: {start_year}-{end_year or start_year}")
 
-            # Check if file is modified
-            if self._is_file_modified(filepath):
-                # File is modified, update end year to current
+            # When using project-wide years, consider repository inception year
+            if not self.per_file_years:
+                repo_year = self._get_repository_creation_year(filepath)
+                if repo_year and repo_year < start_year:
+                    logging.debug(f"Using repository year {repo_year} instead of existing {start_year}")
+                    start_year = repo_year
+
+            # Determine end year based on mode
+            if not self.per_file_years:
+                # Project-wide mode: always extend to current year
+                if current_year > start_year:
+                    year_str = f"{start_year}-{current_year}"
+                else:
+                    year_str = str(start_year)
+                logging.debug(f"Project-wide mode, years: {year_str}")
+            elif self._is_file_modified(filepath):
+                # Per-file mode with modified file: extend to current year
                 if current_year > start_year:
                     year_str = f"{start_year}-{current_year}"
                 else:
                     year_str = str(start_year)
                 logging.debug(f"File modified, updating years to: {year_str}")
             else:
-                # File unchanged, preserve existing years
+                # Per-file mode with unchanged file: preserve existing years
                 if end_year:
                     year_str = f"{start_year}-{end_year}"
                 else:
@@ -615,19 +679,36 @@ class CopyrightChecker:
                 logging.debug(f"File unchanged, preserving years: {year_str}")
         else:
             # No existing copyright, determine from Git history
-            creation_year = self._get_file_creation_year(filepath)
+            if self.per_file_years:
+                # Use individual file creation year
+                creation_year = self._get_file_creation_year(filepath)
 
-            if creation_year:
-                # File is in Git, use creation year as start
-                if self._is_file_modified(filepath) and current_year > creation_year:
-                    year_str = f"{creation_year}-{current_year}"
+                if creation_year:
+                    # Per-file mode: check if file is modified before extending year
+                    if self._is_file_modified(filepath) and current_year > creation_year:
+                        year_str = f"{creation_year}-{current_year}"
+                    else:
+                        year_str = str(creation_year)
+                    logging.debug(f"New copyright using Git file history: {year_str}")
                 else:
-                    year_str = str(creation_year)
-                logging.debug(f"New copyright using Git history: {year_str}")
+                    # File not in Git, use current year
+                    year_str = str(current_year)
+                    logging.debug(f"New copyright using current year: {year_str}")
             else:
-                # File not in Git or Git not available, use current year
-                year_str = str(current_year)
-                logging.debug(f"New copyright using current year: {year_str}")
+                # Use repository inception year (project-wide mode)
+                creation_year = self._get_repository_creation_year(filepath)
+
+                if creation_year:
+                    # Project-wide mode: always extend to current year
+                    if current_year > creation_year:
+                        year_str = f"{creation_year}-{current_year}"
+                    else:
+                        year_str = str(creation_year)
+                    logging.debug(f"New copyright using Git repository history: {year_str}")
+                else:
+                    # Repository not in Git, use current year
+                    year_str = str(current_year)
+                    logging.debug(f"New copyright using current year: {year_str}")
 
         return year_str
 
