@@ -97,6 +97,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action="store_true",
         help="Enable hierarchical copyright templates (looks for --notice file in each directory)",
     )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace existing similar copyright notices with the template notice (requires --fix)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
@@ -107,7 +112,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             git_aware=args.git_aware,
             ignore_file=args.ignore_file,
             use_gitignore=args.use_gitignore,
-            hierarchical=args.hierarchical
+            hierarchical=args.hierarchical,
+            replace_mode=args.replace
         )
 
         # Determine which files to check
