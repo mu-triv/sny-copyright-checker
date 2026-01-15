@@ -25,7 +25,29 @@ cd sny-copyright-checker
 pip install -e .
 ```
 
-### 2. Test the Tool
+### 2. Create Configuration (Easy Way)
+
+Use the interactive wizard to create your `copyright.txt` configuration:
+
+```bash
+sny-copyright-checker init
+```
+
+The wizard will guide you through:
+- Selecting a license (MIT, Apache, GPL, BSD, Proprietary, or Custom)
+- Entering your company/organization name
+- Choosing file extensions to support
+- Generating a ready-to-use configuration
+
+**That's it!** Your `copyright.txt` is ready to use.
+
+For more details on the wizard, see [INIT_WIZARD.md](INIT_WIZARD.md).
+
+### 2. Alternative: Manual Configuration
+
+If you prefer to create `copyright.txt` manually, copy the example template from this repository to your project root and customize it with your company details.
+
+### 3. Test the Tool
 
 Create a test Python file without copyright:
 
@@ -41,9 +63,9 @@ sny-copyright-checker test.py
 type test.py
 ```
 
-### 3. Use in Your Project
+### 4. Use in Your Project
 
-Copy the `copyright.txt` template to your project root, then add to your `.pre-commit-config.yaml`:
+Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
@@ -57,7 +79,7 @@ repos:
         args: [--notice=copyright.txt]
 ```
 
-### 4. Test Examples
+### 5. Test Examples
 
 #### Example 1: Python file without copyright
 ```python

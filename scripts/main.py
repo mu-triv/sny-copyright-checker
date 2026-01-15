@@ -32,14 +32,43 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     :param argv: Command line arguments
     :return: Exit code (0 for success, 1 for failure)
     """
+    # Import sys to handle argv properly
+    import sys
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # Check if first argument is 'init' command
+    if len(argv) > 0 and argv[0] == 'init':
+        # Parse init command
+        parser = argparse.ArgumentParser(
+            prog='sny-copyright-checker init',
+            description="Initialize copyright checker configuration"
+        )
+        parser.add_argument(
+            "--output",
+            "-o",
+            default="copyright.txt",
+            help="Output file path (default: copyright.txt)"
+        )
+        # Remove 'init' from argv before parsing
+        args = parser.parse_args(argv[1:])
+        from .init_wizard import run_init_wizard
+        return run_init_wizard(args.output)
+
+    # Default: parse as check command
     parser = argparse.ArgumentParser(
+        prog='sny-copyright-checker',
         description="Check and add copyright notices to source files"
     )
+
+    # Positional arguments for check behavior
     parser.add_argument(
         "filenames",
         nargs="*",
         help="Files to check for copyright notices",
     )
+
+    # Options for check command (on main parser for backward compatibility)
     parser.add_argument(
         "--notice",
         default="copyright.txt",
@@ -109,6 +138,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     args = parser.parse_args(argv)
+
+    # Default behavior: check files
     setup_logging(args.verbose)
 
     try:
