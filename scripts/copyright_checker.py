@@ -41,7 +41,7 @@ class CopyrightChecker:
         :param use_gitignore: If True, also respect .gitignore patterns (default: True)
         :param hierarchical: If True, look for template_path in each directory hierarchy (default: False)
         :param replace_mode: If True, replace similar existing copyrights (default: False)
-        :param per_file_years: If True, use individual file creation years; if False, use repository inception year (default: False)
+        :param per_file_years: If True, use individual file creation years; if False, use project inception year (default: False)
         """
         self.template_path = template_path
         self.templates: Dict[str, CopyrightTemplate] = {}
@@ -53,7 +53,7 @@ class CopyrightChecker:
         self.ignore_spec = None
         # Cache for hierarchical templates: directory -> templates dict
         self.template_cache: Dict[str, Optional[Dict[str, CopyrightTemplate]]] = {}
-        # Cache for repository creation year
+        # Cache for project creation year
         self._repo_year_cache: Optional[int] = None
 
         if not hierarchical:
@@ -648,11 +648,11 @@ class CopyrightChecker:
             start_year, end_year = existing_years
             logging.debug(f"Existing copyright years: {start_year}-{end_year or start_year}")
 
-            # When using project-wide years, consider repository inception year
+            # When using project-wide years, consider project inception year
             if not self.per_file_years:
                 repo_year = self._get_repository_creation_year(filepath)
                 if repo_year and repo_year < start_year:
-                    logging.debug(f"Using repository year {repo_year} instead of existing {start_year}")
+                    logging.debug(f"Using project year {repo_year} instead of existing {start_year}")
                     start_year = repo_year
 
             # Determine end year based on mode
@@ -695,7 +695,7 @@ class CopyrightChecker:
                     year_str = str(current_year)
                     logging.debug(f"New copyright using current year: {year_str}")
             else:
-                # Use repository inception year (project-wide mode)
+                # Use project inception year (project-wide mode)
                 creation_year = self._get_repository_creation_year(filepath)
 
                 if creation_year:
@@ -704,9 +704,9 @@ class CopyrightChecker:
                         year_str = f"{creation_year}-{current_year}"
                     else:
                         year_str = str(creation_year)
-                    logging.debug(f"New copyright using Git repository history: {year_str}")
+                    logging.debug(f"New copyright using Git project history: {year_str}")
                 else:
-                    # Repository not in Git, use current year
+                    # Project not in Git, use current year
                     year_str = str(current_year)
                     logging.debug(f"New copyright using current year: {year_str}")
 

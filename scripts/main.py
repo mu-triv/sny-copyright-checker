@@ -83,7 +83,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--per-file-years",
         action="store_true",
-        help="Use individual file creation years instead of repository inception year (default: use repository-wide years)",
+        help="Use individual file creation years instead of project inception year (default: use project-wide years)",
     )
     parser.add_argument(
         "--ignore-file",

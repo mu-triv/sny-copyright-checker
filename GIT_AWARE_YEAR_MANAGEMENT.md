@@ -125,14 +125,14 @@ sny-copyright-checker --no-git-aware *.py
 ```
 
 ### `--per-file-years` (New)
-Controls whether to use repository-wide or per-file year tracking.
+Controls whether to use project-wide or per-file year tracking.
 
-**Default Behavior (Repository-Wide Years)**:
+**Default Behavior (Project-Wide Years)**:
 ```bash
-# All files use repository inception year as start
+# All files use project inception year as start
 sny-copyright-checker file1.py file2.py
 
-# Example: Repository created in 2018
+# Example: Project created in 2018
 # All files get: Copyright 2018-2026 Company
 ```
 
@@ -146,9 +146,9 @@ sny-copyright-checker --per-file-years file1.py file2.py
 # file2.py: Copyright 2023-2026 Company
 ```
 
-### Repository-Wide vs Per-File Years
+### Project-Wide vs Per-File Years
 
-#### Repository-Wide Mode (Default)
+#### Project-Wide Mode (Default)
 
 **Best for**:
 - Projects where all code belongs to the same entity
@@ -156,10 +156,10 @@ sny-copyright-checker --per-file-years file1.py file2.py
 - Simple year management
 
 **Behavior**:
-- Uses the year of the first repository commit as the start year
-- All files show the same start year (repository inception)
+- Uses the year of the first project commit as the start year
+- All files show the same start year (project inception)
 - End year is always the current year for all files
-- Example: If repo created in 2018, all files get `2018-2026`
+- Example: If project created in 2018, all files get `2018-2026`
 
 **Benefits**:
 - ✅ Uniform copyright dates across project
@@ -187,9 +187,9 @@ sny-copyright-checker --per-file-years file1.py file2.py
 
 #### Comparison Examples
 
-| Scenario | Repository-Wide (Default) | Per-File Mode |
-|----------|---------------------------|---------------|
-| Repository created in 2018 | All files: `2018-2026` | - |
+| Scenario | Project-Wide (Default) | Per-File Mode |
+|----------|------------------------|---------------|
+| Project created in 2018 | All files: `2018-2026` | - |
 | file1.py added in 2020 | `2018-2026` | `2020-2026` |
 | file2.py added in 2023 | `2018-2026` | `2023-2026` |
 | file3.py added in 2026 (new) | `2018-2026` | `2026` |

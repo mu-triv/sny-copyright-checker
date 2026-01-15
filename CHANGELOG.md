@@ -12,8 +12,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- **Repository-wide vs per-file year management**: New `--per-file-years` flag to control year tracking
-  - **Default behavior (repository-wide)**: All files use repository inception year (e.g., `2018-2026`)
+- **Project-wide vs per-file year management**: New `--per-file-years` flag to control year tracking
+  - **Default behavior (project-wide)**: All files use project inception year (e.g., `2018-2026`)
   - **Per-file mode**: Each file uses its own creation year with `--per-file-years` flag
   - Repository year caching for performance
   - Improved year logic for existing copyrights in project-wide mode
@@ -30,12 +30,12 @@ All notable changes to this project will be documented in this file.
 - Performance optimizations for similarity calculations in tests
 
 ### Changed
-- Git-aware year management now defaults to repository-wide years for consistency
+- Git-aware year management now defaults to project-wide years for consistency
 - Test expectations adjusted to match actual algorithm behavior
 - Performance tests now use realistic parameters to avoid hanging
 
 ### Documentation
-- Updated GIT_AWARE_YEAR_MANAGEMENT.md with repository-wide vs per-file comparison
+- Updated GIT_AWARE_YEAR_MANAGEMENT.md with project-wide vs per-file comparison
 - Updated REPLACE_FEATURE.md with comprehensive testing section
 - Updated REPLACE_FEATURE_DEMO.md with multi-metric similarity explanation and test coverage
 - Updated README.md with testing guide, `--per-file-years` flag, and `--replace` solution for template changes

@@ -4,7 +4,7 @@
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
 
-"""Tests for repository-wide vs per-file year management."""
+"""Tests for project-wide vs per-file year management."""
 
 import os
 import tempfile
@@ -16,7 +16,7 @@ from scripts.copyright_checker import CopyrightChecker
 
 
 class TestProjectYears(unittest.TestCase):
-    """Test repository-wide vs per-file year modes."""
+    """Test project-wide vs per-file year modes."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -32,8 +32,8 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 # Copyright {YEAR_PATTERN} Sony Corporation
 """)
 
-    def test_repository_wide_mode_default(self):
-        """Test that repository-wide mode is the default."""
+    def test_project_wide_mode_default(self):
+        """Test that project-wide mode is the default."""
         checker = CopyrightChecker(
             self.template_path,
             git_aware=True
@@ -50,9 +50,9 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         self.assertTrue(checker.per_file_years)
 
     @patch('subprocess.run')
-    def test_repository_year_retrieval(self, mock_run):
-        """Test that repository creation year is correctly retrieved."""
-        # Mock git log to return repository creation date
+    def test_project_year_retrieval(self, mock_run):
+        """Test that project creation year is correctly retrieved."""
+        # Mock git log to return project creation date
         mock_run.return_value = Mock(
             stdout="2018-03-15T10:30:00+01:00\n",
             returncode=0
@@ -69,7 +69,7 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 
         self.assertEqual(year, 2018)
         mock_run.assert_called_once()
-        # Check that it used --max-count=1 for repository query
+        # Check that it used --max-count=1 for project query
         call_args = mock_run.call_args[0][0]
         self.assertIn("--max-count=1", call_args)
 
@@ -98,8 +98,8 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         self.assertIn("--follow", call_args)
 
     @patch('subprocess.run')
-    def test_repository_year_caching(self, mock_run):
-        """Test that repository year is cached after first retrieval."""
+    def test_project_year_caching(self, mock_run):
+        """Test that project year is cached after first retrieval."""
         mock_run.return_value = Mock(
             stdout="2018-03-15T10:30:00+01:00\n",
             returncode=0
@@ -126,11 +126,11 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
     @patch('subprocess.run')
     @patch('scripts.copyright_checker.datetime')
     def test_project_wide_years_new_file(self, mock_datetime, mock_run):
-        """Test that new files get repository inception year in project-wide mode."""
+        """Test that new files get project inception year in project-wide mode."""
         # Mock current year
         mock_datetime.now.return_value = Mock(year=2026)
 
-        # Mock repository creation year
+        # Mock project creation year
         mock_run.return_value = Mock(
             stdout="2018-03-15T10:30:00+01:00\n",
             returncode=0
@@ -149,7 +149,7 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         template = checker.templates[".py"]
         year_str = checker._determine_copyright_year(test_file, template, "")
 
-        # Should use repository year (2018) to current year (2026)
+        # Should use project year (2018) to current year (2026)
         self.assertEqual(year_str, "2018-2026")
 
     @patch('subprocess.run')
@@ -159,14 +159,14 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         # Mock current year
         mock_datetime.now.return_value = Mock(year=2026)
 
-        # Mock file creation year (different from repository year)
+        # Mock file creation year (different from project year)
         def mock_git_call(*args, **kwargs):
             cmd = args[0]
             if "--follow" in cmd:
                 # File creation year
                 return Mock(stdout="2023-06-10T14:20:00+01:00\n", returncode=0)
             else:
-                # Repository creation year
+                # Project creation year
                 return Mock(stdout="2018-03-15T10:30:00+01:00\n", returncode=0)
 
         mock_run.side_effect = mock_git_call
