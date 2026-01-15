@@ -9,7 +9,7 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.6] - 2026-01-15
 
 ### Added
 - **Project-wide vs per-file year management**: New `--per-file-years` flag to control year tracking
