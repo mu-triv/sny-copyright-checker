@@ -41,25 +41,6 @@ Author: Entertainment Europe, Brussels Lab     # Different unit
 - Extracts key unit identifiers (e.g., "R&D Center Europe", "Haptic Europe", "NSCE")
 - Returns similarity of 0.0 if entities don't match, preventing replacement
 
-### 2. **Critical: Organizational Unit Protection**
-**Prevents replacing copyrights from different units within the same company.**
-
-The feature extracts and compares the specific organizational unit/department from the Author field to ensure copyrights from different entities are never replaced:
-
-```python
-# These different Sony units will NOT replace each other:
-Author: R&D Center Europe Brussels Laboratory  # Will NOT replace ↓
-Author: Haptic Europe, Brussels Laboratory     # Different unit
-Author: NSCE, Brussels Laboratory              # Different unit
-Author: MSE Laboratory                         # Different unit
-Author: Entertainment Europe, Brussels Lab     # Different unit
-```
-
-- **70% entity match threshold**: Author entities must match closely (≥70%)
-- Protects against cross-unit replacement even within the same company
-- Extracts key unit identifiers (e.g., "R&D Center Europe", "Haptic Europe", "NSCE")
-- Returns similarity of 0.0 if entities don't match, preventing replacement
-
 ### 3. Intelligent Year Merging
 - Extracts existing year ranges from old copyrights
 - Merges with current year to preserve copyright history
