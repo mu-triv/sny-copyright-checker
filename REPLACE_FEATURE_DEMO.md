@@ -81,11 +81,19 @@ After --replace:
 ## How It Works
 
 ### Similarity Calculation
-The `--replace` flag uses a Jaccard similarity algorithm that:
-1. Normalizes copyright text (removes years, special chars, whitespace)
-2. Tokenizes into words
-3. Calculates intersection/union ratio
-4. Uses 40% similarity threshold to determine if copyrights are from the same entity
+The `--replace` flag uses a multi-metric similarity algorithm that:
+1. **Token Similarity (40%)**: Jaccard coefficient for entity matching
+2. **N-gram Similarity (40%)**: Trigram comparison for typo tolerance
+3. **Sequence Similarity (20%)**: LCS ratio for structural matching
+4. Normalizes copyright text (removes years, special chars, whitespace)
+5. Uses 40% overall similarity threshold to determine if copyrights are from the same entity
+
+### Entity Protection
+Before replacement:
+1. Extracts organizational unit from Author field
+2. Compares entity similarity (requires ≥70% match)
+3. Prevents cross-unit replacement (e.g., Haptic Europe ≠ R&D Center)
+4. Returns 0% similarity if entities don't match, blocking replacement
 
 ### Year Merging
 When replacing copyrights:
@@ -105,3 +113,14 @@ sny-copyright-check --replace --changed-only
 # Verbose mode to see similarity scores
 sny-copyright-check --replace --verbose files.py
 ```
+
+## Test Coverage
+
+The feature is tested with **98 comprehensive test cases**:
+- ✅ 27 unit tests for core functionality
+- ✅ 17 positive tests (same unit variations, year merging, license updates)
+- ✅ 15 negative tests (different companies, Sony units protection)
+- ✅ 28 edge case tests (unicode, whitespace, file types, block lengths)
+- ✅ 11 stress tests (large files, batch processing, performance)
+
+Run tests with: `pytest tests/test_replace_feature.py -v`

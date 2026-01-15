@@ -356,6 +356,67 @@ The replacement feature respects all standard configuration:
 - `--ignore-file`: Custom ignore patterns
 - `--use-gitignore`/`--no-gitignore`: Respect .gitignore
 
+## Testing
+
+The replacement feature is extensively tested with **98 comprehensive test cases** covering:
+
+### Test Categories
+
+1. **Unit Tests (27 tests)**: Core functionality testing
+   - Similarity calculation algorithms
+   - Year extraction and range merging
+   - Copyright block extraction
+   - Entity identification and matching
+   - Code preservation during replacement
+
+2. **Positive Tests (17 parametrized cases)**: Replacement scenarios
+   - Same unit with variations (abbreviations, formatting)
+   - Year range merging with different starting years
+   - License reference updates
+
+3. **Negative Tests (15 parametrized cases)**: Protection scenarios
+   - Different companies (Microsoft, Google, Amazon, Meta, Apple)
+   - Different Sony organizational units (10 different units tested)
+
+4. **Edge Cases (28 parametrized cases)**: Unusual scenarios
+   - Unicode characters in author names (6 languages)
+   - Various whitespace patterns (tabs, extra spaces)
+   - Different copyright block lengths
+   - Multiple file types (.py, .cpp, .c, .java, .js)
+
+5. **Stress Tests (11 parametrized cases)**: Performance and robustness
+   - Large files (up to 10,000 lines)
+   - Batch processing (10-50 files)
+   - Similarity calculation performance
+   - Complex year extraction patterns
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest tests/test_replace_feature.py
+
+# Run specific test categories
+pytest tests/test_replace_feature.py -k "parametrized"
+pytest tests/test_replace_feature.py -k "positive"
+pytest tests/test_replace_feature.py -k "negative"
+pytest tests/test_replace_feature.py -k "stress"
+
+# Run with verbose output
+pytest tests/test_replace_feature.py -v
+
+# Skip slow tests
+pytest tests/test_replace_feature.py -m "not slow"
+```
+
+### Test Coverage
+
+The test suite uses **pytest parametrize** for efficient coverage:
+- Multiple test variations from single test functions
+- Easy to extend with new test cases
+- Clear test names showing exact parameters tested
+- Comprehensive validation of all feature aspects
+
 ## See Also
 
 - [Git-Aware Year Management](GIT_AWARE_YEAR_MANAGEMENT.md)

@@ -571,6 +571,33 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Running Tests
+
+The project has **comprehensive test coverage with 98+ test cases**:
+
+```bash
+# Run all tests
+pytest tests/
+
+# Run specific test file
+pytest tests/test_replace_feature.py -v
+
+# Run with coverage report
+pytest --cov=scripts tests/
+
+# Run only fast tests (skip performance tests)
+pytest tests/ -m "not slow"
+```
+
+**Test Categories:**
+- Unit tests: Core functionality (similarity, year extraction, entity matching)
+- Positive tests: Replacement scenarios with parametrized variations
+- Negative tests: Protection against unwanted replacements
+- Edge cases: Unicode, whitespace, different file types
+- Stress tests: Large files, batch processing, performance
+
+The test suite uses `pytest.mark.parametrize` for efficient coverage of multiple scenarios.
+
 ## Known Issues and Limitations
 
 ### Template Changes May Create Duplicate Copyrights
@@ -578,6 +605,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 **Issue**: When you update your `copyright.txt` template and re-run the checker on files that already have a copyright, it may add a second copyright notice instead of recognizing the existing one.
 
 **Why**: The checker uses strict template matching. If the copyright format changes (e.g., different company name, license identifier, or text), the old copyright no longer matches the new template and is considered "missing."
+
+**Solution**: Use the `--replace` flag to intelligently replace similar copyrights based on entity matching rather than exact template matching. See [REPLACE_FEATURE.md](REPLACE_FEATURE.md) for details.
 
 **Example Scenario**:
 ```python
@@ -589,25 +618,38 @@ def hello():
     pass
 ```
 
-After updating `copyright.txt` to use Company B and re-running:
+After updating `copyright.txt` to use Company B and using `--replace`:
+```python
+# Copyright 2026 Company B      # <- Replaced (if entities match)
+# SPDX-License-Identifier: Apache-2.0
+
+def hello():
+    pass
+```
+
+Or if entities don't match, both are preserved:
 ```python
 # Copyright 2026 Company B      # <- New copyright added
 # SPDX-License-Identifier: Apache-2.0
 
-# Copyright 2025 Company A      # <- Old copyright still present
+# Copyright 2025 Company A      # <- Old copyright preserved (different entity)
 # License: MIT
 
 def hello():
     pass
 ```
 
-**Workarounds**:
-1. **Manual cleanup**: Before changing templates, manually remove or update existing copyrights
-2. **Test first**: Run checker in check-only mode (`--no-fix`) to see which files would be modified
-3. **Selective application**: Use git to only apply checker to new/modified files
-4. **Batch find-replace**: Use text editor to update existing copyrights before running checker
-
-**Future Enhancement**: A `--replace` mode could be added to detect and replace any copyright-like headers, not just exact template matches.
+**Recommended Approaches**:
+1. **Use `--replace` flag**: Intelligently replace similar copyrights (recommended)
+   ```bash
+   sny-copyright-check --replace --fix file.py
+   ```
+2. **Test first**: Run in check-only mode to preview changes
+   ```bash
+   sny-copyright-check --replace --verbose --no-fix file.py
+   ```
+3. **Manual cleanup**: Before changing templates, update existing copyrights
+4. **Selective application**: Use git to apply checker only to new/modified files
 
 ## License
 
