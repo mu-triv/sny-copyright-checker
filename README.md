@@ -22,12 +22,12 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 🔧 **Auto-Fix**: Automatically adds missing copyright notices with the current year
 
-� **Smart Copyright Replacement**: Intelligently replace similar existing copyrights with your standardized template
+🧠 **Smart Copyright Replacement**: Intelligently replace similar existing copyrights with your standardized template
    - Uses similarity matching to identify copyrights from the same business entity
    - Preserves and merges year ranges (e.g., `2021-2024` → `2021-2026`)
    - Handles variations in formatting, wording, and licensing details
 
-�📝 **Flexible Templates**: Section-based template file for easy maintenance
+📝 **Flexible Templates**: Section-based template file for easy maintenance
 
 🎯 **Smart Insertion**: Respects shebang lines and file structure
 
