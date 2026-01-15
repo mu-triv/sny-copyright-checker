@@ -22,7 +22,12 @@ A powerful [pre-commit](https://pre-commit.com/) hook to automatically check and
 
 🔧 **Auto-Fix**: Automatically adds missing copyright notices with the current year
 
-📝 **Flexible Templates**: Section-based template file for easy maintenance
+� **Smart Copyright Replacement**: Intelligently replace similar existing copyrights with your standardized template
+   - Uses similarity matching to identify copyrights from the same business entity
+   - Preserves and merges year ranges (e.g., `2021-2024` → `2021-2026`)
+   - Handles variations in formatting, wording, and licensing details
+
+�📝 **Flexible Templates**: Section-based template file for easy maintenance
 
 🎯 **Smart Insertion**: Respects shebang lines and file structure
 
@@ -106,6 +111,12 @@ sny-copyright-checker file1.py file2.sql file3.c
 
 # Check only (no modifications)
 sny-copyright-checker --no-fix file1.py
+
+# Replace similar existing copyrights with template version
+sny-copyright-checker --replace file1.py file2.py
+
+# Replace copyrights in all changed files
+sny-copyright-checker --replace --changed-only
 
 # Specify custom template file
 sny-copyright-checker --notice=my_copyright.txt *.py
