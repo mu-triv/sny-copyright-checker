@@ -315,32 +315,54 @@ class CopyrightChecker:
             if template.has_duplicates(content):
                 logging.warning(f"Multiple copyright notices detected in: {filepath}")
                 if auto_fix:
-                    logging.info(f"Removing duplicate copyright notices from: {filepath}")
+                    logging.info(
+                        f"Removing duplicate copyright notices from: {filepath}"
+                    )
                     try:
-                        self._remove_duplicate_copyrights(filepath, template, content, line_ending)
+                        self._remove_duplicate_copyrights(
+                            filepath, template, content, line_ending
+                        )
                         return True, True
                     except Exception as e:
-                        logging.error(f"Failed to remove duplicate copyrights from {filepath}: {e}")
+                        logging.error(
+                            f"Failed to remove duplicate copyrights from {filepath}: {e}"
+                        )
                         return False, False
                 else:
-                    logging.warning(f"File has duplicate copyrights (run with --fix to remove): {filepath}")
+                    logging.warning(
+                        f"File has duplicate copyrights (run with --fix to remove): {filepath}"
+                    )
                     return False, False
 
             # Even if we have a valid copyright, check for incomplete/partial copyrights
             # that don't match the template but contain copyright keywords
             all_copyright_blocks = self._find_all_copyright_blocks(content, template)
             if len(all_copyright_blocks) > 1:
-                logging.warning(f"Found {len(all_copyright_blocks)} copyright-like blocks in: {filepath}")
+                logging.warning(
+                    f"Found {len(all_copyright_blocks)} copyright-like blocks in: {filepath}"
+                )
                 if auto_fix:
-                    logging.info(f"Removing incomplete/partial copyright notices from: {filepath}")
+                    logging.info(
+                        f"Removing incomplete/partial copyright notices from: {filepath}"
+                    )
                     try:
-                        self._remove_extra_copyright_blocks(filepath, template, content, line_ending, all_copyright_blocks)
+                        self._remove_extra_copyright_blocks(
+                            filepath,
+                            template,
+                            content,
+                            line_ending,
+                            all_copyright_blocks,
+                        )
                         return True, True
                     except Exception as e:
-                        logging.error(f"Failed to remove extra copyright blocks from {filepath}: {e}")
+                        logging.error(
+                            f"Failed to remove extra copyright blocks from {filepath}: {e}"
+                        )
                         return False, False
                 else:
-                    logging.warning(f"File has incomplete/partial copyrights (run with --fix to remove): {filepath}")
+                    logging.warning(
+                        f"File has incomplete/partial copyrights (run with --fix to remove): {filepath}"
+                    )
                     return False, False
 
             logging.debug(f"Valid copyright notice found in: {filepath}")
@@ -355,11 +377,15 @@ class CopyrightChecker:
             copyright_text, _, _ = existing_copyright
 
             # Check if it's from our business unit or a different one
-            template_entity = self._extract_author_entity(template.get_notice_with_year("2024"))
+            template_entity = self._extract_author_entity(
+                template.get_notice_with_year("2024")
+            )
             existing_entity = self._extract_author_entity(copyright_text)
 
             is_same_business_unit = (
-                template_entity and existing_entity and template_entity == existing_entity
+                template_entity
+                and existing_entity
+                and template_entity == existing_entity
             )
 
             if is_same_business_unit:
@@ -375,10 +401,14 @@ class CopyrightChecker:
                         if was_replaced:
                             return True, True
                         else:
-                            logging.warning(f"Could not replace copyright in {filepath}")
+                            logging.warning(
+                                f"Could not replace copyright in {filepath}"
+                            )
                             return False, False
                     except Exception as e:
-                        logging.error(f"Failed to replace copyright notice in {filepath}: {e}")
+                        logging.error(
+                            f"Failed to replace copyright notice in {filepath}: {e}"
+                        )
                         return False, False
                 else:
                     logging.warning(
@@ -405,9 +435,11 @@ class CopyrightChecker:
                                 f"Copyright not similar enough for replacement, will add our copyright instead"
                             )
                     except Exception as e:
-                        logging.error(f"Failed to replace copyright notice in {filepath}: {e}")
+                        logging.error(
+                            f"Failed to replace copyright notice in {filepath}: {e}"
+                        )
                         # Fall through to try adding
-                
+
                 # If we reach here in replace_mode, either replace failed due to low similarity
                 # or there was an error. Treat as if file needs our copyright added.
                 # Fall through to the git-aware logic below
@@ -422,13 +454,19 @@ class CopyrightChecker:
                             f"File {filepath} modified by us but has copyright from different entity, adding our copyright..."
                         )
                         try:
-                            self._add_copyright_notice(filepath, template, content, line_ending)
+                            self._add_copyright_notice(
+                                filepath, template, content, line_ending
+                            )
                             return True, True
                         except Exception as e:
-                            logging.error(f"Failed to add copyright notice to {filepath}: {e}")
+                            logging.error(
+                                f"Failed to add copyright notice to {filepath}: {e}"
+                            )
                             return False, False
                     else:
-                        logging.warning(f"File {filepath} needs our copyright (run with --fix to add)")
+                        logging.warning(
+                            f"File {filepath} needs our copyright (run with --fix to add)"
+                        )
                         return False, False
                 else:
                     # Case 2: Different business unit + NOT git-changed = DON'T add
@@ -510,6 +548,39 @@ class CopyrightChecker:
         with open(filepath, "wb") as f:
             f.write(new_content.encode("utf-8"))
 
+    def _is_inside_string_literal(self, lines: List[str], line_number: int) -> bool:
+        """
+        Check if a given line is inside a multi-line string literal.
+
+        :param lines: All lines in the file
+        :param line_number: The line number to check (0-indexed)
+        :return: True if the line is inside a string literal
+        """
+        in_string = False
+        string_delimiter = None
+
+        for i in range(line_number + 1):
+            line = lines[i]
+
+            # Check for triple-quoted strings
+            for delimiter in ['"""', "'''"]:
+                count = line.count(delimiter)
+                if count > 0:
+                    # Toggle string state for each delimiter found
+                    for _ in range(count):
+                        if not in_string:
+                            in_string = True
+                            string_delimiter = delimiter
+                        elif string_delimiter == delimiter:
+                            in_string = False
+                            string_delimiter = None
+
+            # If we've reached the target line, return the current state
+            if i == line_number:
+                return in_string
+
+        return in_string
+
     def _remove_duplicate_copyrights(
         self,
         filepath: str,
@@ -520,6 +591,9 @@ class CopyrightChecker:
         """
         Remove duplicate copyright notices, keeping only the first (most recent) one.
 
+        IMPORTANT: Filters out copyright text found inside string literals to avoid
+        matching copyright text in test data or code examples.
+
         :param filepath: Path to the file
         :param template: Copyright template to match
         :param content: Current file content
@@ -529,14 +603,23 @@ class CopyrightChecker:
         normalized_content = content.replace("\r\n", "\n")
         lines = normalized_content.split("\n")
 
-        # Find all copyright notice positions
-        match_positions = template.find_all_matches(normalized_content)
+        # Find all copyright notice positions in the entire file
+        all_match_positions = template.find_all_matches(normalized_content)
+
+        # Filter out matches that are inside string literals
+        match_positions = [
+            pos
+            for pos in all_match_positions
+            if not self._is_inside_string_literal(lines, pos)
+        ]
 
         if len(match_positions) <= 1:
             # No duplicates to remove
             return
 
-        logging.debug(f"Found {len(match_positions)} copyright notices at lines: {match_positions}")
+        logging.debug(
+            f"Found {len(match_positions)} copyright notices at lines: {match_positions}"
+        )
 
         # Keep the first occurrence, remove all others
         # We need to remove from the end to preserve line numbers
@@ -563,14 +646,16 @@ class CopyrightChecker:
         with open(filepath, "wb") as f:
             f.write(new_content.encode("utf-8"))
 
-        logging.info(f"Removed {len(match_positions) - 1} duplicate copyright notice(s) from {filepath}")
+        logging.info(
+            f"Removed {len(match_positions) - 1} duplicate copyright notice(s) from {filepath}"
+        )
 
     def _find_all_copyright_blocks(
         self, content: str, template: CopyrightTemplate
     ) -> List[Tuple[str, int, int]]:
         """
         Find all copyright-like blocks in the content, including partial/incomplete ones.
-        
+
         IMPORTANT: Only searches the file header area (before actual code starts) to avoid
         matching copyright text in test data, strings, or code examples.
 
@@ -595,7 +680,7 @@ class CopyrightChecker:
         blocks = []
         i = 0
         found_code = False  # Track if we've encountered actual code
-        
+
         while i < len(content_lines) and not found_code:
             line = content_lines[i]
             line_lower = line.lower()
@@ -628,12 +713,16 @@ class CopyrightChecker:
                         end_line = j - 1
                         break
                     # If it contains copyright keywords or starts with comment prefix, include it
-                    elif any(kw in next_lower for kw in copyright_keywords) or \
-                         (next_line.strip() and next_line.strip().startswith(comment_prefix)):
+                    elif any(kw in next_lower for kw in copyright_keywords) or (
+                        next_line.strip()
+                        and next_line.strip().startswith(comment_prefix)
+                    ):
                         end_line = j
                         j += 1
                     # If it's a non-comment line with content, end of block
-                    elif next_line.strip() and not next_line.strip().startswith(comment_prefix):
+                    elif next_line.strip() and not next_line.strip().startswith(
+                        comment_prefix
+                    ):
                         end_line = j - 1
                         break
                     else:
@@ -698,7 +787,9 @@ class CopyrightChecker:
         with open(filepath, "wb") as f:
             f.write(new_content.encode("utf-8"))
 
-        logging.info(f"Removed {len(all_blocks) - 1} extra copyright block(s) from {filepath}")
+        logging.info(
+            f"Removed {len(all_blocks) - 1} extra copyright block(s) from {filepath}"
+        )
 
     def check_files(
         self, filepaths: List[str], auto_fix: bool = True

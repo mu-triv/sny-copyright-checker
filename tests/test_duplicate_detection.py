@@ -393,3 +393,222 @@ print("test")
 print("test")
 """
         assert not template.has_duplicates(content)
+
+
+class TestStringLiteralHandling:
+    """Test suite to ensure copyright checker doesn't modify string literals"""
+
+    @pytest.fixture
+    def temp_dir(self):
+        """Create a temporary directory for test files"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield tmpdir
+
+    @pytest.fixture
+    def copyright_template(self, temp_dir):
+        """Create a basic copyright template file"""
+        template_content = """[VARIABLES]
+SPDX_LICENSE = MIT
+COMPANY = Sony Group Corporation
+
+[.py]
+# SPDX-License-Identifier: {SPDX_LICENSE}
+# Copyright {regex:\\d{4}(-\\d{4})?} {COMPANY}
+# Author: R&D Center Europe Brussels Laboratory, {COMPANY}
+# License: For licensing see the License.txt file
+"""
+        template_path = os.path.join(temp_dir, "copyright.txt")
+        with open(template_path, "w") as f:
+            f.write(template_content)
+        return template_path
+
+    def test_string_literal_not_modified_simple(self, temp_dir, copyright_template):
+        """Test that copyright text in string literals is not modified"""
+        test_file = os.path.join(temp_dir, "test.py")
+        content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+def test_function():
+    test_data = \"\"\"# SPDX-License-Identifier: MIT
+# Copyright 2025 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+print("test")
+\"\"\"
+    return test_data
+"""
+        with open(test_file, "w") as f:
+            f.write(content)
+
+        checker = CopyrightChecker(copyright_template)
+        has_valid, was_modified = checker.check_file(test_file, auto_fix=True)
+
+        # Should be valid and not modified (string literal should be preserved)
+        assert has_valid
+        assert not was_modified
+
+        # Verify string literal was not touched
+        with open(test_file, "r") as f:
+            result = f.read()
+
+        # Count copyright notices - should still have 2 (one real, one in string)
+        assert result.count("# Copyright 2026 Sony Group Corporation") == 1
+        assert result.count("# Copyright 2025 Sony Group Corporation") == 1
+        assert 'test_data = """' in result
+
+    def test_string_literal_with_duplicate_real_copyright(
+        self, temp_dir, copyright_template
+    ):
+        """Test that real duplicates are removed but string literals are preserved"""
+        test_file = os.path.join(temp_dir, "test.py")
+        content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+def test_function():
+    test_data = \"\"\"# SPDX-License-Identifier: MIT
+# Copyright 2024 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+print("test")
+\"\"\"
+    return test_data
+"""
+        with open(test_file, "w") as f:
+            f.write(content)
+
+        checker = CopyrightChecker(copyright_template)
+        has_valid, was_modified = checker.check_file(test_file, auto_fix=True)
+
+        # Should remove duplicate but preserve string literal
+        assert has_valid
+        assert was_modified
+
+        with open(test_file, "r") as f:
+            result = f.read()
+
+        # Should have only ONE real copyright at the top
+        lines = result.split("\n")
+        real_copyright_count = 0
+        in_string = False
+
+        for line in lines:
+            if '"""' in line:
+                in_string = not in_string
+            if not in_string and "# Copyright 2026 Sony Group Corporation" in line:
+                real_copyright_count += 1
+
+        assert real_copyright_count == 1, (
+            f"Expected 1 real copyright, found {real_copyright_count}"
+        )
+
+        # String literal should still be there
+        assert "# Copyright 2024 Sony Group Corporation" in result
+        assert 'test_data = """' in result
+
+    def test_multiple_string_literals_preserved(self, temp_dir, copyright_template):
+        """Test that multiple string literals with copyright text are all preserved"""
+        test_file = os.path.join(temp_dir, "test.py")
+        content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+def test1():
+    data1 = \"\"\"# Copyright 2020 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+\"\"\"
+    return data1
+
+def test2():
+    data2 = '''# Copyright 2021 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+'''
+    return data2
+"""
+        with open(test_file, "w") as f:
+            f.write(content)
+
+        checker = CopyrightChecker(copyright_template)
+        has_valid, was_modified = checker.check_file(test_file, auto_fix=True)
+
+        assert has_valid
+        assert not was_modified
+
+        with open(test_file, "r") as f:
+            result = f.read()
+
+        # Both string literals should be preserved
+        assert "# Copyright 2020 Sony Group Corporation" in result
+        assert "# Copyright 2021 Sony Group Corporation" in result
+        assert "data1 =" in result
+        assert "data2 =" in result
+
+    def test_single_line_string_not_confused(self, temp_dir, copyright_template):
+        """Test that single-line strings don't affect duplicate detection"""
+        test_file = os.path.join(temp_dir, "test.py")
+        content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+message = "Copyright 2026 Sony Group Corporation"
+another = '''short string'''
+print("Copyright notice")
+"""
+        with open(test_file, "w") as f:
+            f.write(content)
+
+        checker = CopyrightChecker(copyright_template)
+        has_valid, was_modified = checker.check_file(test_file, auto_fix=True)
+
+        assert has_valid
+        assert not was_modified
+
+        with open(test_file, "r") as f:
+            result = f.read()
+
+        # Original content should be unchanged
+        assert result == content
+
+    def test_nested_strings_handled_correctly(self, temp_dir, copyright_template):
+        """Test handling of strings within strings"""
+        test_file = os.path.join(temp_dir, "test.py")
+        content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+def test():
+    code = \"\"\"
+def another():
+    s = '''# Copyright 2020 Sony Group Corporation'''
+    return s
+\"\"\"
+    return code
+"""
+        with open(test_file, "w") as f:
+            f.write(content)
+
+        checker = CopyrightChecker(copyright_template)
+        has_valid, was_modified = checker.check_file(test_file, auto_fix=True)
+
+        assert has_valid
+        assert not was_modified
+
+        with open(test_file, "r") as f:
+            result = f.read()
+
+        # Content should be preserved
+        assert "# Copyright 2020 Sony Group Corporation" in result
+        assert "code =" in result
