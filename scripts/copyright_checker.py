@@ -570,6 +570,9 @@ class CopyrightChecker:
     ) -> List[Tuple[str, int, int]]:
         """
         Find all copyright-like blocks in the content, including partial/incomplete ones.
+        
+        IMPORTANT: Only searches the file header area (before actual code starts) to avoid
+        matching copyright text in test data, strings, or code examples.
 
         :param content: File content
         :param template: Copyright template for the file type
@@ -591,7 +594,9 @@ class CopyrightChecker:
 
         blocks = []
         i = 0
-        while i < len(content_lines):
+        found_code = False  # Track if we've encountered actual code
+        
+        while i < len(content_lines) and not found_code:
             line = content_lines[i]
             line_lower = line.lower()
 
@@ -599,6 +604,13 @@ class CopyrightChecker:
             if i == 0 and line.startswith("#!"):
                 i += 1
                 continue
+
+            # Stop searching if we hit actual code (non-comment, non-empty line)
+            stripped = line.strip()
+            if stripped and not stripped.startswith(comment_prefix):
+                # This is actual code, stop searching for copyright blocks
+                found_code = True
+                break
 
             # Check if line looks like a copyright comment
             if any(keyword in line_lower for keyword in copyright_keywords):
