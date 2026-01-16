@@ -71,7 +71,7 @@ Add the following to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.6  # Use the latest release
+    rev: v1.0.7  # Use the latest release
     hooks:
       - id: sny-copyright-checker
         args: [--notice=copyright.txt]
@@ -432,7 +432,7 @@ Customize the pre-commit hook behavior with various arguments:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -444,7 +444,7 @@ Run the checker without automatically adding copyright notices:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--no-fix, --notice=copyright.txt]
@@ -456,7 +456,7 @@ Enable detailed output for debugging:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--verbose, --notice=copyright.txt]
@@ -468,7 +468,7 @@ Check only files modified compared to a specific git reference:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--changed-only, --base-ref=origin/main, --notice=copyright.txt]
@@ -480,7 +480,7 @@ Only run on specific file types using the `files` regex:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--notice=copyright.txt]
@@ -493,7 +493,7 @@ Combine multiple options:
 
 ```yaml
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.6
+  rev: v1.0.7
   hooks:
     - id: sny-copyright-checker
       args: [--verbose, --notice=copyright.txt, --changed-only]
@@ -507,7 +507,7 @@ Run separate hooks for different scenarios:
 ```yaml
 repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.6
+    rev: v1.0.7
     hooks:
       # Auto-fix Python files only
       - id: sny-copyright-checker
