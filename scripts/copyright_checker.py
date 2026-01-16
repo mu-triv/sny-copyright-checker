@@ -432,7 +432,7 @@ class CopyrightChecker:
                         else:
                             # Similarity too low, fall through to add copyright
                             logging.debug(
-                                f"Copyright not similar enough for replacement, will add our copyright instead"
+                                "Copyright not similar enough for replacement, will add our copyright instead"
                             )
                     except Exception as e:
                         logging.error(
@@ -561,44 +561,44 @@ class CopyrightChecker:
 
         for i in range(line_number + 1):
             line = lines[i]
-            
+
             # Track single-line string state to avoid false positives
             # We need to ignore """ or ''' that appear inside regular strings
             in_single_string = False
             single_string_char = None
             escaped = False
-            
+
             j = 0
             while j < len(line):
                 char = line[j]
-                
+
                 if escaped:
                     escaped = False
                     j += 1
                     continue
-                
-                if char == '\\':
+
+                if char == "\\":
                     escaped = True
                     j += 1
                     continue
-                
+
                 # If we're in a multi-line string, just check for its closing delimiter
                 if in_multiline_string:
-                    if j + 2 < len(line) and line[j:j+3] == multiline_delimiter:
+                    if j + 2 < len(line) and line[j : j + 3] == multiline_delimiter:
                         in_multiline_string = False
                         multiline_delimiter = None
                         j += 3
                         continue
                     j += 1
                     continue
-                
+
                 # Track single-line strings
                 if char in ('"', "'"):
                     if not in_single_string:
                         # Check for triple quote
-                        if j + 2 < len(line) and line[j:j+3] in ('"""', "'''"):
+                        if j + 2 < len(line) and line[j : j + 3] in ('"""', "'''"):
                             in_multiline_string = True
-                            multiline_delimiter = line[j:j+3]
+                            multiline_delimiter = line[j : j + 3]
                             j += 3
                             continue
                         else:
@@ -611,7 +611,7 @@ class CopyrightChecker:
                         single_string_char = None
                         j += 1
                         continue
-                
+
                 j += 1
 
             # If we've reached the target line, return the multi-line string state
