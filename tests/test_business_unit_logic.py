@@ -550,6 +550,11 @@ def shared_function():
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
 
+# SPDX-License-Identifier: MIT
+# Copyright 2025 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
 def function():
     pass
 """

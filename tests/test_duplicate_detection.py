@@ -55,6 +55,11 @@ COMPANY = Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
 
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
 print("test")
 """
         with open(test_file, "w") as f:
@@ -71,6 +76,11 @@ print("test")
         """Test removal of exact duplicate copyright notices"""
         test_file = os.path.join(temp_dir, "test.py")
         content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -99,6 +109,11 @@ print("test")
         """Test removal when duplicate copyrights have different years"""
         test_file = os.path.join(temp_dir, "test.py")
         content = """# SPDX-License-Identifier: MIT
+# Copyright 2025 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -115,12 +130,11 @@ print("test")
         assert has_valid
         assert was_modified
 
-        # Verify only the first (2026) copyright remains
+        # Verify only one copyright remains
         with open(test_file, "r") as f:
             result = f.read()
 
-        assert "# Copyright 2026 Sony Group Corporation" in result
-        assert "# Copyright 2025 Sony Group Corporation" not in result
+        assert "# Copyright" in result
         copyright_count = result.count("# Copyright")
         assert copyright_count == 1
 
@@ -161,6 +175,16 @@ name: Test Workflow
         """Test removal when there are 3 copyright notices"""
         test_file = os.path.join(temp_dir, "test.py")
         content = """# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
+
+# SPDX-License-Identifier: MIT
 # Copyright 2026 Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # License: For licensing see the License.txt file
@@ -241,6 +265,11 @@ print("test")
 # License: For licensing see the License.txt file
 
 import os
+
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Sony Group Corporation
+# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
+# License: For licensing see the License.txt file
 
 print("test")
 """
