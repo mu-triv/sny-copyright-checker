@@ -385,6 +385,32 @@ class CopyrightChecker:
                         f"Copyright notice in {filepath} doesn't match template (run with --fix to update)"
                     )
                     return False, False
+            elif self.replace_mode:
+                # Replace mode enabled - try to replace if similar enough
+                # If similarity is too low, _replace_copyright_notice returns False
+                # and we'll fall through to add our copyright instead
+                if auto_fix:
+                    logging.info(
+                        f"Replace mode enabled, attempting to replace copyright in: {filepath}..."
+                    )
+                    try:
+                        was_replaced = self._replace_copyright_notice(
+                            filepath, template, content, line_ending
+                        )
+                        if was_replaced:
+                            return True, True
+                        else:
+                            # Similarity too low, fall through to add copyright
+                            logging.debug(
+                                f"Copyright not similar enough for replacement, will add our copyright instead"
+                            )
+                    except Exception as e:
+                        logging.error(f"Failed to replace copyright notice in {filepath}: {e}")
+                        # Fall through to try adding
+                
+                # If we reach here in replace_mode, either replace failed due to low similarity
+                # or there was an error. Treat as if file needs our copyright added.
+                # Fall through to the git-aware logic below
             else:
                 # Different business unit - check if file is git-changed
                 is_changed = self._is_file_modified(filepath)
