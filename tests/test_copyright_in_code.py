@@ -83,7 +83,7 @@ TEST_DATA = '''
 def example():
     \"\"\"
     Example function.
-    
+
     Copyright 2020 Example Corp
     Author: John Doe
     License: MIT
