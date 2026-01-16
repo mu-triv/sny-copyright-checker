@@ -71,6 +71,36 @@ class CopyrightTemplate:
                 return True
         return False
 
+    def find_all_matches(self, content: str) -> List[int]:
+        """
+        Find all positions where the copyright notice appears in content.
+
+        :param content: Content to check
+        :return: List of line numbers (0-indexed) where copyright notices start
+        """
+        content_lines = content.split("\n")
+        matches = []
+
+        # Try to find the template starting at different positions
+        for start_idx in range(len(content_lines)):
+            if self._matches_at_position(content_lines, start_idx):
+                matches.append(start_idx)
+                # Skip lines that are part of this match to avoid overlapping detections
+                # Jump to the end of this match
+                start_idx += len(self.lines) - 1
+
+        return matches
+
+    def has_duplicates(self, content: str) -> bool:
+        """
+        Check if content contains multiple copyright notices.
+
+        :param content: Content to check
+        :return: True if there are 2 or more copyright notices
+        """
+        matches = self.find_all_matches(content)
+        return len(matches) > 1
+
     def extract_years(self, content: str) -> Optional[Tuple[int, Optional[int]]]:
         """
         Extract the year or year range from the copyright notice in content.

@@ -5,8 +5,6 @@
 # License: For licensing see the License.txt file
 
 
-"""Main copyright checker with auto-insertion functionality"""
-
 import logging
 import os
 import re
@@ -22,11 +20,6 @@ try:
 except ImportError:
     HAS_PATHSPEC = False
 
-from .copyright_template_parser import CopyrightTemplate, CopyrightTemplateParser
-
-
-class CopyrightChecker:
-    """Copyright checker with support for multiple file formats and auto-insertion"""
 
     def __init__(
         self,
@@ -39,18 +32,12 @@ class CopyrightChecker:
         per_file_years: bool = False,
     ):
         """
-        Initialize the copyright checker.
-
-        :param template_path: Path to the copyright template file (or filename for hierarchical mode)
         :param git_aware: If True, use Git history for year management (default: True)
-        :param ignore_file: Path to .copyrightignore file (default: None, auto-detect)
         :param use_gitignore: If True, also respect .gitignore patterns (default: True)
         :param hierarchical: If True, look for template_path in each directory hierarchy (default: False)
-        :param replace_mode: If True, replace similar existing copyrights (default: False)
         :param per_file_years: If True, use individual file creation years; if False, use project inception year (default: False)
         """
         self.template_path = template_path
-        self.templates: Dict[str, CopyrightTemplate] = {}
         self.git_aware = git_aware
         self.use_gitignore = use_gitignore
         self.hierarchical = hierarchical
@@ -58,8 +45,6 @@ class CopyrightChecker:
         self.per_file_years = per_file_years
         self.ignore_spec = None
         # Cache for hierarchical templates: directory -> templates dict
-        self.template_cache: Dict[str, Optional[Dict[str, CopyrightTemplate]]] = {}
-        # Cache for project creation year
         self._repo_year_cache: Optional[int] = None
 
         if not hierarchical:
@@ -73,48 +58,32 @@ class CopyrightChecker:
 
     def _load_templates(
         self, template_file: Optional[str] = None
-    ) -> Dict[str, CopyrightTemplate]:
-        """Load and parse copyright templates from file.
-
         :param template_file: Path to template file (uses self.template_path if None)
         :return: Dictionary of templates by extension
         """
         template_file = template_file or self.template_path
         try:
-            templates = CopyrightTemplateParser.parse(template_file)
             logging.debug(
-                f"Loaded {len(templates)} copyright templates from {template_file} "
                 f"for extensions: {', '.join(templates.keys())}"
             )
             return templates
         except FileNotFoundError:
             if not self.hierarchical:
                 raise FileNotFoundError(
-                    f"Copyright template file not found: {template_file}"
                 )
             return {}
         except ValueError as e:
             if not self.hierarchical:
-                raise ValueError(f"Failed to parse copyright template: {e}")
             logging.warning(f"Failed to parse {template_file}: {e}")
             return {}
 
-    def _find_copyright_file(self, directory: str) -> Optional[str]:
         """
-        Find the nearest copyright template file by traversing up the directory tree.
-
         :param directory: Starting directory to search from
-        :return: Path to copyright file, or None if not found
         """
         current_dir = os.path.abspath(directory)
         root = os.path.abspath(os.sep)
 
         while True:
-            copyright_path = os.path.join(current_dir, self.template_path)
-            if os.path.exists(copyright_path):
-                logging.debug(f"Found copyright file: {copyright_path}")
-                return copyright_path
-
             # Move up one directory
             parent_dir = os.path.dirname(current_dir)
             if parent_dir == current_dir or current_dir == root:
@@ -126,9 +95,7 @@ class CopyrightChecker:
 
     def _get_templates_for_directory(
         self, directory: str
-    ) -> Dict[str, CopyrightTemplate]:
         """
-        Get copyright templates for a specific directory (hierarchical mode).
         Uses caching to avoid re-parsing the same file.
 
         :param directory: Directory to get templates for
@@ -141,21 +108,12 @@ class CopyrightChecker:
             cached = self.template_cache[directory]
             return cached if cached is not None else {}
 
-        # Find nearest copyright file
-        copyright_file = self._find_copyright_file(directory)
-
-        if copyright_file:
-            # Load templates from found file
-            templates = self._load_templates(copyright_file)
             self.template_cache[directory] = templates
             return templates
         else:
-            # No copyright file found in hierarchy
-            logging.debug(f"No copyright file found for directory: {directory}")
             self.template_cache[directory] = None
             return {}
 
-    def _get_template_for_file(self, filepath: str) -> Dict[str, CopyrightTemplate]:
         """
         Get the appropriate templates for a file.
 
@@ -171,21 +129,12 @@ class CopyrightChecker:
 
     def _load_ignore_patterns(self, ignore_file: Optional[str] = None) -> None:
         """
-        Load ignore patterns from .copyrightignore and optionally .gitignore.
-
-        :param ignore_file: Path to .copyrightignore file (if None, auto-detect)
         """
         if not HAS_PATHSPEC:
             logging.debug("pathspec not installed, ignore patterns disabled")
             return
 
         patterns = []
-
-        # Load .copyrightignore
-        copyright_ignore_path = ignore_file or ".copyrightignore"
-        if os.path.exists(copyright_ignore_path):
-            patterns.extend(self._read_ignore_file(copyright_ignore_path))
-            logging.debug(f"Loaded patterns from {copyright_ignore_path}")
 
         # Load .gitignore if enabled
         if self.use_gitignore and os.path.exists(".gitignore"):
@@ -263,10 +212,7 @@ class CopyrightChecker:
 
     def check_file(self, filepath: str, auto_fix: bool = True) -> Tuple[bool, bool]:
         """
-        Check if a file contains valid copyright notice.
-
         :param filepath: Path to the file to check
-        :param auto_fix: If True, automatically add missing copyright notices
         :return: Tuple of (has_valid_notice, was_modified)
         :raises FileNotFoundError: If the file doesn't exist
         """
@@ -286,11 +232,9 @@ class CopyrightChecker:
         if file_ext not in templates:
             if self.hierarchical:
                 logging.debug(
-                    f"No copyright template found for '{file_ext}' in hierarchy for: {filepath}"
                 )
             else:
                 logging.debug(
-                    f"No copyright template for extension '{file_ext}', skipping: {filepath}"
                 )
             return True, False
 
@@ -309,43 +253,74 @@ class CopyrightChecker:
         # Detect line ending style
         line_ending = self._detect_line_ending(content)
 
-        # Check if copyright notice exists and matches template
         if template.matches(content):
-            logging.debug(f"Valid copyright notice found in: {filepath}")
+            if template.has_duplicates(content):
+                if auto_fix:
+                    try:
+                        return True, True
+                    except Exception as e:
+                        return False, False
+                else:
+                    return False, False
+
+                if auto_fix:
+                    try:
+                        return True, True
+                    except Exception as e:
+                        return False, False
+                else:
+                    return False, False
+
             return True, False
 
-        # Copyright notice doesn't match template exactly
-        # In replace mode, try to replace similar copyrights
-        if self.replace_mode and auto_fix:
-            logging.debug(
-                f"Replace mode enabled, checking for similar copyright in: {filepath}"
+            # Check if it's from our business unit or a different one
+            is_same_business_unit = (
+                template_entity and existing_entity and template_entity == existing_entity
             )
-            try:
-                was_replaced = self._replace_copyright_notice(
-                    filepath, template, content, line_ending
-                )
-                if was_replaced:
-                    return True, True
-                else:
-                    # No similar copyright found, fall through to add new copyright
-                    logging.debug(
-                        f"No similar copyright found, will add new copyright to: {filepath}"
-                    )
-            except Exception as e:
-                logging.error(f"Failed to replace copyright notice in {filepath}: {e}")
-                # Fall through to try adding new copyright
 
-        # Copyright notice is missing or couldn't be replaced
+            if is_same_business_unit:
+                if auto_fix:
+                    logging.info(
+                    )
+                    try:
+                            filepath, template, content, line_ending
+                        )
+                        if was_replaced:
+                            return True, True
+                        else:
+                            return False, False
+                    except Exception as e:
+                        return False, False
+                else:
+                    logging.warning(
+                    )
+                    return False, False
+            else:
+                # Different business unit - check if file is git-changed
+                is_changed = self._is_file_modified(filepath)
+
+                if is_changed:
+                    if auto_fix:
+                        logging.info(
+                        )
+                        try:
+                            return True, True
+                        except Exception as e:
+                            return False, False
+                    else:
+                        return False, False
+                else:
+                    # Case 2: Different business unit + NOT git-changed = DON'T add
+                    logging.debug(
+                    )
+                    return True, False
+
         if auto_fix:
-            logging.info(f"Adding copyright notice to: {filepath}")
             try:
-                self._add_copyright_notice(filepath, template, content, line_ending)
                 return True, True
             except Exception as e:
-                logging.error(f"Failed to add copyright notice to {filepath}: {e}")
                 return False, False
         else:
-            logging.warning(f"Missing copyright notice in: {filepath}")
             return False, False
 
     def _detect_line_ending(self, content: str) -> str:
@@ -359,24 +334,16 @@ class CopyrightChecker:
             return "\r\n"
         return "\n"
 
-    def _add_copyright_notice(
         self,
         filepath: str,
-        template: CopyrightTemplate,
         content: str,
         line_ending: str = "\n",
     ) -> None:
         """
-        Add copyright notice to a file.
-
         :param filepath: Path to the file
-        :param template: Copyright template to use
         :param content: Current file content
         :param line_ending: Line ending style to use ("\r\n" or "\n")
         """
-        year_str = self._determine_copyright_year(filepath, template, content)
-        copyright_notice = template.get_notice_with_year(year_str)
-
         # Normalize content to LF for processing
         normalized_content = content.replace("\r\n", "\n")
         lines = normalized_content.split("\n")
@@ -386,16 +353,11 @@ class CopyrightChecker:
             insert_position = 1
             # Add empty line after shebang if not present
             if len(lines) > 1 and lines[1].strip():
-                copyright_notice = "\n" + copyright_notice
-
-        # Add newlines around copyright notice
         if insert_position == 0:
-            new_content = copyright_notice + "\n\n" + normalized_content
         else:
             new_content = (
                 lines[0]
                 + "\n"
-                + copyright_notice
                 + "\n\n"
                 + "\n".join(lines[insert_position:])
             )
@@ -408,14 +370,152 @@ class CopyrightChecker:
         with open(filepath, "wb") as f:
             f.write(new_content.encode("utf-8"))
 
+        self,
+        filepath: str,
+        content: str,
+        line_ending: str = "\n",
+    ) -> None:
+        """
+        :param filepath: Path to the file
+        :param content: Current file content
+        :param line_ending: Line ending style to use ("\r\n" or "\n")
+        """
+        # Normalize content to LF for processing
+        normalized_content = content.replace("\r\n", "\n")
+        lines = normalized_content.split("\n")
+
+        match_positions = template.find_all_matches(normalized_content)
+
+        if len(match_positions) <= 1:
+            # No duplicates to remove
+            return
+
+        # Keep the first occurrence, remove all others
+        # We need to remove from the end to preserve line numbers
+        lines_to_remove = set()
+        for match_start in match_positions[1:]:  # Skip the first match
+            for i in range(len(template.lines)):
+                lines_to_remove.add(match_start + i)
+
+            next_line_idx = match_start + len(template.lines)
+            if next_line_idx < len(lines) and not lines[next_line_idx].strip():
+                lines_to_remove.add(next_line_idx)
+
+        new_lines = [line for i, line in enumerate(lines) if i not in lines_to_remove]
+        new_content = "\n".join(new_lines)
+
+        # Convert to the original line ending style
+        if line_ending == "\r\n":
+            new_content = new_content.replace("\n", "\r\n")
+
+        # Write back to file
+        with open(filepath, "wb") as f:
+            f.write(new_content.encode("utf-8"))
+
+    ) -> List[Tuple[str, int, int]]:
+        """
+        :param content: File content
+        """
+        content_lines = content.split("\n")
+
+        # Get the comment prefix from the template
+        if not template.lines:
+            return []
+
+        first_template_line = template.lines[0]
+        comment_prefix_match = re.match(r"^(\s*[#/\-*]+\s*)", first_template_line)
+        if not comment_prefix_match:
+            return []
+
+        comment_prefix = comment_prefix_match.group(1).strip()
+        blocks = []
+        i = 0
+        while i < len(content_lines):
+            line = content_lines[i]
+            line_lower = line.lower()
+
+            # Skip shebang
+            if i == 0 and line.startswith("#!"):
+                i += 1
+                continue
+
+                start_line = i
+                end_line = i
+
+                # Continue reading consecutive comment lines
+                j = i + 1
+                while j < len(content_lines):
+                    next_line = content_lines[j]
+                    next_lower = next_line.lower()
+
+                    # If it's an empty line, might be end of block
+                    if not next_line.strip():
+                        end_line = j - 1
+                        break
+                         (next_line.strip() and next_line.strip().startswith(comment_prefix)):
+                        end_line = j
+                        j += 1
+                    # If it's a non-comment line with content, end of block
+                    elif next_line.strip() and not next_line.strip().startswith(comment_prefix):
+                        end_line = j - 1
+                        break
+                    else:
+                        j += 1
+
+                # Extract the block
+                # Move past this block
+                i = end_line + 1
+            else:
+                i += 1
+
+        return blocks
+
+        self,
+        filepath: str,
+        content: str,
+        line_ending: str,
+        all_blocks: List[Tuple[str, int, int]],
+    ) -> None:
+        """
+        :param filepath: Path to the file
+        :param content: Current file content
+        :param line_ending: Line ending style
+        """
+        if len(all_blocks) <= 1:
+            return
+
+        # Normalize content
+        normalized_content = content.replace("\r\n", "\n")
+        lines = normalized_content.split("\n")
+
+        # Keep only the first block, remove all others
+        lines_to_remove = set()
+        for _, start_line, end_line in all_blocks[1:]:
+            for i in range(start_line, end_line + 1):
+                lines_to_remove.add(i)
+
+            # Also remove trailing blank line if present
+            next_line_idx = end_line + 1
+            if next_line_idx < len(lines) and not lines[next_line_idx].strip():
+                lines_to_remove.add(next_line_idx)
+
+        # Build new content
+        new_lines = [line for i, line in enumerate(lines) if i not in lines_to_remove]
+        new_content = "\n".join(new_lines)
+
+        # Convert to original line ending
+        if line_ending == "\r\n":
+            new_content = new_content.replace("\n", "\r\n")
+
+        # Write back
+        with open(filepath, "wb") as f:
+            f.write(new_content.encode("utf-8"))
+
     def check_files(
         self, filepaths: List[str], auto_fix: bool = True
     ) -> Tuple[List[str], List[str], List[str]]:
         """
-        Check multiple files for copyright notices.
-
         :param filepaths: List of file paths to check
-        :param auto_fix: If True, automatically add missing copyright notices
         :return: Tuple of (passed_files, failed_files, modified_files)
         """
         passed = []
@@ -648,34 +748,25 @@ class CopyrightChecker:
             logging.debug("Git is not installed or not available")
             return True  # Assume modified if Git not available
 
-    def _determine_copyright_year(
-        self, filepath: str, template: CopyrightTemplate, content: str
     ) -> str:
         """
-        Determine the appropriate copyright year or year range for a file.
-
         Logic:
-        1. If file has existing copyright, extract existing years
         2. If file is unchanged in Git, preserve existing years
         3. If file is modified, extend year range to current year
-        4. If no existing copyright:
            - Use Git creation year as start (if available)
            - Use current year as end if file is modified
 
         :param filepath: Path to the file
-        :param template: Copyright template for the file type
         :param content: Current file content
         :return: Year string (e.g., "2024" or "2020-2024")
         """
         current_year = datetime.now().year
 
-        # Try to extract existing years from copyright notice
         existing_years = template.extract_years(content)
 
         if existing_years:
             start_year, end_year = existing_years
             logging.debug(
-                f"Existing copyright years: {start_year}-{end_year or start_year}"
             )
 
             # When using project-wide years, consider project inception year
@@ -710,7 +801,6 @@ class CopyrightChecker:
                     year_str = str(start_year)
                 logging.debug(f"File unchanged, preserving years: {year_str}")
         else:
-            # No existing copyright, determine from Git history
             if self.per_file_years:
                 # Use individual file creation year
                 creation_year = self._get_file_creation_year(filepath)
@@ -724,11 +814,9 @@ class CopyrightChecker:
                         year_str = f"{creation_year}-{current_year}"
                     else:
                         year_str = str(creation_year)
-                    logging.debug(f"New copyright using Git file history: {year_str}")
                 else:
                     # File not in Git, use current year
                     year_str = str(current_year)
-                    logging.debug(f"New copyright using current year: {year_str}")
             else:
                 # Use project inception year (project-wide mode)
                 creation_year = self._get_repository_creation_year(filepath)
@@ -740,31 +828,17 @@ class CopyrightChecker:
                     else:
                         year_str = str(creation_year)
                     logging.debug(
-                        f"New copyright using Git project history: {year_str}"
                     )
                 else:
                     # Project not in Git, use current year
                     year_str = str(current_year)
-                    logging.debug(f"New copyright using current year: {year_str}")
-
         return year_str
 
-    def _extract_author_entity(self, text: str) -> Optional[str]:
         """
-        Extract the specific author/entity identifier from copyright text.
-
         This identifies the organizational unit or department to ensure
-        we don't replace copyrights from different units within the same company.
-
-        :param text: Copyright text
         :return: Key entity identifier or None
         """
-        # Look for Author: line
-        author_match = re.search(r"author\s*:\s*([^\n]+)", text, re.IGNORECASE)
-        if not author_match:
             return None
-
-        author_line = author_match.group(1).strip()
 
         # Extract the first significant part before comma or "Laboratory" or company name
         # This captures the unit/department identifier
@@ -774,13 +848,10 @@ class CopyrightChecker:
         #   "NSCE, Brussels Laboratory" -> "nsce"
 
         # Remove company name to focus on the unit
-        author_line = re.sub(
-            r",?\s*sony\s+group\s+corporation.*", "", author_line, flags=re.IGNORECASE
         )
 
         # Take the part before "Laboratory" or first comma
         parts = re.split(
-            r",|\s+laboratory", author_line, maxsplit=1, flags=re.IGNORECASE
         )
         if parts:
             entity = parts[0].strip()
@@ -793,25 +864,17 @@ class CopyrightChecker:
 
         return None
 
-    def _normalize_copyright_text(self, text: str) -> str:
         """
-        Normalize copyright text for similarity comparison.
-
         Removes year information, special characters, and normalizes whitespace
         to focus on the business entity and structure.
 
-        :param text: Copyright text to normalize
         :return: Normalized text for comparison
         """
         # Remove years (4-digit numbers and year ranges)
         text = re.sub(r"\b\d{4}(-\d{4})?\b", "", text)
 
-        # Remove common copyright symbols and markers
-        text = re.sub(r"[©Ⓒⓒ(c)(C)]", "", text, flags=re.IGNORECASE)
-
         # Remove common prefixes/keywords to focus on entity
         text = re.sub(
-            r"\b(copyright|author|license|spdx-license-identifier)\s*:?\s*",
             "",
             text,
             flags=re.IGNORECASE,
@@ -908,32 +971,16 @@ class CopyrightChecker:
 
         return len(intersection) / len(union) if union else 0.0
 
-    def _calculate_copyright_similarity(self, text1: str, text2: str) -> float:
         """
-        Calculate similarity score between two copyright texts using multiple methods.
-
-        IMPORTANT: Enforces strict author/entity matching to prevent replacing
-        copyrights from different organizational units within the same company.
-
         Uses a weighted combination of:
         - Token similarity (Jaccard coefficient): Fast, good for entity matching
         - Character n-gram similarity: Robust to typos and variations
         - Sequence similarity (LCS ratio): Considers structural similarity
-        - Author entity matching: CRITICAL check to prevent cross-unit replacement
-
-        :param text1: First copyright text
-        :param text2: Second copyright text
         :return: Similarity score between 0.0 and 1.0
         """
-        # CRITICAL: Extract and compare author entities first
-        # Different organizational units must NOT replace each other
-        entity1 = self._extract_author_entity(text1)
-        entity2 = self._extract_author_entity(text2)
-
         logging.debug(f"  Entity1 (existing): {entity1}")
         logging.debug(f"  Entity2 (template): {entity2}")
 
-        # If both have author entities specified, they must match closely
         if entity1 and entity2:
             # Calculate entity similarity using token-based comparison
             entity_tokens1 = set(entity1.split())
@@ -959,9 +1006,6 @@ class CopyrightChecker:
                     )
                     return 0.0  # Return 0 to prevent replacement
 
-        norm1 = self._normalize_copyright_text(text1)
-        norm2 = self._normalize_copyright_text(text2)
-
         if not norm1 or not norm2:
             return 0.0
 
@@ -977,22 +1021,15 @@ class CopyrightChecker:
         similarity = (0.4 * token_sim) + (0.4 * ngram_sim) + (0.2 * sequence_sim)
 
         logging.debug(
-            f"Copyright similarity: {similarity:.2f} (token={token_sim:.2f}, ngram={ngram_sim:.2f}, seq={sequence_sim:.2f})"
         )
         logging.debug(f"  Text1 normalized: {norm1}")
         logging.debug(f"  Text2 normalized: {norm2}")
 
         return similarity
 
-    def _extract_copyright_block(
-        self, content: str, template: CopyrightTemplate
     ) -> Optional[Tuple[str, int, int]]:
         """
-        Extract existing copyright block from file content.
-
         :param content: File content
-        :param template: Copyright template for the file type
-        :return: Tuple of (copyright_text, start_line, end_line) or None if not found
         """
         content_lines = content.split("\n")
 
@@ -1008,10 +1045,6 @@ class CopyrightChecker:
 
         comment_prefix = comment_prefix_match.group(1).strip()
 
-        # Search for copyright block
-        # Look for lines that start with the comment prefix and contain copyright-related keywords
-        copyright_keywords = ["copyright", "©", "(c)", "author", "license", "spdx"]
-
         start_line = None
         end_line = None
 
@@ -1021,27 +1054,19 @@ class CopyrightChecker:
             if i == 0 and line.startswith("#!"):
                 continue
 
-            # Check if line looks like a copyright comment
-            if any(keyword in line_lower for keyword in copyright_keywords):
                 if start_line is None:
                     start_line = i
                 end_line = i
             elif start_line is not None and line.strip() == "":
-                # Empty line after copyright block
                 break
             elif (
                 start_line is not None
                 and not line.strip().startswith(comment_prefix)
                 and line.strip()
             ):
-                # Non-comment line after copyright started
                 break
 
         if start_line is not None and end_line is not None:
-            copyright_lines = content_lines[start_line : end_line + 1]
-            copyright_text = "\n".join(copyright_lines)
-            return (copyright_text, start_line, end_line)
-
         return None
 
     def _merge_year_ranges(
@@ -1050,7 +1075,6 @@ class CopyrightChecker:
         """
         Merge existing and new year ranges intelligently.
 
-        :param existing_years: Tuple of (start_year, end_year or None) from existing copyright
         :param new_start: New start year to consider
         :param new_end: New end year to consider
         :return: Merged year string (e.g., "2020-2026")
@@ -1075,13 +1099,11 @@ class CopyrightChecker:
         :return: Tuple of (start_year, end_year) or None
         """
         # Look for year patterns: YYYY or YYYY-YYYY
-        # Also handle (c), ©, and other copyright markers before the year
         year_pattern = r"\b(\d{4})(?:\s*-\s*(\d{4}))?\b"
 
         matches = re.findall(year_pattern, text)
 
         if matches:
-            # Take the first match (usually the copyright year)
             first_match = matches[0]
             start_year = int(first_match[0])
             end_year = int(first_match[1]) if first_match[1] else None
@@ -1093,63 +1115,37 @@ class CopyrightChecker:
 
         return None
 
-    def _replace_copyright_notice(
         self,
         filepath: str,
-        template: CopyrightTemplate,
         content: str,
         line_ending: str = "\n",
     ) -> bool:
         """
-        Replace an existing similar copyright notice with the template notice.
-
         :param filepath: Path to the file
-        :param template: Copyright template to use
         :param content: Current file content
         :param line_ending: Line ending style to use
         :return: True if replacement was made, False otherwise
         """
-        # Extract existing copyright block
-        copyright_info = self._extract_copyright_block(content, template)
-
-        if not copyright_info:
-            logging.debug(f"No existing copyright block found in {filepath}")
             return False
 
-        existing_copyright, start_line, end_line = copyright_info
-
-        # Generate template copyright text for comparison (without year)
         template_text = template.get_notice_with_year("YEAR")
 
         # Calculate similarity
-        similarity = self._calculate_copyright_similarity(
-            existing_copyright, template_text
         )
 
-        # Use a threshold of 0.4 (40% similarity) to determine if copyrights are related
-        # This allows for variations in author, license details, etc.
         SIMILARITY_THRESHOLD = 0.4
 
         if similarity < SIMILARITY_THRESHOLD:
             logging.debug(
-                f"Copyright similarity {similarity:.2f} below threshold {SIMILARITY_THRESHOLD}, "
                 f"not replacing in {filepath}"
             )
             return False
 
         logging.info(
-            f"Found similar copyright (similarity: {similarity:.2f}) in {filepath}, replacing..."
         )
-
-        # Extract years from existing copyright using both template-specific and general methods
-        existing_years = template.extract_years(existing_copyright)
 
         # If template extraction failed, try a general year extraction
         if not existing_years:
-            existing_years = self._extract_years_general(existing_copyright)
-
-        logging.debug(f"Extracted years from existing copyright: {existing_years}")
-
         # Determine the new year range
         current_year = datetime.now().year
         creation_year = self._get_file_creation_year(filepath)
@@ -1188,7 +1184,6 @@ class CopyrightChecker:
                     else:
                         year_str = str(old_start)
         else:
-            # No years found in existing copyright, use standard logic
             if creation_year and creation_year < current_year:
                 year_str = f"{creation_year}-{current_year}"
             else:
@@ -1196,13 +1191,8 @@ class CopyrightChecker:
 
         logging.debug(f"Using year range: {year_str}")
 
-        # Generate new copyright notice with merged years
-        new_copyright = template.get_notice_with_year(year_str)
-
-        # Replace the copyright block in content
         content_lines = content.replace("\r\n", "\n").split("\n")
 
-        # Remove old copyright lines
         new_lines = content_lines[:start_line] + content_lines[end_line + 1 :]
 
         # Determine insertion position (after shebang if present)
@@ -1210,9 +1200,7 @@ class CopyrightChecker:
         if new_lines and new_lines[0].startswith("#!"):
             insert_position = 1
 
-        # Insert new copyright
         if insert_position == 0:
-            new_content = new_copyright + "\n\n" + "\n".join(new_lines)
         else:
             # After shebang
             if insert_position < len(new_lines) and new_lines[insert_position].strip():
@@ -1220,7 +1208,6 @@ class CopyrightChecker:
                 new_content = (
                     new_lines[0]
                     + "\n"
-                    + new_copyright
                     + "\n\n"
                     + "\n".join(new_lines[insert_position:])
                 )
@@ -1228,7 +1215,6 @@ class CopyrightChecker:
                 new_content = (
                     new_lines[0]
                     + "\n"
-                    + new_copyright
                     + "\n\n"
                     + "\n".join(new_lines[insert_position:])
                 )
@@ -1241,5 +1227,4 @@ class CopyrightChecker:
         with open(filepath, "wb") as f:
             f.write(new_content.encode("utf-8"))
 
-        logging.info(f"Successfully replaced copyright notice in {filepath}")
         return True
