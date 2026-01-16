@@ -11,7 +11,6 @@ import tempfile
 import time
 import unittest
 import pytest
-from pathlib import Path
 
 from scripts.copyright_checker import CopyrightChecker
 
@@ -41,27 +40,38 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
     def test_similarity_calculation(self):
         """Test copyright similarity calculation"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Test high similarity (same unit)
         text1 = "Copyright Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory"
         text2 = "Copyright 2024 Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory"
         similarity = checker._calculate_copyright_similarity(text1, text2)
-        self.assertGreater(similarity, 0.5, "Similar copyrights from same unit should have >50% similarity")
+        self.assertGreater(
+            similarity,
+            0.5,
+            "Similar copyrights from same unit should have >50% similarity",
+        )
 
         # Test low similarity
         text3 = "Copyright Microsoft Corporation\nAuthor: Redmond Office"
         similarity_low = checker._calculate_copyright_similarity(text1, text3)
-        self.assertLess(similarity_low, 0.3, "Different entities should have <30% similarity")
+        self.assertLess(
+            similarity_low, 0.3, "Different entities should have <30% similarity"
+        )
 
     def test_year_extraction_general(self):
         """Test general year extraction from various copyright formats"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Test single year
         text1 = "Copyright 2025 Sony Group Corporation"
@@ -80,7 +90,9 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
     def test_year_range_merging(self):
         """Test intelligent year range merging"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Test extending range
         result = checker._merge_year_ranges((2021, 2024), 2021, 2026)
@@ -96,7 +108,9 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
     def test_copyright_block_extraction(self):
         """Test extraction of copyright block from file content"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
         templates = checker.templates
 
         content = """# Copyright 2025 Sony Group Corporation
@@ -106,7 +120,7 @@ def my_function():
     pass
 """
 
-        template = templates['.py']
+        template = templates[".py"]
         result = checker._extract_copyright_block(content, template)
 
         self.assertIsNotNone(result)
@@ -117,7 +131,9 @@ def my_function():
 
     def test_replace_similar_copyright(self):
         """Test replacing a similar copyright with template version"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Create test file with old copyright that is similar enough
         test_file = os.path.join(self.temp_dir, "test.py")
@@ -149,7 +165,9 @@ def test_function():
 
     def test_no_replace_dissimilar_copyright(self):
         """Test that dissimilar copyrights are not replaced"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Create test file with very different copyright
         test_file = os.path.join(self.temp_dir, "test2.py")
@@ -178,7 +196,9 @@ def test_function():
 
     def test_replace_preserves_code(self):
         """Test that copyright replacement preserves the rest of the file"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test3.py")
         old_content = """# Copyright 2023 Sony Group Corporation
@@ -210,7 +230,9 @@ if __name__ == "__main__":
 
     def test_no_replace_different_sony_units(self):
         """Test that different Sony organizational units are NOT replaced"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Test various Sony units that should NOT be replaced by R&D Center copyright
         different_units = [
@@ -248,8 +270,9 @@ def unit_function():
             # The key test: the original unit name must still be in the file
             # This ensures the copyright wasn't replaced
             self.assertIn(
-                unit_name, new_content,
-                f"Original unit '{unit_name}' should be preserved (not replaced by R&D Center)"
+                unit_name,
+                new_content,
+                f"Original unit '{unit_name}' should be preserved (not replaced by R&D Center)",
             )
 
             # If protection worked correctly, should be 1 copyright (not replaced)
@@ -265,28 +288,48 @@ def unit_function():
 
     def test_entity_extraction(self):
         """Test extraction of organizational unit identifiers"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_cases = [
-            ("Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation", "r&d center europe brussels"),
-            ("Author: Haptic Europe, Brussels Laboratory, Sony Group Corporation", "haptic europe"),
+            (
+                "Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation",
+                "r&d center europe brussels",
+            ),
+            (
+                "Author: Haptic Europe, Brussels Laboratory, Sony Group Corporation",
+                "haptic europe",
+            ),
             ("Author: NSCE, Brussels Laboratory, Sony Group Corporation", "nsce"),
             ("Author: MSE Laboratory, Sony Group Corporation", "mse"),
-            ("Author: Network Comm, Brussels Laboratory, Sony Group Corporation", "network comm"),
-            ("Author: Entertainment Europe, Brussels Laboratory, Sony Group Corporation", "entertainment europe"),
-            ("Author: SCDE Europe, Brussels Laboratory, Sony Group Corporation", "scde europe"),
+            (
+                "Author: Network Comm, Brussels Laboratory, Sony Group Corporation",
+                "network comm",
+            ),
+            (
+                "Author: Entertainment Europe, Brussels Laboratory, Sony Group Corporation",
+                "entertainment europe",
+            ),
+            (
+                "Author: SCDE Europe, Brussels Laboratory, Sony Group Corporation",
+                "scde europe",
+            ),
         ]
 
         for text, expected_entity in test_cases:
             entity = checker._extract_author_entity(text)
             self.assertEqual(
-                entity, expected_entity,
-                f"Failed to extract correct entity from: {text}"
+                entity,
+                expected_entity,
+                f"Failed to extract correct entity from: {text}",
             )
 
     def test_same_unit_different_wording_allows_replacement(self):
         """Test that the same unit with different wording CAN be replaced"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test_same_unit.py")
         # Same unit (R&D Center Europe) but slightly different formatting
@@ -342,12 +385,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
     def test_replace_same_unit_abbreviation_variation(self):
         """Test replacement when same unit uses abbreviation variation"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         # "R&D" vs "Research & Development" - should still match
@@ -362,7 +408,10 @@ def test():
 
         has_notice, was_modified = checker.check_file(test_file, auto_fix=True)
 
-        self.assertTrue(was_modified, "Same unit with abbreviation variation should trigger modification")
+        self.assertTrue(
+            was_modified,
+            "Same unit with abbreviation variation should trigger modification",
+        )
 
         with open(test_file, "r", encoding="utf-8") as f:
             new_content = f.read()
@@ -373,7 +422,9 @@ def test():
 
     def test_replace_outdated_license_reference(self):
         """Test replacement of outdated license reference with same unit"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2020-2023 Sony Group Corporation
@@ -399,7 +450,9 @@ def test():
 
     def test_replace_copyright_with_extra_whitespace(self):
         """Test replacement when original has extra whitespace"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """#  Copyright   2021  Sony Group Corporation
@@ -413,7 +466,9 @@ def test():
 
         has_notice, was_modified = checker.check_file(test_file, auto_fix=True)
 
-        self.assertTrue(was_modified, "Copyright with extra whitespace should be replaced")
+        self.assertTrue(
+            was_modified, "Copyright with extra whitespace should be replaced"
+        )
 
 
 class TestCopyrightReplaceNegative(unittest.TestCase):
@@ -440,12 +495,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
     def test_no_replace_completely_different_company(self):
         """Test no replacement for completely different company"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2023 Microsoft Corporation
@@ -468,7 +526,9 @@ def test():
 
     def test_no_replace_different_sony_division(self):
         """Test no replacement across different Sony divisions"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         divisions = [
             "PlayStation Studios, Sony Interactive Entertainment",
@@ -497,7 +557,9 @@ def test():
 
     def test_no_replace_missing_author_in_existing(self):
         """Test behavior when existing copyright has no author field"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2023 Sony Group Corporation
@@ -544,12 +606,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
     def test_copyright_with_unicode_characters(self):
         """Test replacement with unicode characters in author name"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2023 Sony Group Corporation
@@ -571,7 +636,9 @@ def test():
 
     def test_very_long_copyright_block(self):
         """Test replacement with very long copyright notice"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         long_copyright = """# Copyright 2020-2023 Sony Group Corporation
@@ -599,7 +666,9 @@ def test():
 
     def test_copyright_at_end_of_file(self):
         """Test when copyright is at the end of file (unusual but possible)"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """def test():
@@ -619,7 +688,9 @@ def test():
 
     def test_empty_file_replacement(self):
         """Test replacement on empty file"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         with open(test_file, "w", encoding="utf-8") as f:
@@ -636,7 +707,9 @@ def test():
 
     def test_multiple_consecutive_copyrights(self):
         """Test file with multiple copyright blocks"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2020 Sony Group Corporation
@@ -658,7 +731,9 @@ def test():
 
     def test_copyright_with_no_blank_line_after(self):
         """Test copyright immediately followed by code"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2023 Sony Group Corporation
@@ -680,7 +755,9 @@ def test():
 
     def test_year_range_already_current(self):
         """Test when year range already includes current year"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "test.py")
         old_content = """# Copyright 2020-2026 Sony Group Corporation
@@ -726,12 +803,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
     def test_large_file_with_copyright(self):
         """Test replacement in a very large file"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         test_file = os.path.join(self.temp_dir, "large_test.py")
 
@@ -740,12 +820,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
 """
-        old_content += "\n".join([f"def function_{i}():\n    pass\n" for i in range(5000)])
+        old_content += "\n".join(
+            [f"def function_{i}():\n    pass\n" for i in range(5000)]
+        )
 
         with open(test_file, "w", encoding="utf-8") as f:
             f.write(old_content)
 
         import time
+
         start_time = time.time()
         has_notice, was_modified = checker.check_file(test_file, auto_fix=True)
         elapsed = time.time() - start_time
@@ -756,7 +839,9 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
     def test_many_files_batch_processing(self):
         """Test processing many files in batch"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Create 50 test files
         test_files = []
@@ -773,38 +858,55 @@ def test_{i}():
             test_files.append(test_file)
 
         import time
+
         start_time = time.time()
         passed, failed, modified = checker.check_files(test_files, auto_fix=True)
         elapsed = time.time() - start_time
 
         # Should complete in reasonable time
-        self.assertLess(elapsed, 10.0, f"Batch processing took too long: {elapsed:.2f}s")
+        self.assertLess(
+            elapsed, 10.0, f"Batch processing took too long: {elapsed:.2f}s"
+        )
         self.assertEqual(len(failed), 0, "All files should process successfully")
         self.assertEqual(len(modified), 50, "All files should be modified")
 
     def test_similarity_calculation_performance(self):
         """Test performance of similarity calculation with long texts"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Create short copyright texts for performance testing
-        long_text1 = "Copyright Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n" + ("Additional line\n" * 20)
-        long_text2 = "Copyright 2024 Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n" + ("Different line\n" * 20)
+        long_text1 = (
+            "Copyright Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n"
+            + ("Additional line\n" * 20)
+        )
+        long_text2 = (
+            "Copyright 2024 Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n"
+            + ("Different line\n" * 20)
+        )
 
         import time
+
         start_time = time.time()
 
         # Calculate similarity just 5 times to avoid hanging
         for _ in range(5):
             similarity = checker._calculate_copyright_similarity(long_text1, long_text2)
+            assert similarity is not None, "Similarity should be calculated"
 
         elapsed = time.time() - start_time
 
         # Very lenient expectation - just ensure it completes
-        self.assertLess(elapsed, 5.0, f"Similarity calculation too slow: {elapsed:.2f}s")
+        self.assertLess(
+            elapsed, 5.0, f"Similarity calculation too slow: {elapsed:.2f}s"
+        )
 
     def test_deeply_nested_year_extraction(self):
         """Test year extraction with many potential year patterns"""
-        checker = CopyrightChecker(self.template_file, git_aware=False, replace_mode=True)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=False, replace_mode=True
+        )
 
         # Text with many years (should extract first one)
         complex_text = """Copyright 2020 Sony Group Corporation
@@ -824,12 +926,14 @@ Copyright years: 2020-2024
 # PARAMETRIZED PYTEST TESTS - More comprehensive coverage
 # ============================================================================
 
+
 @pytest.fixture
 def temp_dir_pytest():
     """Create a temporary directory for pytest test files"""
     temp_d = tempfile.mkdtemp()
     yield temp_d
     import shutil
+
     if os.path.exists(temp_d):
         shutil.rmtree(temp_d)
 
@@ -854,13 +958,21 @@ AUTHOR = R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
 
 # POSITIVE TESTS - Parametrized
-@pytest.mark.parametrize("old_author,expected_match", [
-    ("R&D Center Europe Brussels Laboratory, Sony Group Corporation", True),
-    ("Research & Development Center Europe Brussels Laboratory, Sony Group Corporation", True),
-    ("R&D Center Europe Brussels Lab, Sony Group Corporation", True),
-    ("R&D Center Europe Brussels Laboratory", True),
-])
-def test_replace_same_unit_variations_parametrized(temp_dir_pytest, template_file_pytest, old_author, expected_match):
+@pytest.mark.parametrize(
+    "old_author,expected_match",
+    [
+        ("R&D Center Europe Brussels Laboratory, Sony Group Corporation", True),
+        (
+            "Research & Development Center Europe Brussels Laboratory, Sony Group Corporation",
+            True,
+        ),
+        ("R&D Center Europe Brussels Lab, Sony Group Corporation", True),
+        ("R&D Center Europe Brussels Laboratory", True),
+    ],
+)
+def test_replace_same_unit_variations_parametrized(
+    temp_dir_pytest, template_file_pytest, old_author, expected_match
+):
     """Test replacement with various acceptable variations of the same unit"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -880,19 +992,26 @@ def test():
         new_content = f.read()
 
     if expected_match:
-        assert was_modified, f"Same unit variation '{old_author}' should trigger modification"
+        assert was_modified, (
+            f"Same unit variation '{old_author}' should trigger modification"
+        )
         # Should have year updated to include 2026
         assert "2026" in new_content or "2022" in new_content, "Year should be present"
 
 
-@pytest.mark.parametrize("old_years,expected_merged", [
-    ("2020", "2020-2026"),
-    ("2021-2023", "2021-2026"),
-    ("2018-2024", "2018-2026"),
-    ("2025", "2025-2026"),
-    ("2020-2021", "2020-2026"),
-])
-def test_replace_year_range_merging_parametrized(temp_dir_pytest, template_file_pytest, old_years, expected_merged):
+@pytest.mark.parametrize(
+    "old_years,expected_merged",
+    [
+        ("2020", "2020-2026"),
+        ("2021-2023", "2021-2026"),
+        ("2018-2024", "2018-2026"),
+        ("2025", "2025-2026"),
+        ("2020-2021", "2020-2026"),
+    ],
+)
+def test_replace_year_range_merging_parametrized(
+    temp_dir_pytest, template_file_pytest, old_years, expected_merged
+):
     """Test year range merging with various starting years"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -916,12 +1035,17 @@ def test():
     assert expected_merged in new_content, f"Expected year range {expected_merged}"
 
 
-@pytest.mark.parametrize("old_license", [
-    "License: See OldLicense.md for details",
-    "License: For licensing see the OldLicense.txt file",
-    "License: GPL v2",
-])
-def test_replace_outdated_license_references_parametrized(temp_dir_pytest, template_file_pytest, old_license):
+@pytest.mark.parametrize(
+    "old_license",
+    [
+        "License: See OldLicense.md for details",
+        "License: For licensing see the OldLicense.txt file",
+        "License: GPL v2",
+    ],
+)
+def test_replace_outdated_license_references_parametrized(
+    temp_dir_pytest, template_file_pytest, old_license
+):
     """Test replacement of various outdated license references"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -945,14 +1069,19 @@ def test():
 
 
 # NEGATIVE TESTS - Parametrized
-@pytest.mark.parametrize("company,author", [
-    ("Microsoft Corporation", "Azure Team"),
-    ("Google LLC", "Google Brain"),
-    ("Amazon.com, Inc.", "AWS Team"),
-    ("Meta Platforms, Inc.", "Reality Labs"),
-    ("Apple Inc.", "CoreOS Team"),
-])
-def test_no_replace_different_companies_parametrized(temp_dir_pytest, template_file_pytest, company, author):
+@pytest.mark.parametrize(
+    "company,author",
+    [
+        ("Microsoft Corporation", "Azure Team"),
+        ("Google LLC", "Google Brain"),
+        ("Amazon.com, Inc.", "AWS Team"),
+        ("Meta Platforms, Inc.", "Reality Labs"),
+        ("Apple Inc.", "CoreOS Team"),
+    ],
+)
+def test_no_replace_different_companies_parametrized(
+    temp_dir_pytest, template_file_pytest, company, author
+):
     """Test no replacement for completely different companies"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -975,19 +1104,24 @@ def test():
     assert company in new_content, f"Original {company} should be preserved"
 
 
-@pytest.mark.parametrize("sony_unit", [
-    "Haptic Europe, Brussels Laboratory, Sony Group Corporation",
-    "NSCE, Sony Group Corporation",
-    "MSE, Sony Group Corporation",
-    "Network Communications Europe, Sony Group Corporation",
-    "Sony Entertainment Europe, Sony Group Corporation",
-    "PlayStation Studios, Sony Interactive Entertainment",
-    "Sony Pictures Entertainment",
-    "Sony Music Entertainment Japan",
-    "Sony Semiconductor Solutions Corporation",
-    "Sony AI",
-])
-def test_no_replace_different_sony_units_parametrized(temp_dir_pytest, template_file_pytest, sony_unit):
+@pytest.mark.parametrize(
+    "sony_unit",
+    [
+        "Haptic Europe, Brussels Laboratory, Sony Group Corporation",
+        "NSCE, Sony Group Corporation",
+        "MSE, Sony Group Corporation",
+        "Network Communications Europe, Sony Group Corporation",
+        "Sony Entertainment Europe, Sony Group Corporation",
+        "PlayStation Studios, Sony Interactive Entertainment",
+        "Sony Pictures Entertainment",
+        "Sony Music Entertainment Japan",
+        "Sony Semiconductor Solutions Corporation",
+        "Sony AI",
+    ],
+)
+def test_no_replace_different_sony_units_parametrized(
+    temp_dir_pytest, template_file_pytest, sony_unit
+):
     """Test no replacement across different Sony organizational units"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1008,19 +1142,26 @@ def test():
 
     # Original unit identifier should be preserved in the content
     unit_identifier = sony_unit.split(",")[0].strip()
-    assert unit_identifier in new_content, f"Original unit {unit_identifier} should be preserved"
+    assert unit_identifier in new_content, (
+        f"Original unit {unit_identifier} should be preserved"
+    )
 
 
 # EDGE CASE TESTS - Parametrized
-@pytest.mark.parametrize("special_char_name", [
-    "François Müller",
-    "Søren Kierkegård",
-    "José García",
-    "Владимир Иванов",
-    "李明",
-    "محمد احمد",
-])
-def test_copyright_with_unicode_author_names_parametrized(temp_dir_pytest, template_file_pytest, special_char_name):
+@pytest.mark.parametrize(
+    "special_char_name",
+    [
+        "François Müller",
+        "Søren Kierkegård",
+        "José García",
+        "Владимир Иванов",
+        "李明",
+        "محمد احمد",
+    ],
+)
+def test_copyright_with_unicode_author_names_parametrized(
+    temp_dir_pytest, template_file_pytest, special_char_name
+):
     """Test replacement with various unicode characters in author names"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1043,13 +1184,18 @@ def test():
         pytest.fail(f"Failed with unicode character: {e}")
 
 
-@pytest.mark.parametrize("whitespace_pattern", [
-    "#  Copyright   2021  Sony Group Corporation",  # Extra spaces
-    "#\tCopyright\t2021\tSony Group Corporation",  # Tabs
-    "# Copyright  2021   Sony Group Corporation",  # Multiple spaces
-    "#Copyright 2021 Sony Group Corporation",  # No space after #
-])
-def test_copyright_with_various_whitespace_parametrized(temp_dir_pytest, template_file_pytest, whitespace_pattern):
+@pytest.mark.parametrize(
+    "whitespace_pattern",
+    [
+        "#  Copyright   2021  Sony Group Corporation",  # Extra spaces
+        "#\tCopyright\t2021\tSony Group Corporation",  # Tabs
+        "# Copyright  2021   Sony Group Corporation",  # Multiple spaces
+        "#Copyright 2021 Sony Group Corporation",  # No space after #
+    ],
+)
+def test_copyright_with_various_whitespace_parametrized(
+    temp_dir_pytest, template_file_pytest, whitespace_pattern
+):
     """Test replacement with various whitespace patterns"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1069,21 +1215,30 @@ def test():
     assert True, "Should handle whitespace variations"
 
 
-@pytest.mark.parametrize("copyright_lines", [
-    3,   # Short
-    5,   # Medium
-    10,  # Long
-    20,  # Very long
-])
-def test_various_copyright_block_lengths_parametrized(temp_dir_pytest, template_file_pytest, copyright_lines):
+@pytest.mark.parametrize(
+    "copyright_lines",
+    [
+        3,  # Short
+        5,  # Medium
+        10,  # Long
+        20,  # Very long
+    ],
+)
+def test_various_copyright_block_lengths_parametrized(
+    temp_dir_pytest, template_file_pytest, copyright_lines
+):
     """Test replacement with various copyright block lengths"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
     test_file = os.path.join(temp_dir_pytest, "test.py")
 
-    copyright_block = ["# Copyright 2023 Sony Group Corporation",
-                       "# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation"]
-    copyright_block.extend([f"# Additional line {i}" for i in range(copyright_lines - 2)])
+    copyright_block = [
+        "# Copyright 2023 Sony Group Corporation",
+        "# Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation",
+    ]
+    copyright_block.extend(
+        [f"# Additional line {i}" for i in range(copyright_lines - 2)]
+    )
 
     old_content = "\n".join(copyright_block) + "\n\ndef test():\n    pass\n"
 
@@ -1099,14 +1254,19 @@ def test_various_copyright_block_lengths_parametrized(temp_dir_pytest, template_
     assert "def test():" in new_content, "Code should be preserved"
 
 
-@pytest.mark.parametrize("file_extension,comment_style", [
-    (".py", "#"),
-    (".cpp", "//"),
-    (".c", "//"),
-    (".java", "//"),
-    (".js", "//"),
-])
-def test_different_file_types_parametrized(temp_dir_pytest, file_extension, comment_style):
+@pytest.mark.parametrize(
+    "file_extension,comment_style",
+    [
+        (".py", "#"),
+        (".cpp", "//"),
+        (".c", "//"),
+        (".java", "//"),
+        (".js", "//"),
+    ],
+)
+def test_different_file_types_parametrized(
+    temp_dir_pytest, file_extension, comment_style
+):
     """Test replacement across different file types with different comment styles"""
     template_path = os.path.join(temp_dir_pytest, "copyright_multi.txt")
     template_content = f"""[VARIABLES]
@@ -1139,13 +1299,18 @@ void test() {{}}
 
 
 # STRESS TESTS - Parametrized
-@pytest.mark.parametrize("file_lines", [
-    100,
-    1000,
-    5000,
-    10000,
-])
-def test_large_file_performance_parametrized(temp_dir_pytest, template_file_pytest, file_lines):
+@pytest.mark.parametrize(
+    "file_lines",
+    [
+        100,
+        1000,
+        5000,
+        10000,
+    ],
+)
+def test_large_file_performance_parametrized(
+    temp_dir_pytest, template_file_pytest, file_lines
+):
     """Test replacement performance with various file sizes"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1156,7 +1321,9 @@ def test_large_file_performance_parametrized(temp_dir_pytest, template_file_pyte
 # Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 
 """
-    old_content += "\n".join([f"def function_{i}():\n    pass\n" for i in range(file_lines // 2)])
+    old_content += "\n".join(
+        [f"def function_{i}():\n    pass\n" for i in range(file_lines // 2)]
+    )
 
     with open(test_file, "w", encoding="utf-8") as f:
         f.write(old_content)
@@ -1167,16 +1334,23 @@ def test_large_file_performance_parametrized(temp_dir_pytest, template_file_pyte
 
     # Performance expectations based on file size
     max_time = 0.5 if file_lines < 1000 else (5.0 if file_lines < 10000 else 10.0)
-    assert elapsed < max_time, f"File with {file_lines} lines took too long: {elapsed:.2f}s (max: {max_time}s)"
+    assert elapsed < max_time, (
+        f"File with {file_lines} lines took too long: {elapsed:.2f}s (max: {max_time}s)"
+    )
     assert was_modified, "Large file should be processed successfully"
 
 
-@pytest.mark.parametrize("num_files", [
-    10,
-    25,
-    50,
-])
-def test_batch_processing_performance_parametrized(temp_dir_pytest, template_file_pytest, num_files):
+@pytest.mark.parametrize(
+    "num_files",
+    [
+        10,
+        25,
+        50,
+    ],
+)
+def test_batch_processing_performance_parametrized(
+    temp_dir_pytest, template_file_pytest, num_files
+):
     """Test batch processing performance with various numbers of files"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1200,23 +1374,36 @@ def test_{i}():
 
     # Performance expectations
     max_time = 2.0 if num_files < 25 else (5.0 if num_files < 50 else 10.0)
-    assert elapsed < max_time, f"Batch of {num_files} files took too long: {elapsed:.2f}s (max: {max_time}s)"
+    assert elapsed < max_time, (
+        f"Batch of {num_files} files took too long: {elapsed:.2f}s (max: {max_time}s)"
+    )
     assert len(failed) == 0, "All files should process successfully"
     assert len(modified) == num_files, f"All {num_files} files should be modified"
 
 
 @pytest.mark.slow  # Mark as slow test
-@pytest.mark.parametrize("text_length", [
-    20,    # Small
-    50,    # Medium
-])
-def test_similarity_calculation_performance_parametrized(template_file_pytest, text_length):
+@pytest.mark.parametrize(
+    "text_length",
+    [
+        20,  # Small
+        50,  # Medium
+    ],
+)
+def test_similarity_calculation_performance_parametrized(
+    template_file_pytest, text_length
+):
     """Test similarity calculation performance with various text lengths"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
     # Create copyright texts
-    long_text1 = "Copyright Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n" + ("Additional line\n" * text_length)
-    long_text2 = "Copyright 2024 Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n" + ("Different line\n" * text_length)
+    long_text1 = (
+        "Copyright Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n"
+        + ("Additional line\n" * text_length)
+    )
+    long_text2 = (
+        "Copyright 2024 Sony Group Corporation\nAuthor: R&D Center Europe Brussels Laboratory\n"
+        + ("Different line\n" * text_length)
+    )
 
     start_time = time.time()
 
@@ -1224,22 +1411,30 @@ def test_similarity_calculation_performance_parametrized(template_file_pytest, t
     iterations = 5
     for _ in range(iterations):
         similarity = checker._calculate_copyright_similarity(long_text1, long_text2)
+        assert similarity is not None, "Similarity should return a value"
 
     elapsed = time.time() - start_time
 
     # Very lenient time expectations - just ensure it completes
     max_time = 5.0  # 5 seconds should be plenty
-    assert elapsed < max_time, f"Similarity calculation for {text_length} lines took {elapsed:.2f}s for {iterations} iterations (max: {max_time}s)"
+    assert elapsed < max_time, (
+        f"Similarity calculation for {text_length} lines took {elapsed:.2f}s for {iterations} iterations (max: {max_time}s)"
+    )
 
 
-@pytest.mark.parametrize("year_pattern", [
-    "Copyright 2020 Sony",
-    "Copyright 2020-2024 Sony",
-    "Copyright years: 2018, 2019, 2020, 2021",
-    "Copyright 2015, 2016, 2017, 2018, 2019, 2020",
-    "Years: 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020",
-])
-def test_complex_year_extraction_parametrized(temp_dir_pytest, template_file_pytest, year_pattern):
+@pytest.mark.parametrize(
+    "year_pattern",
+    [
+        "Copyright 2020 Sony",
+        "Copyright 2020-2024 Sony",
+        "Copyright years: 2018, 2019, 2020, 2021",
+        "Copyright 2015, 2016, 2017, 2018, 2019, 2020",
+        "Years: 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020",
+    ],
+)
+def test_complex_year_extraction_parametrized(
+    temp_dir_pytest, template_file_pytest, year_pattern
+):
     """Test year extraction with various complex year patterns"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1258,16 +1453,33 @@ Author: R&D Center Europe Brussels Laboratory
 
 
 # ENTITY EXTRACTION TESTS - Parametrized
-@pytest.mark.parametrize("author_line,expected_entity", [
-    ("Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation", "r&d center europe brussels"),
-    ("Author: Haptic Europe, Brussels Laboratory, Sony Group Corporation", "haptic europe"),
-    ("Author: NSCE, Sony Group Corporation", "nsce"),
-    ("Author: MSE, Sony Group Corporation", "mse"),
-    ("Author: Network Communications Europe, Sony Group Corporation", "network communications europe"),
-    ("Author: Research & Development Center Europe", "research & development center europe"),
-    ("Author: Sony AI, Sony Group Corporation", "sony ai"),
-])
-def test_entity_extraction_accuracy_parametrized(template_file_pytest, author_line, expected_entity):
+@pytest.mark.parametrize(
+    "author_line,expected_entity",
+    [
+        (
+            "Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation",
+            "r&d center europe brussels",
+        ),
+        (
+            "Author: Haptic Europe, Brussels Laboratory, Sony Group Corporation",
+            "haptic europe",
+        ),
+        ("Author: NSCE, Sony Group Corporation", "nsce"),
+        ("Author: MSE, Sony Group Corporation", "mse"),
+        (
+            "Author: Network Communications Europe, Sony Group Corporation",
+            "network communications europe",
+        ),
+        (
+            "Author: Research & Development Center Europe",
+            "research & development center europe",
+        ),
+        ("Author: Sony AI, Sony Group Corporation", "sony ai"),
+    ],
+)
+def test_entity_extraction_accuracy_parametrized(
+    template_file_pytest, author_line, expected_entity
+):
     """Test accurate entity extraction from various author formats"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
@@ -1282,19 +1494,30 @@ def test_entity_extraction_accuracy_parametrized(template_file_pytest, author_li
 
 
 # SIMILARITY METRIC TESTS - Parametrized
-@pytest.mark.parametrize("text1,text2,min_similarity", [
-    ("R&D Center Europe", "Research & Development Center Europe", 0.3),  # Adjusted - abbreviation vs full
-    ("R&D Center", "R&D Centre", 0.5),  # Token similarity is lower for short texts
-    ("Brussels Laboratory", "Brussels Lab", 0.4),  # Adjusted expectation
-    ("Sony Group Corporation", "Sony Group Corp", 0.6),  # Adjusted expectation
-])
-def test_similarity_metrics_parametrized(template_file_pytest, text1, text2, min_similarity):
+@pytest.mark.parametrize(
+    "text1,text2,min_similarity",
+    [
+        (
+            "R&D Center Europe",
+            "Research & Development Center Europe",
+            0.3,
+        ),  # Adjusted - abbreviation vs full
+        ("R&D Center", "R&D Centre", 0.5),  # Token similarity is lower for short texts
+        ("Brussels Laboratory", "Brussels Lab", 0.4),  # Adjusted expectation
+        ("Sony Group Corporation", "Sony Group Corp", 0.6),  # Adjusted expectation
+    ],
+)
+def test_similarity_metrics_parametrized(
+    template_file_pytest, text1, text2, min_similarity
+):
     """Test similarity calculation between related texts"""
     checker = CopyrightChecker(template_file_pytest, git_aware=False, replace_mode=True)
 
     # Test n-gram similarity (most reliable for variations)
     ngram_sim = checker._calculate_ngram_similarity(text1, text2)
-    assert ngram_sim >= min_similarity, f"N-gram similarity too low: {ngram_sim} (expected >= {min_similarity})"
+    assert ngram_sim >= min_similarity, (
+        f"N-gram similarity too low: {ngram_sim} (expected >= {min_similarity})"
+    )
 
     # Test sequence similarity
     seq_sim = checker._calculate_sequence_similarity(text1, text2)

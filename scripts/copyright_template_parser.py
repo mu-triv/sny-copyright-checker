@@ -33,7 +33,7 @@ class CopyrightTemplate:
 
         result_lines = []
         for line in self.lines:
-            #Replace {regex:...} with the actual year
+            # Replace {regex:...} with the actual year
             # Handle nested braces properly
             result_line = line
             start = result_line.find("{regex:")
@@ -42,15 +42,17 @@ class CopyrightTemplate:
                 depth = 0
                 end = -1
                 for i in range(start, len(result_line)):
-                    if result_line[i] == '{':
+                    if result_line[i] == "{":
                         depth += 1
-                    elif result_line[i] == '}':
+                    elif result_line[i] == "}":
                         depth -= 1
                         if depth == 0:
                             end = i
                             break
                 if end != -1:
-                    result_line = result_line[:start] + year_str + result_line[end+1:]
+                    result_line = (
+                        result_line[:start] + year_str + result_line[end + 1 :]
+                    )
             result_lines.append(result_line)
         return "\n".join(result_lines)
 
@@ -68,6 +70,36 @@ class CopyrightTemplate:
             if self._matches_at_position(content_lines, start_idx):
                 return True
         return False
+
+    def find_all_matches(self, content: str) -> List[int]:
+        """
+        Find all positions where the copyright notice appears in content.
+
+        :param content: Content to check
+        :return: List of line numbers (0-indexed) where copyright notices start
+        """
+        content_lines = content.split("\n")
+        matches = []
+
+        # Try to find the template starting at different positions
+        for start_idx in range(len(content_lines)):
+            if self._matches_at_position(content_lines, start_idx):
+                matches.append(start_idx)
+                # Skip lines that are part of this match to avoid overlapping detections
+                # Jump to the end of this match
+                start_idx += len(self.lines) - 1
+
+        return matches
+
+    def has_duplicates(self, content: str) -> bool:
+        """
+        Check if content contains multiple copyright notices.
+
+        :param content: Content to check
+        :return: True if there are 2 or more copyright notices
+        """
+        matches = self.find_all_matches(content)
+        return len(matches) > 1
 
     def extract_years(self, content: str) -> Optional[Tuple[int, Optional[int]]]:
         """
@@ -87,7 +119,9 @@ class CopyrightTemplate:
                 return years
         return None
 
-    def _extract_years_at_position(self, content_lines: List[str], start_idx: int) -> Optional[Tuple[int, Optional[int]]]:
+    def _extract_years_at_position(
+        self, content_lines: List[str], start_idx: int
+    ) -> Optional[Tuple[int, Optional[int]]]:
         """
         Extract years from copyright notice at a specific position.
 
@@ -114,24 +148,24 @@ class CopyrightTemplate:
                     current_pos = start_pos
 
                     while current_pos < len(template_line) and depth > 0:
-                        if template_line[current_pos] == '{':
+                        if template_line[current_pos] == "{":
                             depth += 1
-                        elif template_line[current_pos] == '}':
+                        elif template_line[current_pos] == "}":
                             depth -= 1
                         current_pos += 1
 
                     # Build the pattern
                     before = re.escape(template_line[:start_idx_marker])
                     after = re.escape(template_line[current_pos:])
-                    regex_str = template_line[start_pos:current_pos-1]
+                    regex_str = template_line[start_pos : current_pos - 1]
                     pattern_str = f"{before}({regex_str}){after}"
 
                     match = re.match(pattern_str, content_line)
                     if match:
                         year_str = match.group(1)
                         # Parse year or year range
-                        if '-' in year_str:
-                            parts = year_str.split('-')
+                        if "-" in year_str:
+                            parts = year_str.split("-")
                             try:
                                 return (int(parts[0]), int(parts[1]))
                             except (ValueError, IndexError):
@@ -173,16 +207,16 @@ class CopyrightTemplate:
                     end_idx_marker = start_pos
 
                     while end_idx_marker < len(template_line) and depth > 0:
-                        if template_line[end_idx_marker] == '{':
+                        if template_line[end_idx_marker] == "{":
                             depth += 1
-                        elif template_line[end_idx_marker] == '}':
+                        elif template_line[end_idx_marker] == "}":
                             depth -= 1
                         end_idx_marker += 1
 
                     # Build the pattern: escape the parts before and after, insert regex in between
                     before = re.escape(template_line[:start_idx_marker])
                     after = re.escape(template_line[end_idx_marker:])
-                    regex_str = template_line[start_pos:end_idx_marker-1]
+                    regex_str = template_line[start_pos : end_idx_marker - 1]
                     pattern_str = f"{before}({regex_str}){after}"
 
                     if not re.match(pattern_str, content_line):
@@ -239,7 +273,11 @@ class CopyrightTemplateParser:
                 line = line.rstrip("\n")
 
                 # Skip empty lines when not inside a section
-                if not line.strip() and current_extension is None and not in_variables_section:
+                if (
+                    not line.strip()
+                    and current_extension is None
+                    and not in_variables_section
+                ):
                     continue
 
                 # Check for [VARIABLES] section - only process the first one
@@ -265,7 +303,9 @@ class CopyrightTemplateParser:
                         continue
 
                 # Check for section header [.ext] or [.ext1, .ext2, .ext3]
-                section_match = re.match(r"^\[((?:\.\w+)(?:\s*,\s*\.\w+)*)\]$", line.strip())
+                section_match = re.match(
+                    r"^\[((?:\.\w+)(?:\s*,\s*\.\w+)*)\]$", line.strip()
+                )
                 if section_match:
                     # Exit variables section if we were in it
                     in_variables_section = False
@@ -277,8 +317,10 @@ class CopyrightTemplateParser:
                             current_lines.pop()
 
                         # Substitute variables in current_lines before creating template
-                        substituted_lines = CopyrightTemplateParser._substitute_variables(
-                            current_lines, variables
+                        substituted_lines = (
+                            CopyrightTemplateParser._substitute_variables(
+                                current_lines, variables
+                            )
                         )
 
                         # Handle both single extension and list of extensions
@@ -290,16 +332,20 @@ class CopyrightTemplateParser:
                             for ext in current_extension:
                                 templates[ext] = template
                         else:
-                            templates[current_extension] = CopyrightTemplateParser._create_template(
-                                current_extension, substituted_lines
+                            templates[current_extension] = (
+                                CopyrightTemplateParser._create_template(
+                                    current_extension, substituted_lines
+                                )
                             )
 
                     # Parse extensions (can be comma-separated)
                     extensions_str = section_match.group(1)
-                    extensions = [ext.strip() for ext in extensions_str.split(',')]
+                    extensions = [ext.strip() for ext in extensions_str.split(",")]
 
                     # Start new section with first extension as the key
-                    current_extension = extensions[0] if len(extensions) == 1 else extensions
+                    current_extension = (
+                        extensions[0] if len(extensions) == 1 else extensions
+                    )
                     current_lines = []
                 elif current_extension is not None:
                     # Add line to current section (including empty lines within section)
@@ -331,7 +377,9 @@ class CopyrightTemplateParser:
                 )
 
         if not templates:
-            raise ValueError(f"No valid sections found in template file: {template_path}")
+            raise ValueError(
+                f"No valid sections found in template file: {template_path}"
+            )
 
         return templates
 
@@ -384,14 +432,14 @@ class CopyrightTemplateParser:
                 end_idx = start_pos
 
                 while end_idx < len(line) and depth > 0:
-                    if line[end_idx] == '{':
+                    if line[end_idx] == "{":
                         depth += 1
-                    elif line[end_idx] == '}':
+                    elif line[end_idx] == "}":
                         depth -= 1
                     end_idx += 1
 
                 if depth == 0:
-                    regex_str = line[start_pos:end_idx-1]
+                    regex_str = line[start_pos : end_idx - 1]
                     try:
                         pattern = re.compile(regex_str)
                         regex_patterns.append(pattern)
@@ -403,7 +451,5 @@ class CopyrightTemplateParser:
                 regex_patterns.append(None)
 
         return CopyrightTemplate(
-            extension=extension,
-            lines=lines,
-            regex_patterns=regex_patterns
+            extension=extension, lines=lines, regex_patterns=regex_patterns
         )

@@ -8,13 +8,13 @@
 import pytest
 import tempfile
 import os
-import re
 from scripts.copyright_template_parser import CopyrightTemplateParser, CopyrightTemplate
 
 
 # ============================================================================
 # POSITIVE TEST CASES - Normal expected functionality
 # ============================================================================
+
 
 def test_parse_simple_template():
     """Test parsing a simple copyright template"""
@@ -23,19 +23,19 @@ def test_parse_simple_template():
 # Author: Test Author
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        template = templates['.py']
-        assert template.extension == '.py'
+        assert ".py" in templates
+        template = templates[".py"]
+        assert template.extension == ".py"
         assert len(template.lines) == 2
-        assert 'Copyright' in template.lines[0]
-        assert 'Author' in template.lines[1]
+        assert "Copyright" in template.lines[0]
+        assert "Author" in template.lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -49,7 +49,7 @@ def test_parse_multiple_sections():
 -- Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -57,8 +57,8 @@ def test_parse_multiple_sections():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         assert len(templates) == 2
-        assert '.py' in templates
-        assert '.sql' in templates
+        assert ".py" in templates
+        assert ".sql" in templates
     finally:
         os.unlink(temp_path)
 
@@ -69,17 +69,17 @@ def test_parse_template_with_nested_braces():
 # Copyright {regex:\\d{4}(-\\d{4})?} sny Corporation
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Verify the regex pattern was correctly extracted
         assert template.regex_patterns[0] is not None
-        assert template.regex_patterns[0].pattern == r'\d{4}(-\d{4})?'
+        assert template.regex_patterns[0].pattern == r"\d{4}(-\d{4})?"
     finally:
         os.unlink(temp_path)
 
@@ -99,7 +99,7 @@ def test_parse_template_with_multiple_extensions():
 <!-- HTML copyright -->
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -107,10 +107,10 @@ def test_parse_template_with_multiple_extensions():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         assert len(templates) == 4
-        assert '.py' in templates
-        assert '.js' in templates
-        assert '.cpp' in templates
-        assert '.html' in templates
+        assert ".py" in templates
+        assert ".js" in templates
+        assert ".cpp" in templates
+        assert ".html" in templates
     finally:
         os.unlink(temp_path)
 
@@ -122,13 +122,13 @@ def test_template_matches_with_regex():
 # Author: Test Author
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Test with single year
         file_content = """# Copyright 2026 SNY Group Corporation
@@ -158,13 +158,13 @@ Copyright Notice
 All rights reserved
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.txt']
+        template = templates[".txt"]
 
         file_content = """Copyright Notice
 All rights reserved
@@ -185,14 +185,14 @@ Some other text
 def test_get_notice_with_year():
     """Test generating notice with specific year"""
     template = CopyrightTemplate(
-        extension='.py',
-        lines=['# Copyright {regex:\\d{4}} sny', '# Author: Test'],
-        regex_patterns=[None, None]
+        extension=".py",
+        lines=["# Copyright {regex:\\d{4}} sny", "# Author: Test"],
+        regex_patterns=[None, None],
     )
 
     notice = template.get_notice_with_year(2026)
-    assert '2026' in notice
-    assert 'Author: Test' in notice
+    assert "2026" in notice
+    assert "Author: Test" in notice
 
 
 def test_get_notice_with_year_replaces_regex():
@@ -202,20 +202,20 @@ def test_get_notice_with_year_replaces_regex():
 # License: MIT
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         notice = template.get_notice_with_year(2026)
 
-        assert '2026' in notice
-        assert '{regex:' not in notice
-        assert 'sny Corporation' in notice
-        assert 'License: MIT' in notice
+        assert "2026" in notice
+        assert "{regex:" not in notice
+        assert "sny Corporation" in notice
+        assert "License: MIT" in notice
     finally:
         os.unlink(temp_path)
 
@@ -228,17 +228,17 @@ def test_parse_template_with_empty_lines():
 # This is a multi-line notice
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Should include the empty line in the middle
         assert len(template.lines) == 3
-        assert template.lines[1] == ''
+        assert template.lines[1] == ""
     finally:
         os.unlink(temp_path)
 
@@ -251,17 +251,17 @@ def test_parse_template_strips_trailing_empty_lines():
 
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Trailing empty lines should be removed
         assert len(template.lines) == 1
-        assert template.lines[-1] != ''
+        assert template.lines[-1] != ""
     finally:
         os.unlink(temp_path)
 
@@ -272,13 +272,13 @@ def test_template_matches_at_different_positions():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Copyright at beginning
         file_content1 = """# Copyright 2026 sny
@@ -302,17 +302,18 @@ def main():
 # NEGATIVE TEST CASES - Error conditions and invalid inputs
 # ============================================================================
 
+
 def test_parse_nonexistent_file():
     """Test parsing a file that doesn't exist"""
     with pytest.raises(FileNotFoundError):
-        CopyrightTemplateParser.parse('/nonexistent/path/to/file.txt')
+        CopyrightTemplateParser.parse("/nonexistent/path/to/file.txt")
 
 
 def test_parse_empty_file():
     """Test parsing an empty template file"""
     content = ""
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -329,7 +330,7 @@ def test_parse_file_without_sections():
 # No section headers
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -346,7 +347,7 @@ def test_parse_invalid_regex_pattern():
 # Copyright {regex:[[[invalid} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -363,7 +364,7 @@ def test_parse_unmatched_braces():
 # Copyright {regex:\\d{4 sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -380,13 +381,13 @@ def test_template_no_match_different_text():
 # Copyright {regex:\\d{4}} sny Corporation
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Different company name
         file_content = """# Copyright 2026 Microsoft Corporation
@@ -410,13 +411,13 @@ def test_template_no_match_wrong_year_format():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Wrong year format (3 digits instead of 4)
         file_content = """# Copyright 202 sny
@@ -443,13 +444,13 @@ def test_template_no_match_incomplete_lines():
 # License: MIT
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Only first line present
         file_content = """# Copyright 2026 sny
@@ -465,6 +466,7 @@ def main():
 # EDGE CASES - Boundary conditions and special scenarios
 # ============================================================================
 
+
 def test_parse_section_with_only_empty_lines():
     """Test parsing a section that contains only empty lines"""
     content = """[.py]
@@ -474,7 +476,7 @@ def test_parse_section_with_only_empty_lines():
 -- Copyright 2026
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -482,10 +484,10 @@ def test_parse_section_with_only_empty_lines():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # Empty section creates an empty template (current behavior)
-        assert '.py' in templates
-        assert len(templates['.py'].lines) == 0
-        assert '.sql' in templates
-        assert len(templates['.sql'].lines) == 1
+        assert ".py" in templates
+        assert len(templates[".py"].lines) == 0
+        assert ".sql" in templates
+        assert len(templates[".sql"].lines) == 1
     finally:
         os.unlink(temp_path)
 
@@ -498,15 +500,15 @@ def test_parse_template_with_leading_empty_lines():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert len(templates['.py'].lines) == 1
+        assert ".py" in templates
+        assert len(templates[".py"].lines) == 1
     finally:
         os.unlink(temp_path)
 
@@ -514,9 +516,7 @@ def test_parse_template_with_leading_empty_lines():
 def test_template_matches_empty_content():
     """Test template matching against empty content"""
     template = CopyrightTemplate(
-        extension='.py',
-        lines=['# Copyright 2026'],
-        regex_patterns=[None]
+        extension=".py", lines=["# Copyright 2026"], regex_patterns=[None]
     )
 
     assert template.matches("") is False
@@ -525,9 +525,9 @@ def test_template_matches_empty_content():
 def test_template_matches_content_shorter_than_template():
     """Test template matching when content has fewer lines than template"""
     template = CopyrightTemplate(
-        extension='.py',
-        lines=['# Copyright 2026', '# Author: Test', '# License: MIT'],
-        regex_patterns=[None, None, None]
+        extension=".py",
+        lines=["# Copyright 2026", "# Author: Test", "# License: MIT"],
+        regex_patterns=[None, None, None],
     )
 
     file_content = """# Copyright 2026
@@ -542,13 +542,13 @@ def test_template_with_whitespace_variations():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Trailing whitespace should be handled
         file_content1 = """# Copyright 2026 sny
@@ -573,13 +573,13 @@ def test_template_single_line():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         assert len(template.lines) == 1
         file_content = """# Copyright 2026 sny"""
@@ -591,22 +591,20 @@ def test_template_single_line():
 def test_get_notice_with_year_edge_values():
     """Test get_notice_with_year with edge case year values"""
     template = CopyrightTemplate(
-        extension='.py',
-        lines=['# Copyright {regex:\\d{4}} sny'],
-        regex_patterns=[None]
+        extension=".py", lines=["# Copyright {regex:\\d{4}} sny"], regex_patterns=[None]
     )
 
     # Very old year
     notice1 = template.get_notice_with_year(1900)
-    assert '1900' in notice1
+    assert "1900" in notice1
 
     # Far future year
     notice2 = template.get_notice_with_year(9999)
-    assert '9999' in notice2
+    assert "9999" in notice2
 
     # Current century start
     notice3 = template.get_notice_with_year(2000)
-    assert '2000' in notice3
+    assert "2000" in notice3
 
 
 def test_template_with_special_regex_characters():
@@ -615,13 +613,13 @@ def test_template_with_special_regex_characters():
 # Copyright {regex:\\d{4}} sny (R&D)
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Parentheses should be matched literally, not as regex groups
         file_content = """# Copyright 2026 sny (R&D)
@@ -648,13 +646,13 @@ def test_template_with_multiple_regex_patterns_per_line():
 # Copyright {regex:\\d{4}} by {regex:\\w+}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Only the first regex pattern is extracted and compiled
         assert template.regex_patterns[0] is not None
@@ -669,13 +667,13 @@ def test_template_with_very_long_line():
 # Copyright {{regex:\\d{{4}}}} sny - {long_text}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         file_content = f"""# Copyright 2026 sny - {long_text}
 def main():
@@ -693,13 +691,13 @@ def test_parse_section_header_variations():
 # Copyright 2026
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content1)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        assert '.py' in templates
+        assert ".py" in templates
     finally:
         os.unlink(temp_path)
 
@@ -708,13 +706,13 @@ def test_parse_section_header_variations():
 // Copyright 2026
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content2)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        assert '.js' in templates
+        assert ".js" in templates
     finally:
         os.unlink(temp_path)
 
@@ -725,13 +723,13 @@ def test_template_matches_with_line_endings():
 # Copyright {regex:\\d{4}} sny
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Unix line endings (LF)
         file_content_lf = "# Copyright 2026 sny\ndef main():\n    pass"
@@ -747,21 +745,22 @@ def test_template_matches_with_line_endings():
 def test_template_get_notice_no_regex():
     """Test get_notice_with_year when template has no regex patterns"""
     template = CopyrightTemplate(
-        extension='.txt',
-        lines=['Copyright Notice', 'All rights reserved'],
-        regex_patterns=[None, None]
+        extension=".txt",
+        lines=["Copyright Notice", "All rights reserved"],
+        regex_patterns=[None, None],
     )
 
     notice = template.get_notice_with_year(2026)
     # Should return the template as-is since there's no {regex:...} to replace
-    assert 'Copyright Notice' in notice
-    assert 'All rights reserved' in notice
-    assert '2026' not in notice
+    assert "Copyright Notice" in notice
+    assert "All rights reserved" in notice
+    assert "2026" not in notice
 
 
 # ============================================================================
 # GROUPED EXTENSIONS TEST CASES
 # ============================================================================
+
 
 def test_parse_grouped_extensions_basic():
     """Test parsing template with grouped extensions [.ext1, .ext2, .ext3]"""
@@ -770,7 +769,7 @@ def test_parse_grouped_extensions_basic():
 # Author: Test
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -778,17 +777,17 @@ def test_parse_grouped_extensions_basic():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # All three extensions should be present
-        assert '.py' in templates
-        assert '.yaml' in templates
-        assert '.yml' in templates
+        assert ".py" in templates
+        assert ".yaml" in templates
+        assert ".yml" in templates
 
         # All should have the same template content
-        assert templates['.py'].lines == templates['.yaml'].lines
-        assert templates['.yaml'].lines == templates['.yml'].lines
+        assert templates[".py"].lines == templates[".yaml"].lines
+        assert templates[".yaml"].lines == templates[".yml"].lines
 
         # Verify content
-        assert len(templates['.py'].lines) == 2
-        assert 'Copyright' in templates['.py'].lines[0]
+        assert len(templates[".py"].lines) == 2
+        assert "Copyright" in templates[".py"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -799,7 +798,7 @@ def test_parse_grouped_extensions_with_spaces():
 // Copyright 2026 SNY
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -807,15 +806,15 @@ def test_parse_grouped_extensions_with_spaces():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # All extensions should be parsed correctly despite spacing
-        assert '.js' in templates
-        assert '.ts' in templates
-        assert '.go' in templates
-        assert '.rs' in templates
+        assert ".js" in templates
+        assert ".ts" in templates
+        assert ".go" in templates
+        assert ".rs" in templates
 
         # All should have identical content
-        assert templates['.js'].lines == templates['.ts'].lines
-        assert templates['.ts'].lines == templates['.go'].lines
-        assert templates['.go'].lines == templates['.rs'].lines
+        assert templates[".js"].lines == templates[".ts"].lines
+        assert templates[".ts"].lines == templates[".go"].lines
+        assert templates[".go"].lines == templates[".rs"].lines
     finally:
         os.unlink(temp_path)
 
@@ -832,7 +831,7 @@ def test_parse_mixed_grouped_and_single_extensions():
 // JS/TS copyright
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -840,19 +839,19 @@ def test_parse_mixed_grouped_and_single_extensions():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # Check all extensions are present
-        assert '.py' in templates
-        assert '.yaml' in templates
-        assert '.sql' in templates
-        assert '.js' in templates
-        assert '.ts' in templates
+        assert ".py" in templates
+        assert ".yaml" in templates
+        assert ".sql" in templates
+        assert ".js" in templates
+        assert ".ts" in templates
 
         # Grouped extensions should share templates
-        assert templates['.py'].lines == templates['.yaml'].lines
-        assert templates['.js'].lines == templates['.ts'].lines
+        assert templates[".py"].lines == templates[".yaml"].lines
+        assert templates[".js"].lines == templates[".ts"].lines
 
         # But different groups should have different templates
-        assert templates['.py'].lines != templates['.sql'].lines
-        assert templates['.sql'].lines != templates['.js'].lines
+        assert templates[".py"].lines != templates[".sql"].lines
+        assert templates[".sql"].lines != templates[".js"].lines
     finally:
         os.unlink(temp_path)
 
@@ -863,7 +862,7 @@ def test_grouped_extensions_all_match_same_content():
 # Copyright {regex:\\d{4}} SNY Corporation
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -877,9 +876,9 @@ def main():
 """
 
         # All grouped extensions should match the same content
-        assert templates['.py'].matches(file_content) is True
-        assert templates['.yaml'].matches(file_content) is True
-        assert templates['.sh'].matches(file_content) is True
+        assert templates[".py"].matches(file_content) is True
+        assert templates[".yaml"].matches(file_content) is True
+        assert templates[".sh"].matches(file_content) is True
     finally:
         os.unlink(temp_path)
 
@@ -891,7 +890,7 @@ def test_grouped_extensions_get_notice_with_year():
 // Author: Test
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -899,14 +898,14 @@ def test_grouped_extensions_get_notice_with_year():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # All should generate the same notice for the same year
-        notice_js = templates['.js'].get_notice_with_year(2026)
-        notice_ts = templates['.ts'].get_notice_with_year(2026)
-        notice_go = templates['.go'].get_notice_with_year(2026)
+        notice_js = templates[".js"].get_notice_with_year(2026)
+        notice_ts = templates[".ts"].get_notice_with_year(2026)
+        notice_go = templates[".go"].get_notice_with_year(2026)
 
         assert notice_js == notice_ts
         assert notice_ts == notice_go
-        assert '2026' in notice_js
-        assert 'SNY Group' in notice_js
+        assert "2026" in notice_js
+        assert "SNY Group" in notice_js
     finally:
         os.unlink(temp_path)
 
@@ -917,15 +916,15 @@ def test_grouped_extensions_single_extension():
 # Copyright 2026 SNY
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert 'Copyright' in templates['.py'].lines[0]
+        assert ".py" in templates
+        assert "Copyright" in templates[".py"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -942,7 +941,7 @@ def test_grouped_extensions_multiple_groups():
 # Python/Ruby copyright
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -953,18 +952,18 @@ def test_grouped_extensions_multiple_groups():
         assert len(templates) == 7
 
         # First group
-        assert templates['.c'].lines == templates['.h'].lines
-        assert templates['.h'].lines == templates['.cpp'].lines
+        assert templates[".c"].lines == templates[".h"].lines
+        assert templates[".h"].lines == templates[".cpp"].lines
 
         # Second group
-        assert templates['.js'].lines == templates['.ts'].lines
+        assert templates[".js"].lines == templates[".ts"].lines
 
         # Third group
-        assert templates['.py'].lines == templates['.rb'].lines
+        assert templates[".py"].lines == templates[".rb"].lines
 
         # Different groups should have different content
-        assert templates['.c'].lines != templates['.js'].lines
-        assert templates['.js'].lines != templates['.py'].lines
+        assert templates[".c"].lines != templates[".js"].lines
+        assert templates[".js"].lines != templates[".py"].lines
     finally:
         os.unlink(temp_path)
 
@@ -978,7 +977,7 @@ def test_grouped_extensions_with_regex_patterns():
 **************************************************************************/
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -986,9 +985,9 @@ def test_grouped_extensions_with_regex_patterns():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # All should have the regex pattern
-        assert templates['.c'].regex_patterns[1] is not None
-        assert templates['.cpp'].regex_patterns[1] is not None
-        assert templates['.h'].regex_patterns[1] is not None
+        assert templates[".c"].regex_patterns[1] is not None
+        assert templates[".cpp"].regex_patterns[1] is not None
+        assert templates[".h"].regex_patterns[1] is not None
 
         # Test matching with year range
         file_content = """/**************************************************************************
@@ -998,9 +997,9 @@ def test_grouped_extensions_with_regex_patterns():
 
 int main() {}
 """
-        assert templates['.c'].matches(file_content) is True
-        assert templates['.cpp'].matches(file_content) is True
-        assert templates['.h'].matches(file_content) is True
+        assert templates[".c"].matches(file_content) is True
+        assert templates[".cpp"].matches(file_content) is True
+        assert templates[".h"].matches(file_content) is True
     finally:
         os.unlink(temp_path)
 
@@ -1014,7 +1013,7 @@ def test_grouped_extensions_empty_section():
 -- SQL copyright
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -1022,14 +1021,14 @@ def test_grouped_extensions_empty_section():
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # Both extensions should exist with empty lines
-        assert '.py' in templates
-        assert '.yaml' in templates
-        assert len(templates['.py'].lines) == 0
-        assert len(templates['.yaml'].lines) == 0
+        assert ".py" in templates
+        assert ".yaml" in templates
+        assert len(templates[".py"].lines) == 0
+        assert len(templates[".yaml"].lines) == 0
 
         # SQL should have content
-        assert '.sql' in templates
-        assert len(templates['.sql'].lines) == 1
+        assert ".sql" in templates
+        assert len(templates[".sql"].lines) == 1
     finally:
         os.unlink(temp_path)
 
@@ -1037,6 +1036,7 @@ def test_grouped_extensions_empty_section():
 # ============================================================================
 # VARIABLES FEATURE TEST CASES
 # ============================================================================
+
 
 def test_parse_template_with_variables():
     """Test parsing template with [VARIABLES] section"""
@@ -1049,20 +1049,20 @@ AUTHOR = Test Author
 # Author: {AUTHOR}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        template = templates['.py']
-        assert 'Sony Group Corporation' in template.lines[0]
-        assert 'Test Author' in template.lines[1]
+        assert ".py" in templates
+        template = templates[".py"]
+        assert "Sony Group Corporation" in template.lines[0]
+        assert "Test Author" in template.lines[1]
         # Variables should be substituted, not remain as placeholders
-        assert '{COMPANY}' not in template.lines[0]
-        assert '{AUTHOR}' not in template.lines[1]
+        assert "{COMPANY}" not in template.lines[0]
+        assert "{AUTHOR}" not in template.lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1078,17 +1078,17 @@ COMPANY = Sony Corporation
 # Copyright 2026 {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        template = templates['.py']
-        assert 'SPDX-License-Identifier: MIT' in template.lines[0]
-        assert 'Sony Corporation' in template.lines[1]
+        assert ".py" in templates
+        template = templates[".py"]
+        assert "SPDX-License-Identifier: MIT" in template.lines[0]
+        assert "Sony Corporation" in template.lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1103,21 +1103,21 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 # Copyright {YEAR_PATTERN} {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        template = templates['.py']
+        assert ".py" in templates
+        template = templates[".py"]
         # YEAR_PATTERN variable should be substituted with regex pattern
-        assert '{regex:\\d{4}(-\\d{4})?}' in template.lines[0]
-        assert 'Sony Group Corporation' in template.lines[0]
+        assert "{regex:\\d{4}(-\\d{4})?}" in template.lines[0]
+        assert "Sony Group Corporation" in template.lines[0]
         # Variable placeholder should be gone
-        assert '{YEAR_PATTERN}' not in template.lines[0]
-        assert '{COMPANY}' not in template.lines[0]
+        assert "{YEAR_PATTERN}" not in template.lines[0]
+        assert "{COMPANY}" not in template.lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1134,18 +1134,18 @@ COMPANY = Sony Group
 // Copyright {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert '.js' in templates
+        assert ".py" in templates
+        assert ".js" in templates
         # Both should have the variable substituted
-        assert 'Sony Group' in templates['.py'].lines[0]
-        assert 'Sony Group' in templates['.js'].lines[0]
+        assert "Sony Group" in templates[".py"].lines[0]
+        assert "Sony Group" in templates[".js"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1161,20 +1161,20 @@ SPDX_LICENSE = Apache-2.0
 # Copyright 2026 {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert '.yaml' in templates
-        assert '.yml' in templates
+        assert ".py" in templates
+        assert ".yaml" in templates
+        assert ".yml" in templates
         # All should have variables substituted
-        for ext in ['.py', '.yaml', '.yml']:
-            assert 'Apache-2.0' in templates[ext].lines[0]
-            assert 'Sony Corporation' in templates[ext].lines[1]
+        for ext in [".py", ".yaml", ".yml"]:
+            assert "Apache-2.0" in templates[ext].lines[0]
+            assert "Sony Corporation" in templates[ext].lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1185,15 +1185,15 @@ def test_parse_template_no_variables_section():
 # Copyright 2026 Sony Group Corporation
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert 'Sony Group Corporation' in templates['.py'].lines[0]
+        assert ".py" in templates
+        assert "Sony Group Corporation" in templates[".py"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1206,15 +1206,15 @@ def test_parse_template_empty_variables_section():
 # Copyright 2026 Sony
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert 'Sony' in templates['.py'].lines[0]
+        assert ".py" in templates
+        assert "Sony" in templates[".py"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1230,15 +1230,15 @@ AUTHOR = R&D Center Europe Brussels Laboratory
 # Author: {AUTHOR}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert 'Sony Group Corporation Europe' in templates['.py'].lines[0]
-        assert 'R&D Center Europe Brussels Laboratory' in templates['.py'].lines[1]
+        assert "Sony Group Corporation Europe" in templates[".py"].lines[0]
+        assert "R&D Center Europe Brussels Laboratory" in templates[".py"].lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1253,15 +1253,15 @@ UNUSED_VAR = Some Value
 # Copyright {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert '.py' in templates
-        assert 'Sony' in templates['.py'].lines[0]
+        assert ".py" in templates
+        assert "Sony" in templates[".py"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1277,13 +1277,13 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 # Author: Test
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         file_content = """# Copyright 2026 Sony Group Corporation
 # Author: Test
@@ -1306,7 +1306,7 @@ COMPANY = Sony
 # Author: {UNDEFINED_VAR}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -1314,9 +1314,9 @@ COMPANY = Sony
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # Defined variable should be substituted
-        assert 'Sony' in templates['.py'].lines[0]
+        assert "Sony" in templates[".py"].lines[0]
         # Undefined variable should remain as placeholder
-        assert '{UNDEFINED_VAR}' in templates['.py'].lines[1]
+        assert "{UNDEFINED_VAR}" in templates[".py"].lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1336,7 +1336,7 @@ COMPANY = Second Company
 // Copyright {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
@@ -1344,8 +1344,8 @@ COMPANY = Second Company
         templates = CopyrightTemplateParser.parse(temp_path)
 
         # Both should use the first VARIABLES section
-        assert 'First Company' in templates['.py'].lines[0]
-        assert 'First Company' in templates['.js'].lines[0]
+        assert "First Company" in templates[".py"].lines[0]
+        assert "First Company" in templates[".js"].lines[0]
     finally:
         os.unlink(temp_path)
 
@@ -1361,24 +1361,24 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 # Author: Test Team
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
-        template = templates['.py']
+        template = templates[".py"]
 
         # Generate notice with year
         notice = template.get_notice_with_year(2026)
 
         # Should have year substituted and company name
-        assert '2026' in notice
-        assert 'Sony Corporation' in notice
-        assert 'Test Team' in notice
+        assert "2026" in notice
+        assert "Sony Corporation" in notice
+        assert "Test Team" in notice
         # Variable placeholders should be gone
-        assert '{COMPANY}' not in notice
-        assert '{YEAR_PATTERN}' not in notice
+        assert "{COMPANY}" not in notice
+        assert "{YEAR_PATTERN}" not in notice
     finally:
         os.unlink(temp_path)
 
@@ -1394,15 +1394,15 @@ LICENSE = MIT/Apache-2.0
 # License: {LICENSE}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert 'Sony & Associates (Europe)' in templates['.py'].lines[0]
-        assert 'MIT/Apache-2.0' in templates['.py'].lines[1]
+        assert "Sony & Associates (Europe)" in templates[".py"].lines[0]
+        assert "MIT/Apache-2.0" in templates[".py"].lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1418,16 +1418,16 @@ OPTIONAL_FIELD =
 # Optional: {OPTIONAL_FIELD}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert 'Sony' in templates['.py'].lines[0]
+        assert "Sony" in templates[".py"].lines[0]
         # Empty variable should result in just the prefix
-        assert 'Optional: ' in templates['.py'].lines[1]
+        assert "Optional: " in templates[".py"].lines[1]
     finally:
         os.unlink(temp_path)
 
@@ -1443,18 +1443,18 @@ COMPANY = Upper Case
 # Also: {COMPANY}
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write(content)
         temp_path = f.name
 
     try:
         templates = CopyrightTemplateParser.parse(temp_path)
 
-        assert 'Lower Case' in templates['.py'].lines[0]
-        assert 'Upper Case' in templates['.py'].lines[1]
+        assert "Lower Case" in templates[".py"].lines[0]
+        assert "Upper Case" in templates[".py"].lines[1]
     finally:
         os.unlink(temp_path)
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

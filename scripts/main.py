@@ -5,13 +5,13 @@
 # License: For licensing see the License.txt file
 
 
-
 """Entry point for the sny copyright check pre-commit hook"""
 
 import argparse
 import logging
 import sys
-from typing import List, Optional, Sequence
+from pathlib import Path
+from typing import Optional, Sequence
 
 from .copyright_checker import CopyrightChecker
 
@@ -19,10 +19,7 @@ from .copyright_checker import CopyrightChecker
 def setup_logging(verbose: bool = False) -> None:
     """Configure logging."""
     level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        format="%(levelname)s: %(message)s",
-        level=level
-    )
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=level)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -32,30 +29,75 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     :param argv: Command line arguments
     :return: Exit code (0 for success, 1 for failure)
     """
+    # Import sys to handle argv properly
+    import sys
+    import os
+
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # Check if first argument is 'init' command (exact match, not a file path)
+    # Must be exactly 'init' without any path separators
+    if (
+        len(argv) > 0
+        and argv[0] == "init"
+        and "/" not in argv[0]
+        and "\\" not in argv[0]
+    ):
+        # Parse init command
+        parser = argparse.ArgumentParser(
+            prog="sny-copyright-checker init",
+            description="Initialize copyright checker configuration",
+        )
+        parser.add_argument(
+            "--output",
+            "-o",
+            default="copyright.txt",
+            help="Output file path (default: copyright.txt)",
+        )
+        # Remove 'init' from argv before parsing
+        args = parser.parse_args(argv[1:])
+
+        # Validate output path
+        output_path = Path(args.output)
+        if output_path.exists() and output_path.is_dir():
+            parser.error(f"Output path is a directory: {args.output}")
+
+        # Check if parent directory is writable
+        parent_dir = output_path.parent if output_path.parent.exists() else Path.cwd()
+        if not os.access(parent_dir, os.W_OK):
+            parser.error(f"Output directory is not writable: {parent_dir}")
+
+        from .init_wizard import run_init_wizard
+
+        return run_init_wizard(args.output)
+
+    # Default: parse as check command
     parser = argparse.ArgumentParser(
-        description="Check and add copyright notices to source files"
+        prog="sny-copyright-checker",
+        description="Check and add copyright notices to source files",
     )
+
+    # Positional arguments for check behavior
     parser.add_argument(
         "filenames",
         nargs="*",
         help="Files to check for copyright notices",
     )
+
+    # Options for check command (on main parser for backward compatibility)
     parser.add_argument(
         "--notice",
         default="copyright.txt",
         help="Filename of copyright template to search for (default: copyright.txt). In hierarchical mode, this filename is searched in the directory tree.",
     )
-    parser.add_argument(
-        "--fix",
-        action="store_true",
-        default=True,
-        help="Automatically add missing copyright notices (default: True)",
-    )
+    # Fix mode defaults to True, use --no-fix to disable
     parser.add_argument(
         "--no-fix",
         action="store_false",
         dest="fix",
-        help="Only check for copyright notices without modifying files",
+        default=True,
+        help="Only check for copyright notices without modifying files (default: auto-fix is enabled)",
     )
     parser.add_argument(
         "--verbose",
@@ -109,7 +151,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     args = parser.parse_args(argv)
+
+    # Validate flag combinations
+    if args.replace and not args.fix:
+        parser.error(
+            "--replace requires auto-fix to be enabled. Remove --no-fix or don't use --replace."
+        )
+
+    if args.per_file_years and not args.git_aware:
+        parser.error(
+            "--per-file-years requires Git to be enabled. Remove --no-git-aware or don't use --per-file-years."
+        )
+
+    # Default behavior: check files
     setup_logging(args.verbose)
+
+    # Warn about ignored flags
+    if args.base_ref != "HEAD" and not args.changed_only:
+        logging.warning("--base-ref is ignored without --changed-only")
+
+    if args.changed_only and args.filenames:
+        logging.warning(
+            "--changed-only ignores filename arguments. Only changed files from git will be checked."
+        )
 
     try:
         checker = CopyrightChecker(
@@ -119,7 +183,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             use_gitignore=args.use_gitignore,
             hierarchical=args.hierarchical,
             replace_mode=args.replace,
-            per_file_years=args.per_file_years
+            per_file_years=args.per_file_years,
         )
 
         # Determine which files to check
@@ -174,6 +238,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         logging.error(f"Unexpected error: {e}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         return 255
 

@@ -5,19 +5,47 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: mixed-line-ending
+      args: [--fix=no]
+    - id: check-yaml
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+- repo: local
+  hooks:
+    - id: sny-copyright-checker
+      name: SNY Copyright Notice Check
+      entry: python -m scripts.main
+      language: python
+      types: [text]
+      args: [--notice=copyright.txt]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.14.11
+  hooks:
+      - id: ruff
+      - id: ruff-format
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v4.3.0
+  hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, perf, build, chore, ci, infra, docs, style, refactor, test]
 
-  - repo: local
-    hooks:
-      - id: sny-copyright-checker
-        name: SNY Copyright Notice Check
-        entry: python -m scripts.main
-        language: python
-        types: [text]
-        args: [--notice=copyright.txt]
+exclude: |
+    (?x)(
+            .github/workflows/.*|
+            requirements.txt|
+            .python-version|
+            uv.lock|
+            __init__.py|
+            .vscode/launch.json|
+            .*\.sql |
+            .*\.yaml |
+            .*\.json |
+            .*\.svg|
+            .*\.drawio
+    )

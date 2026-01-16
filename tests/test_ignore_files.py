@@ -10,7 +10,6 @@
 import os
 import tempfile
 import unittest
-from pathlib import Path
 
 from scripts.copyright_checker import CopyrightChecker, HAS_PATHSPEC
 
@@ -39,6 +38,7 @@ COMPANY = Test Company
         """Clean up test fixtures"""
         os.chdir(self.original_cwd)
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -161,10 +161,7 @@ COMPANY = Test Company
         with open(custom_ignore, "w") as f:
             f.write("custom_pattern.py\n")
 
-        checker = CopyrightChecker(
-            self.template_path,
-            ignore_file=custom_ignore
-        )
+        checker = CopyrightChecker(self.template_path, ignore_file=custom_ignore)
 
         self.assertTrue(checker.should_ignore("custom_pattern.py"))
 
@@ -190,8 +187,7 @@ COMPANY = Test Company
 
         checker = CopyrightChecker(self.template_path)
         passed, failed, modified = checker.check_files(
-            ["ignored.py", "checked.py"],
-            auto_fix=True
+            ["ignored.py", "checked.py"], auto_fix=True
         )
 
         # ignored.py should be in passed (considered as passed)
@@ -278,6 +274,7 @@ class TestIgnoreFilesWithoutPathspec(unittest.TestCase):
         """Clean up test fixtures"""
         os.chdir(self.original_cwd)
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 

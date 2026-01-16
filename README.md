@@ -93,6 +93,22 @@ pip install -e .
 
 ## Usage
 
+### Quick Setup with Init Wizard
+
+The easiest way to get started is with the interactive init wizard:
+
+```bash
+sny-copyright-checker init
+```
+
+This will guide you through:
+- Selecting a license type (MIT, Apache, GPL, BSD, Proprietary, or Custom)
+- Entering your company/organization details
+- Choosing file extensions to support
+- Generating a ready-to-use `copyright.txt` configuration
+
+See [INIT_WIZARD.md](INIT_WIZARD.md) for detailed documentation.
+
 ### As a Pre-commit Hook
 
 Once installed, the hook will automatically run when you commit files:
@@ -134,6 +150,13 @@ sny-copyright-checker --changed-only --base-ref origin/main
 ```
 
 ### Command Line Options
+
+#### Init Command
+
+- `sny-copyright-checker init`: Run interactive wizard to create `copyright.txt`
+  - `--output, -o PATH`: Output file path (default: `copyright.txt`)
+
+#### Check Command (default)
 
 - `filenames`: Files to check for copyright notices
 - `--notice FILENAME`: Filename of copyright template (default: `copyright.txt`). In hierarchical mode, this filename is searched for in the directory tree.
