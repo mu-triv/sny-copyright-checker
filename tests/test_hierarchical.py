@@ -11,7 +11,6 @@ import os
 import shutil
 import tempfile
 import unittest
-from pathlib import Path
 
 from scripts.copyright_checker import CopyrightChecker
 
@@ -243,8 +242,7 @@ class TestHierarchicalTemplates(unittest.TestCase):
 
         checker = CopyrightChecker("copyright.txt", hierarchical=True)
         passed, failed, modified = checker.check_files(
-            ["main.py", "vendor/lib.py"],
-            auto_fix=True
+            ["main.py", "vendor/lib.py"], auto_fix=True
         )
 
         self.assertEqual(len(passed), 2)
@@ -476,7 +474,9 @@ class TestHierarchicalTemplates(unittest.TestCase):
         checker = CopyrightChecker("copyright.txt", hierarchical=True)
 
         # Use relative path with ./
-        has_notice, was_modified = checker.check_file("./src/utils/helper.py", auto_fix=True)
+        has_notice, was_modified = checker.check_file(
+            "./src/utils/helper.py", auto_fix=True
+        )
 
         self.assertTrue(has_notice)
         self.assertTrue(was_modified)

@@ -9,7 +9,6 @@
 import os
 import tempfile
 import unittest
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 from scripts.copyright_checker import CopyrightChecker
@@ -34,34 +33,24 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
 
     def test_project_wide_mode_default(self):
         """Test that project-wide mode is the default."""
-        checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True
-        )
+        checker = CopyrightChecker(self.template_path, git_aware=True)
         self.assertFalse(checker.per_file_years)
 
     def test_per_file_mode_enabled(self):
         """Test that per-file mode can be enabled."""
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=True
+            self.template_path, git_aware=True, per_file_years=True
         )
         self.assertTrue(checker.per_file_years)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_project_year_retrieval(self, mock_run):
         """Test that project creation year is correctly retrieved."""
         # Mock git log to return project creation date
-        mock_run.return_value = Mock(
-            stdout="2018-03-15T10:30:00+01:00\n",
-            returncode=0
-        )
+        mock_run.return_value = Mock(stdout="2018-03-15T10:30:00+01:00\n", returncode=0)
 
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=False
+            self.template_path, git_aware=True, per_file_years=False
         )
 
         test_file = os.path.join(self.test_dir, "test.py")
@@ -73,19 +62,14 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         call_args = mock_run.call_args[0][0]
         self.assertIn("--max-count=1", call_args)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_file_year_retrieval(self, mock_run):
         """Test that file creation year is correctly retrieved."""
         # Mock git log to return file creation date
-        mock_run.return_value = Mock(
-            stdout="2020-06-10T14:20:00+01:00\n",
-            returncode=0
-        )
+        mock_run.return_value = Mock(stdout="2020-06-10T14:20:00+01:00\n", returncode=0)
 
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=True
+            self.template_path, git_aware=True, per_file_years=True
         )
 
         test_file = os.path.join(self.test_dir, "test.py")
@@ -97,18 +81,13 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         call_args = mock_run.call_args[0][0]
         self.assertIn("--follow", call_args)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_project_year_caching(self, mock_run):
         """Test that project year is cached after first retrieval."""
-        mock_run.return_value = Mock(
-            stdout="2018-03-15T10:30:00+01:00\n",
-            returncode=0
-        )
+        mock_run.return_value = Mock(stdout="2018-03-15T10:30:00+01:00\n", returncode=0)
 
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=False
+            self.template_path, git_aware=True, per_file_years=False
         )
 
         test_file = os.path.join(self.test_dir, "test.py")
@@ -123,23 +102,18 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         # Should only call git once due to caching
         self.assertEqual(mock_run.call_count, 1)
 
-    @patch('subprocess.run')
-    @patch('scripts.copyright_checker.datetime')
+    @patch("subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
     def test_project_wide_years_new_file(self, mock_datetime, mock_run):
         """Test that new files get project inception year in project-wide mode."""
         # Mock current year
         mock_datetime.now.return_value = Mock(year=2026)
 
         # Mock project creation year
-        mock_run.return_value = Mock(
-            stdout="2018-03-15T10:30:00+01:00\n",
-            returncode=0
-        )
+        mock_run.return_value = Mock(stdout="2018-03-15T10:30:00+01:00\n", returncode=0)
 
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=False
+            self.template_path, git_aware=True, per_file_years=False
         )
 
         test_file = os.path.join(self.test_dir, "test.py")
@@ -152,8 +126,8 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         # Should use project year (2018) to current year (2026)
         self.assertEqual(year_str, "2018-2026")
 
-    @patch('subprocess.run')
-    @patch('scripts.copyright_checker.datetime')
+    @patch("subprocess.run")
+    @patch("scripts.copyright_checker.datetime")
     def test_per_file_years_new_file(self, mock_datetime, mock_run):
         """Test that new files get file creation year in per-file mode."""
         # Mock current year
@@ -172,9 +146,7 @@ YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}
         mock_run.side_effect = mock_git_call
 
         checker = CopyrightChecker(
-            self.template_path,
-            git_aware=True,
-            per_file_years=True
+            self.template_path, git_aware=True, per_file_years=True
         )
 
         test_file = os.path.join(self.test_dir, "test.py")

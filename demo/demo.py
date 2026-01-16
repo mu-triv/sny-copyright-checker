@@ -46,13 +46,13 @@ def main():
 
 def already_has_copyright():
     pass
-"""
+""",
     }
 
     created_files = []
     for filename, content in test_files.items():
         filepath = os.path.join(temp_dir, filename)
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
         created_files.append(filepath)
         print(f"✓ Created: {filename}")
@@ -99,7 +99,7 @@ def demo_checker():
         print("-" * 70)
 
         # Show original content
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             original = f.read()
         print("BEFORE:")
         print(original[:200] + ("..." if len(original) > 200 else ""))
@@ -110,7 +110,7 @@ def demo_checker():
 
             if was_modified:
                 print("\n✓ Copyright notice ADDED")
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     updated = f.read()
                 print("\nAFTER:")
                 print(updated[:300] + ("..." if len(updated) > 300 else ""))

@@ -31,19 +31,19 @@ def demo_mit_license():
 
     # Simulate user inputs
     inputs = [
-        "mit",              # Choose MIT license
-        "Acme Corporation", # Company name
-        "y",                # Include author
-        "Engineering Team", # Author name
-        "n",                # Don't customize
-        "7",                # Python extensions (option 7)
-        "y",                # Save
+        "mit",  # Choose MIT license
+        "Acme Corporation",  # Company name
+        "y",  # Include author
+        "Engineering Team",  # Author name
+        "n",  # Don't customize
+        "7",  # Python extensions (option 7)
+        "y",  # Save
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "copyright_mit.txt"
 
-        with patch('scripts.init_wizard.input', side_effect=inputs):
+        with patch("scripts.init_wizard.input", side_effect=inputs):
             result = run_init_wizard(str(output_file))
 
         if result == 0:
@@ -65,18 +65,18 @@ def demo_proprietary_multi_language():
     print()
 
     inputs = [
-        "proprietary",      # Proprietary license
+        "proprietary",  # Proprietary license
         "SecretCorp Inc.",  # Company
-        "n",                # No author field
-        "n",                # Don't customize
-        "1,5,7",            # C/C++, JavaScript, and Python
-        "y",                # Save
+        "n",  # No author field
+        "n",  # Don't customize
+        "1,5,7",  # C/C++, JavaScript, and Python
+        "y",  # Save
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "copyright_proprietary.txt"
 
-        with patch('scripts.init_wizard.input', side_effect=inputs):
+        with patch("scripts.init_wizard.input", side_effect=inputs):
             result = run_init_wizard(str(output_file))
 
         if result == 0:
@@ -98,27 +98,27 @@ def demo_apache_all_languages():
     print()
 
     inputs = [
-        "apache",           # Apache license
+        "apache",  # Apache license
         "OpenSource Inc.",  # Company
-        "y",                # Include author
-        "Contributors",     # Author
-        "n",                # Don't customize
-        "all",              # All extensions
-        "y",                # Save
+        "y",  # Include author
+        "Contributors",  # Author
+        "n",  # Don't customize
+        "all",  # All extensions
+        "y",  # Save
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "copyright_apache.txt"
 
-        with patch('scripts.init_wizard.input', side_effect=inputs):
+        with patch("scripts.init_wizard.input", side_effect=inputs):
             result = run_init_wizard(str(output_file))
 
         if result == 0:
             print("\n" + "=" * 70)
             print("Generated Configuration (showing first 50 lines):")
             print("=" * 70)
-            lines = output_file.read_text().split('\n')
-            print('\n'.join(lines[:50]))
+            lines = output_file.read_text().split("\n")
+            print("\n".join(lines[:50]))
             if len(lines) > 50:
                 print(f"\n... ({len(lines) - 50} more lines)")
             print("=" * 70)
@@ -135,20 +135,20 @@ def demo_custom_license():
     print()
 
     inputs = [
-        "custom",                        # Custom license
-        "Custom Corp",                   # Company
-        "y",                             # Include author
-        "Legal Department",              # Author
-        "Custom-License-1.0",            # SPDX identifier
-        "See LICENSE.md for full terms", # License notice
-        "7,4",                           # Python and Java
-        "y",                             # Save
+        "custom",  # Custom license
+        "Custom Corp",  # Company
+        "y",  # Include author
+        "Legal Department",  # Author
+        "Custom-License-1.0",  # SPDX identifier
+        "See LICENSE.md for full terms",  # License notice
+        "7,4",  # Python and Java
+        "y",  # Save
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "copyright_custom.txt"
 
-        with patch('scripts.init_wizard.input', side_effect=inputs):
+        with patch("scripts.init_wizard.input", side_effect=inputs):
             result = run_init_wizard(str(output_file))
 
         if result == 0:

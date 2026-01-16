@@ -6,7 +6,6 @@
 
 """Interactive wizard for initializing copyright configuration."""
 
-import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -18,38 +17,38 @@ COPYRIGHT_TEMPLATES = {
         "name": "MIT License",
         "spdx": "MIT",
         "description": "Permissive open source license",
-        "license_notice": "For licensing see the LICENSE file"
+        "license_notice": "For licensing see the LICENSE file",
     },
     "apache": {
         "name": "Apache License 2.0",
         "spdx": "Apache-2.0",
         "description": "Permissive with patent grant",
-        "license_notice": "Licensed under the Apache License, Version 2.0"
+        "license_notice": "Licensed under the Apache License, Version 2.0",
     },
     "gpl3": {
         "name": "GNU General Public License v3.0",
         "spdx": "GPL-3.0-or-later",
         "description": "Copyleft open source license",
-        "license_notice": "This is free software: you can redistribute it and/or modify it under the terms of the GNU GPL v3"
+        "license_notice": "This is free software: you can redistribute it and/or modify it under the terms of the GNU GPL v3",
     },
     "bsd3": {
         "name": "BSD 3-Clause License",
         "spdx": "BSD-3-Clause",
         "description": "Permissive with attribution",
-        "license_notice": "For licensing see the LICENSE file"
+        "license_notice": "For licensing see the LICENSE file",
     },
     "proprietary": {
         "name": "Proprietary License",
         "spdx": "PROPRIETARY",
         "description": "All rights reserved",
-        "license_notice": "All rights reserved. Not for distribution."
+        "license_notice": "All rights reserved. Not for distribution.",
     },
     "custom": {
         "name": "Custom License",
         "spdx": "",
         "description": "Specify your own license",
-        "license_notice": ""
-    }
+        "license_notice": "",
+    },
 }
 
 
@@ -85,7 +84,9 @@ def prompt_input(prompt_text: str, default: Optional[str] = None) -> str:
         sys.exit(0)
 
 
-def prompt_choice(prompt_text: str, choices: Dict[str, str], default: Optional[str] = None) -> str:
+def prompt_choice(
+    prompt_text: str, choices: Dict[str, str], default: Optional[str] = None
+) -> str:
     """Prompt user to select from a list of choices."""
     print(f"\n{prompt_text}")
     print("-" * 60)
@@ -114,13 +115,17 @@ def prompt_choice(prompt_text: str, choices: Dict[str, str], default: Optional[s
         if choice_input in choices:
             return choice_input
 
-        print(f"Invalid choice. Please enter a number (1-{len(sorted_keys)}) or a valid key.")
+        print(
+            f"Invalid choice. Please enter a number (1-{len(sorted_keys)}) or a valid key."
+        )
 
 
 def prompt_yes_no(prompt_text: str, default: bool = True) -> bool:
     """Prompt user for yes/no question."""
     default_str = "Y/n" if default else "y/N"
-    response = prompt_input(f"{prompt_text} ({default_str})", "y" if default else "n").lower()
+    response = prompt_input(
+        f"{prompt_text} ({default_str})", "y" if default else "n"
+    ).lower()
 
     if not response:
         return default
@@ -157,7 +162,9 @@ def prompt_multiselect(prompt_text: str, options: Dict[str, List[str]]) -> List[
         except ValueError:
             pass
 
-        print(f"Invalid input. Enter numbers 1-{len(sorted_keys)} separated by commas, or 'all'.")
+        print(
+            f"Invalid input. Enter numbers 1-{len(sorted_keys)} separated by commas, or 'all'."
+        )
 
 
 def generate_copyright_template(
@@ -167,7 +174,7 @@ def generate_copyright_template(
     spdx_license: Optional[str],
     license_notice: Optional[str],
     extensions: List[str],
-    include_author: bool
+    include_author: bool,
 ) -> str:
     """Generate copyright.txt content based on user inputs."""
 
@@ -198,8 +205,12 @@ def generate_copyright_template(
     def create_notice(comment_prefix: str, comment_suffix: str = "") -> List[str]:
         lines = []
         if spdx_license:
-            lines.append(f"{comment_prefix}SPDX-License-Identifier: {{SPDX_LICENSE}}{comment_suffix}")
-        lines.append(f"{comment_prefix}Copyright {{YEAR_PATTERN}} {{COMPANY}}{comment_suffix}")
+            lines.append(
+                f"{comment_prefix}SPDX-License-Identifier: {{SPDX_LICENSE}}{comment_suffix}"
+            )
+        lines.append(
+            f"{comment_prefix}Copyright {{YEAR_PATTERN}} {{COMPANY}}{comment_suffix}"
+        )
         if include_author and author:
             lines.append(f"{comment_prefix}Author: {{AUTHOR}}{comment_suffix}")
         if license_notice:
@@ -216,7 +227,17 @@ def generate_copyright_template(
     for ext in extensions:
         if ext in [".py", ".yaml", ".yml", ".sh", ".bash"]:
             hash_comment_exts.append(ext)
-        elif ext in [".js", ".jsx", ".ts", ".tsx", ".go", ".rs", ".css", ".scss", ".sass"]:
+        elif ext in [
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".go",
+            ".rs",
+            ".css",
+            ".scss",
+            ".sass",
+        ]:
             slash_comment_exts.append(ext)
         elif ext in [".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".java"]:
             block_comment_exts.append(ext)
@@ -254,9 +275,13 @@ def generate_copyright_template(
         if c_exts:
             ext_list = ", ".join(c_exts)
             template_parts.append(f"[{ext_list}]")
-            template_parts.append("/**************************************************************************")
+            template_parts.append(
+                "/**************************************************************************"
+            )
             template_parts.extend(create_notice("* ", " " * (73 - len("* "))))
-            template_parts.append("**************************************************************************/")
+            template_parts.append(
+                "**************************************************************************/"
+            )
             template_parts.append("")
 
         if java_exts:
@@ -294,9 +319,7 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
     # Step 1: Choose license type
     license_choices = {k: v["description"] for k, v in COPYRIGHT_TEMPLATES.items()}
     license_type = prompt_choice(
-        "Select a license type",
-        license_choices,
-        default="mit"
+        "Select a license type", license_choices, default="mit"
     )
 
     # Step 2: Company/Organization name
@@ -306,7 +329,9 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
         company = prompt_input("Enter company/organization name", "My Company Inc.")
 
     # Step 3: Author (optional)
-    include_author = prompt_yes_no("\nInclude author information in copyright?", default=True)
+    include_author = prompt_yes_no(
+        "\nInclude author information in copyright?", default=True
+    )
     author = None
     if include_author:
         author = prompt_input("Enter author name or team", "Development Team")
@@ -316,19 +341,24 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
     license_notice = None
 
     if license_type == "custom":
-        spdx_license = prompt_input("\nEnter SPDX license identifier (or leave empty)", "")
-        license_notice = prompt_input("Enter license notice text", "All rights reserved")
+        spdx_license = prompt_input(
+            "\nEnter SPDX license identifier (or leave empty)", ""
+        )
+        license_notice = prompt_input(
+            "Enter license notice text", "All rights reserved"
+        )
     else:
         # Allow overriding defaults
         if prompt_yes_no("\nCustomize license details?", default=False):
             template_info = COPYRIGHT_TEMPLATES[license_type]
             spdx_license = prompt_input("SPDX identifier", template_info["spdx"])
-            license_notice = prompt_input("License notice", template_info["license_notice"])
+            license_notice = prompt_input(
+                "License notice", template_info["license_notice"]
+            )
 
     # Step 5: Select file extensions
     extensions = prompt_multiselect(
-        "\nSelect file extensions to include",
-        EXTENSION_GROUPS
+        "\nSelect file extensions to include", EXTENSION_GROUPS
     )
 
     # Generate the template
@@ -339,7 +369,7 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
         spdx_license=spdx_license,
         license_notice=license_notice,
         extensions=extensions,
-        include_author=include_author
+        include_author=include_author,
     )
 
     # Determine output path
@@ -351,8 +381,7 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
     # Check if file exists
     if output_file.exists():
         overwrite = prompt_yes_no(
-            f"\n'{output_path}' already exists. Overwrite?",
-            default=False
+            f"\n'{output_path}' already exists. Overwrite?", default=False
         )
         if not overwrite:
             print("\nOperation cancelled. File was not modified.")

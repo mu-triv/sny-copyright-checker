@@ -49,7 +49,7 @@ class TestCLIArgumentOrder:
             [sys.executable, "-m", "scripts.main", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed (copyright.txt is default)
@@ -61,12 +61,10 @@ class TestCLIArgumentOrder:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(file_path),
-             "--no-fix"],
+            [sys.executable, "-m", "scripts.main", str(file_path), "--no-fix"],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed - file already has copyright from previous test
@@ -79,12 +77,10 @@ class TestCLIArgumentOrder:
         file2 = test_environment / "README.md"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(file1),
-             str(file2)],
+            [sys.executable, "-m", "scripts.main", str(file1), str(file2)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed for .py, skip .md (unsupported)
@@ -95,12 +91,10 @@ class TestCLIArgumentOrder:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--no-fix",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--no-fix", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should work fine
@@ -111,12 +105,10 @@ class TestCLIArgumentOrder:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(file_path),
-             "--verbose"],
+            [sys.executable, "-m", "scripts.main", str(file_path), "--verbose"],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -130,13 +122,18 @@ class TestCLIArgumentOrder:
 
         # Init command should be recognized even with flags after
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "init",
-             "--output", str(output_path),
-             "--help"],  # Should show init help, not try to process --help as file
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "init",
+                "--output",
+                str(output_path),
+                "--help",
+            ],  # Should show init help, not try to process --help as file
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should show init help
@@ -149,11 +146,10 @@ class TestCLIArgumentOrder:
         init_file.write_text("def initialize():\n    pass\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(init_file)],
+            [sys.executable, "-m", "scripts.main", str(init_file)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should process the file, not treat it as init command
@@ -164,11 +160,10 @@ class TestCLIArgumentOrder:
     def test_relative_path_first(self, test_environment):
         """Test with relative path as first argument."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "test.py"],
+            [sys.executable, "-m", "scripts.main", "test.py"],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -178,12 +173,11 @@ class TestCLIArgumentOrder:
         """Test with file pattern as first argument."""
         # Note: This tests shell expansion, not direct pattern matching
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "*.py"],
+            [sys.executable, "-m", "scripts.main", "*.py"],
             capture_output=True,
             text=True,
             cwd=test_environment,
-            shell=True  # Shell will expand *.py
+            shell=True,  # Shell will expand *.py
         )
 
         # Should succeed or fail gracefully (1 for file not found)
@@ -196,9 +190,7 @@ class TestCLIEdgeCases:
     def test_empty_arguments(self):
         """Test with no arguments."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main"],
-            capture_output=True,
-            text=True
+            [sys.executable, "-m", "scripts.main"], capture_output=True, text=True
         )
 
         # Should succeed (no files to process)
@@ -207,11 +199,9 @@ class TestCLIEdgeCases:
     def test_only_flags_no_files(self):
         """Test with only flags, no files."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--verbose",
-             "--no-fix"],
+            [sys.executable, "-m", "scripts.main", "--verbose", "--no-fix"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should succeed (no files to process)
@@ -222,12 +212,10 @@ class TestCLIEdgeCases:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should work (argparse handles -- as end of options)
@@ -239,12 +227,16 @@ class TestCLIEdgeCases:
         dash_file.write_text("def test():\n    pass\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--",  # Use -- to prevent misinterpretation
-             str(dash_file)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--",  # Use -- to prevent misinterpretation
+                str(dash_file),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -259,11 +251,9 @@ class TestInitCommandEdgeCases:
         # This would hang waiting for input, so we skip it or mock input
         # Just verify the command is recognized
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "init",
-             "--help"],
+            [sys.executable, "-m", "scripts.main", "init", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -272,11 +262,15 @@ class TestInitCommandEdgeCases:
     def test_init_with_custom_output(self, test_environment):
         """Test init with custom output path."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "init",
-             "--help"],  # Just check help works
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "init",
+                "--help",
+            ],  # Just check help works
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert "--output" in result.stdout or "-o" in result.stdout
@@ -291,11 +285,10 @@ class TestInitCommandEdgeCases:
 
         # Using full path should NOT trigger init command
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(init_file)],
+            [sys.executable, "-m", "scripts.main", str(init_file)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should try to process as file (will fail - no copyright.txt yet)
@@ -305,13 +298,18 @@ class TestInitCommandEdgeCases:
     def test_init_output_to_directory_fails(self, test_environment):
         """Test that init fails when output is a directory."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "init",
-             "--output", str(test_environment)],  # Directory, not file
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "init",
+                "--output",
+                str(test_environment),
+            ],  # Directory, not file
             capture_output=True,
             text=True,
             input="1\n",  # Select MIT
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should fail with error
@@ -330,12 +328,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--notice", str(custom_template),
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--notice",
+                str(custom_template),
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode == 0
@@ -346,12 +349,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--notice", "nonexistent.txt",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--notice",
+                "nonexistent.txt",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode != 0
@@ -361,12 +369,10 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--verbose",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--verbose", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should have verbose output
@@ -377,12 +383,10 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "-v",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "-v", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should have verbose output
@@ -392,7 +396,9 @@ class TestAllFlagsIndividually:
         """Test --changed-only flag (requires git repo)."""
         # Initialize git repo
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
 
         file_path = test_environment / "test.py"
@@ -403,11 +409,10 @@ class TestAllFlagsIndividually:
         file_path.write_text("def new_func():\n    pass\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--changed-only"],
+            [sys.executable, "-m", "scripts.main", "--changed-only"],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should process changed file
@@ -416,38 +421,54 @@ class TestAllFlagsIndividually:
     def test_changed_only_with_filenames_warns(self, test_environment):
         """Test --changed-only with filenames shows warning."""
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
 
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--changed-only",
-             str(file_path)],  # Should be ignored
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--changed-only",
+                str(file_path),
+            ],  # Should be ignored
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should show warning about ignoring filenames
-        assert "ignores filename" in result.stderr.lower() or "warning" in result.stderr.lower()
+        assert (
+            "ignores filename" in result.stderr.lower()
+            or "warning" in result.stderr.lower()
+        )
 
     def test_base_ref_flag(self, test_environment):
         """Test --base-ref flag with --changed-only."""
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
         subprocess.run(["git", "add", "."], cwd=test_environment)
         subprocess.run(["git", "commit", "-m", "initial"], cwd=test_environment)
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--changed-only",
-             "--base-ref", "HEAD"],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--changed-only",
+                "--base-ref",
+                "HEAD",
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should work (no changed files since HEAD)
@@ -458,12 +479,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--base-ref", "main",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--base-ref",
+                "main",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should warn that base-ref is ignored
@@ -474,12 +500,10 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--no-git-aware",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--no-git-aware", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed (just disables git features)
@@ -488,18 +512,18 @@ class TestAllFlagsIndividually:
     def test_per_file_years_flag(self, test_environment):
         """Test --per-file-years flag."""
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
 
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--per-file-years",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--per-file-years", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -510,13 +534,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--per-file-years",
-             "--no-git-aware",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--per-file-years",
+                "--no-git-aware",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should fail with error
@@ -531,12 +559,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--ignore-file", str(ignore_file),
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--ignore-file",
+                str(ignore_file),
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -547,12 +580,10 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--no-gitignore",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--no-gitignore", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -563,12 +594,10 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--hierarchical",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--hierarchical", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed
@@ -581,12 +610,10 @@ class TestAllFlagsIndividually:
         file_path.write_text("# Copyright 2020 Old Company\ndef test():\n    pass\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--replace",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", "--replace", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed and replace copyright
@@ -599,13 +626,17 @@ class TestAllFlagsIndividually:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--replace",
-             "--no-fix",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--replace",
+                "--no-fix",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should fail with error
@@ -621,13 +652,17 @@ class TestFlagCombinations:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--verbose",
-             "--no-fix",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--verbose",
+                "--no-fix",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode in [0, 1]
@@ -642,13 +677,18 @@ class TestFlagCombinations:
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--hierarchical",
-             "--notice", custom_name,
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--hierarchical",
+                "--notice",
+                custom_name,
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode == 0
@@ -659,13 +699,17 @@ class TestFlagCombinations:
         file_path.write_text("# Copyright 2020 Old\ndef test():\n    pass\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--replace",
-             "--hierarchical",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--replace",
+                "--hierarchical",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode == 0
@@ -673,22 +717,28 @@ class TestFlagCombinations:
     def test_all_flags_together(self, test_environment):
         """Test many flags together (valid combination)."""
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
 
         file_path = test_environment / "test.py"
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--verbose",
-             "--hierarchical",
-             "--replace",
-             "--per-file-years",
-             "--no-gitignore",
-             str(file_path)],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--verbose",
+                "--hierarchical",
+                "--replace",
+                "--per-file-years",
+                "--no-gitignore",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         assert result.returncode == 0
@@ -700,11 +750,15 @@ class TestErrorHandling:
     def test_nonexistent_file(self, test_environment):
         """Test with nonexistent file."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(test_environment / "nonexistent.py")],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                str(test_environment / "nonexistent.py"),
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should handle gracefully
@@ -713,16 +767,23 @@ class TestErrorHandling:
     def test_invalid_base_ref(self, test_environment):
         """Test --base-ref with invalid git reference."""
         subprocess.run(["git", "init"], cwd=test_environment, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=test_environment)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=test_environment
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=test_environment)
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--changed-only",
-             "--base-ref", "nonexistent-branch"],
+            [
+                sys.executable,
+                "-m",
+                "scripts.main",
+                "--changed-only",
+                "--base-ref",
+                "nonexistent-branch",
+            ],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should fail gracefully
@@ -731,11 +792,10 @@ class TestErrorHandling:
     def test_changed_only_without_git(self, test_environment):
         """Test --changed-only in non-git directory."""
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             "--changed-only"],
+            [sys.executable, "-m", "scripts.main", "--changed-only"],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should fail or handle gracefully
@@ -747,11 +807,10 @@ class TestErrorHandling:
         file_path.write_text("some content\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts.main",
-             str(file_path)],
+            [sys.executable, "-m", "scripts.main", str(file_path)],
             capture_output=True,
             text=True,
-            cwd=test_environment
+            cwd=test_environment,
         )
 
         # Should succeed but skip unsupported file

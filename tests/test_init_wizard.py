@@ -8,7 +8,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 
 from scripts.init_wizard import (
@@ -30,7 +30,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".py", ".js"],
-            include_author=True
+            include_author=True,
         )
 
         assert "[VARIABLES]" in template
@@ -38,7 +38,9 @@ class TestGenerateCopyrightTemplate:
         assert "COMPANY = Test Company" in template
         assert "AUTHOR = Test Author" in template
         assert "YEAR_PATTERN = {regex:\\d{4}(-\\d{4})?}" in template
-        assert "[.py]" in template or "[.js, .py]" in template or "[.py, .js]" in template
+        assert (
+            "[.py]" in template or "[.js, .py]" in template or "[.py, .js]" in template
+        )
         assert "# SPDX-License-Identifier: {SPDX_LICENSE}" in template
         assert "# Copyright {YEAR_PATTERN} {COMPANY}" in template
 
@@ -51,7 +53,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".py"],
-            include_author=False
+            include_author=False,
         )
 
         assert "SPDX_LICENSE = PROPRIETARY" in template
@@ -68,7 +70,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license="Custom-1.0",
             license_notice="Custom license text",
             extensions=[".py"],
-            include_author=True
+            include_author=True,
         )
 
         assert "SPDX_LICENSE = Custom-1.0" in template
@@ -85,7 +87,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".py", ".js", ".c", ".java", ".sql"],
-            include_author=True
+            include_author=True,
         )
 
         # Should have sections for different comment styles
@@ -103,12 +105,18 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".c", ".h", ".cpp"],
-            include_author=True
+            include_author=True,
         )
 
-        assert "/**************************************************************************" in template
+        assert (
+            "/**************************************************************************"
+            in template
+        )
         assert "* SPDX-License-Identifier: {SPDX_LICENSE}" in template
-        assert "**************************************************************************/" in template
+        assert (
+            "**************************************************************************/"
+            in template
+        )
 
     def test_java_block_comment(self):
         """Test Java block comment style."""
@@ -119,7 +127,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".java"],
-            include_author=True
+            include_author=True,
         )
 
         assert "/*" in template
@@ -136,7 +144,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".xml", ".html", ".md"],
-            include_author=True
+            include_author=True,
         )
 
         assert "<!--" in template
@@ -152,7 +160,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".sh"],
-            include_author=True
+            include_author=True,
         )
 
         assert "#!/bin/bash" in template
@@ -167,7 +175,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license=None,
             license_notice=None,
             extensions=[".py"],
-            include_author=False
+            include_author=False,
         )
 
         assert "COMPANY = No Author Corp" in template
@@ -183,7 +191,7 @@ class TestGenerateCopyrightTemplate:
             spdx_license="",
             license_notice="Custom notice",
             extensions=[".py"],
-            include_author=True
+            include_author=True,
         )
 
         assert "SPDX_LICENSE" not in template
@@ -195,7 +203,7 @@ class TestGenerateCopyrightTemplate:
 class TestInitWizardIntegration:
     """Integration tests for the init wizard."""
 
-    @patch('scripts.init_wizard.input')
+    @patch("scripts.init_wizard.input")
     def test_init_wizard_mit_default(self, mock_input):
         """Test init wizard with MIT license and default options."""
         from scripts.init_wizard import run_init_wizard
@@ -220,7 +228,7 @@ class TestInitWizardIntegration:
             # File should not exist since we cancelled
             assert not output_path.exists()
 
-    @patch('scripts.init_wizard.input')
+    @patch("scripts.init_wizard.input")
     def test_init_wizard_creates_file(self, mock_input):
         """Test that init wizard creates a valid file."""
         from scripts.init_wizard import run_init_wizard
@@ -250,7 +258,7 @@ class TestInitWizardIntegration:
             # Python extensions should be present
             assert ".py" in content
 
-    @patch('scripts.init_wizard.input')
+    @patch("scripts.init_wizard.input")
     def test_init_wizard_proprietary(self, mock_input):
         """Test init wizard with proprietary license."""
         from scripts.init_wizard import run_init_wizard

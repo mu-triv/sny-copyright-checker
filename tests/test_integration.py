@@ -7,7 +7,6 @@
 
 import pytest
 import tempfile
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -34,8 +33,12 @@ def temp_project_dir():
 
         # Create test files
         (project_dir / "file1.py").write_text("def hello():\n    pass\n")
-        (project_dir / "file2.py").write_text("#!/usr/bin/env python\ndef world():\n    pass\n")
-        (project_dir / "file3.js").write_text("function test() {\n    console.log('test');\n}\n")
+        (project_dir / "file2.py").write_text(
+            "#!/usr/bin/env python\ndef world():\n    pass\n"
+        )
+        (project_dir / "file3.js").write_text(
+            "function test() {\n    console.log('test');\n}\n"
+        )
         (project_dir / "file4.sql").write_text("SELECT * FROM users;\n")
         (project_dir / "file5.txt").write_text("This is a text file\n")  # Unsupported
 
@@ -60,12 +63,11 @@ def existing():
 # CLI INTEGRATION TESTS
 # ============================================================================
 
+
 def test_cli_help():
     """Test CLI help message"""
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main", "--help"],
-        capture_output=True,
-        text=True
+        [sys.executable, "-m", "scripts.main", "--help"], capture_output=True, text=True
     )
 
     assert result.returncode == 0
@@ -78,7 +80,7 @@ def test_cli_version():
     result = subprocess.run(
         [sys.executable, "-m", "scripts.main", "--version"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     # Should either succeed or show version info
@@ -91,12 +93,16 @@ def test_cli_single_file_check(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should succeed and add copyright
@@ -114,13 +120,17 @@ def test_cli_single_file_no_fix(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}",
-         "--no-fix"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+            "--no-fix",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should fail because copyright is missing
@@ -138,13 +148,17 @@ def test_cli_multiple_files(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file1),
-         str(file2),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file1),
+            str(file2),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -162,14 +176,18 @@ def test_cli_mixed_extensions(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(py_file),
-         str(js_file),
-         str(sql_file),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(py_file),
+            str(js_file),
+            str(sql_file),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -192,12 +210,16 @@ def test_cli_file_with_existing_copyright(temp_project_dir):
     original_content = file_path.read_text()
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -212,12 +234,16 @@ def test_cli_unsupported_extension(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should succeed (skipped files don't cause failure)
@@ -229,12 +255,16 @@ def test_cli_nonexistent_file(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(temp_project_dir / "nonexistent.py"),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(temp_project_dir / "nonexistent.py"),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should fail (return code 2 for FileNotFoundError or 1 for check failure)
@@ -246,12 +276,16 @@ def test_cli_nonexistent_template(temp_project_dir):
     file_path = temp_project_dir / "file1.py"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         "--notice=nonexistent.txt"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            "--notice=nonexistent.txt",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should fail with error (return code 2 for FileNotFoundError)
@@ -265,13 +299,17 @@ def test_cli_verbose_output(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}",
-         "-v"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+            "-v",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -282,6 +320,7 @@ def test_cli_verbose_output(temp_project_dir):
 # ============================================================================
 # END-TO-END WORKFLOW TESTS
 # ============================================================================
+
 
 def test_workflow_new_project_initialization(temp_project_dir):
     """Test initializing copyright notices in a new project"""
@@ -295,7 +334,7 @@ def test_workflow_new_project_initialization(temp_project_dir):
         [sys.executable, "-m", "scripts.main", *py_files, f"--notice={template_path}"],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -317,10 +356,16 @@ def test_workflow_mixed_files_with_some_copyrights(temp_project_dir):
     ]
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main", *[str(f) for f in files], f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            *[str(f) for f in files],
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -340,10 +385,16 @@ def test_workflow_shebang_preservation(temp_project_dir):
     assert original.startswith("#!/usr/bin/env python")
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main", str(file_path), f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -361,10 +412,16 @@ def test_workflow_directory_structure_preserved(temp_project_dir):
     template_path = temp_project_dir / "copyright.txt"
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main", str(nested_file), f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(nested_file),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -376,6 +433,7 @@ def test_workflow_directory_structure_preserved(temp_project_dir):
 # PRE-COMMIT SIMULATION TESTS
 # ============================================================================
 
+
 def test_precommit_simulation_all_files_valid(temp_project_dir):
     """Simulate pre-commit hook with all files having copyright"""
     template_path = temp_project_dir / "copyright.txt"
@@ -383,18 +441,30 @@ def test_precommit_simulation_all_files_valid(temp_project_dir):
     # First pass - add copyrights
     files = [temp_project_dir / "file1.py", temp_project_dir / "file2.py"]
     subprocess.run(
-        [sys.executable, "-m", "scripts.main", *[str(f) for f in files], f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            *[str(f) for f in files],
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Second pass - check mode (simulate pre-commit check)
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main", *[str(f) for f in files], f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            *[str(f) for f in files],
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should pass (all files have copyright)
@@ -412,13 +482,17 @@ def test_precommit_simulation_some_files_invalid(temp_project_dir):
 
     # Check mode - should fail because file1.py has no copyright
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         *[str(f) for f in files],
-         f"--notice={template_path}",
-         "--no-fix"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            *[str(f) for f in files],
+            f"--notice={template_path}",
+            "--no-fix",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should fail
@@ -432,12 +506,16 @@ def test_precommit_simulation_auto_fix(temp_project_dir):
 
     # Auto-fix mode
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(file_path),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(file_path),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     # Should succeed and fix the file
@@ -449,12 +527,11 @@ def test_precommit_simulation_auto_fix(temp_project_dir):
 # ERROR HANDLING AND EDGE CASES
 # ============================================================================
 
+
 def test_cli_empty_file_list():
     """Test CLI with no files provided"""
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main"],
-        capture_output=True,
-        text=True
+        [sys.executable, "-m", "scripts.main"], capture_output=True, text=True
     )
 
     # Should show usage or succeed with no action
@@ -471,12 +548,16 @@ def test_cli_with_special_characters_in_filename(temp_project_dir):
     special_file.write_text("def test():\n    pass\n")
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         str(special_file),
-         f"--notice={template_path}"],
+        [
+            sys.executable,
+            "-m",
+            "scripts.main",
+            str(special_file),
+            f"--notice={template_path}",
+        ],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -495,12 +576,10 @@ def test_workflow_concurrent_file_processing(temp_project_dir):
         files.append(str(f))
 
     result = subprocess.run(
-        [sys.executable, "-m", "scripts.main",
-         *files,
-         f"--notice={template_path}"],
+        [sys.executable, "-m", "scripts.main", *files, f"--notice={template_path}"],
         capture_output=True,
         text=True,
-        cwd=temp_project_dir
+        cwd=temp_project_dir,
     )
 
     assert result.returncode == 0
@@ -515,7 +594,7 @@ def test_cli_invalid_arguments():
     result = subprocess.run(
         [sys.executable, "-m", "scripts.main", "--invalid-arg"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     # Should fail with error
@@ -611,7 +690,9 @@ def foo():
         checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
 
         # Should pass - copyright matches
-        has_valid, was_modified = checker.check_file(str(project_dir / "test.py"), auto_fix=False)
+        has_valid, was_modified = checker.check_file(
+            str(project_dir / "test.py"), auto_fix=False
+        )
         assert has_valid is True
         assert was_modified is False
 
@@ -643,11 +724,11 @@ LICENSE = Apache-2.0
         checker = CopyrightChecker(template_path=str(project_dir / "copyright.txt"))
 
         # Process all files
-        for ext in ['.c', '.cpp', '.h']:
+        for ext in [".c", ".cpp", ".h"]:
             checker.check_file(str(project_dir / f"test{ext}"))
 
         # All should have the same copyright with variables substituted
-        for ext in ['.c', '.cpp', '.h']:
+        for ext in [".c", ".cpp", ".h"]:
             content = (project_dir / f"test{ext}").read_text()
             assert "/* Copyright Sony" in content
             assert "License: Apache-2.0" in content
@@ -685,5 +766,5 @@ COMPANY = Sony
         assert "{UNDEFINED_EMAIL}" in content
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
