@@ -556,30 +556,69 @@ class CopyrightChecker:
         :param line_number: The line number to check (0-indexed)
         :return: True if the line is inside a string literal
         """
-        in_string = False
-        string_delimiter = None
+        in_multiline_string = False
+        multiline_delimiter = None
 
         for i in range(line_number + 1):
             line = lines[i]
+            
+            # Track single-line string state to avoid false positives
+            # We need to ignore """ or ''' that appear inside regular strings
+            in_single_string = False
+            single_string_char = None
+            escaped = False
+            
+            j = 0
+            while j < len(line):
+                char = line[j]
+                
+                if escaped:
+                    escaped = False
+                    j += 1
+                    continue
+                
+                if char == '\\':
+                    escaped = True
+                    j += 1
+                    continue
+                
+                # If we're in a multi-line string, just check for its closing delimiter
+                if in_multiline_string:
+                    if j + 2 < len(line) and line[j:j+3] == multiline_delimiter:
+                        in_multiline_string = False
+                        multiline_delimiter = None
+                        j += 3
+                        continue
+                    j += 1
+                    continue
+                
+                # Track single-line strings
+                if char in ('"', "'"):
+                    if not in_single_string:
+                        # Check for triple quote
+                        if j + 2 < len(line) and line[j:j+3] in ('"""', "'''"):
+                            in_multiline_string = True
+                            multiline_delimiter = line[j:j+3]
+                            j += 3
+                            continue
+                        else:
+                            in_single_string = True
+                            single_string_char = char
+                            j += 1
+                            continue
+                    elif char == single_string_char:
+                        in_single_string = False
+                        single_string_char = None
+                        j += 1
+                        continue
+                
+                j += 1
 
-            # Check for triple-quoted strings
-            for delimiter in ['"""', "'''"]:
-                count = line.count(delimiter)
-                if count > 0:
-                    # Toggle string state for each delimiter found
-                    for _ in range(count):
-                        if not in_string:
-                            in_string = True
-                            string_delimiter = delimiter
-                        elif string_delimiter == delimiter:
-                            in_string = False
-                            string_delimiter = None
-
-            # If we've reached the target line, return the current state
+            # If we've reached the target line, return the multi-line string state
             if i == line_number:
-                return in_string
+                return in_multiline_string
 
-        return in_string
+        return in_multiline_string
 
     def _remove_duplicate_copyrights(
         self,
