@@ -11,9 +11,18 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.7] - 2026-01-18
 
+### Added
+- **Init Wizard Enhancement**: Automatically creates/updates `.pre-commit-config.yaml`
+  - Wizard now asks if you want to create or update pre-commit configuration
+  - Automatically generates correct file patterns based on selected extensions
+  - Updates existing configuration intelligently without breaking other hooks
+  - Includes sensible default arguments
+  - Saves time and reduces configuration errors
+
 ### Changed
 - Improved string literal detection for better handling of copyright notices in test code
 - Enhanced test coverage for edge cases involving escaped quotes and multiline strings
+- Added PyYAML dependency for pre-commit config file handling
 
 ### Documentation
 - **README.md restructured**: Now concise and user-friendly for quick understanding
@@ -25,8 +34,10 @@ All notable changes to this project will be documented in this file.
   - Easy company/organization details entry
   - Automatic file extension selection
   - Generates ready-to-use `copyright.txt` configuration
+  - **NEW**: Automatically creates/updates `.pre-commit-config.yaml`
   - Perfect for first-time users - no manual configuration needed
   - See [INIT_WIZARD.md](INIT_WIZARD.md) for details
+- Updated INIT_WIZARD.md with pre-commit config automation details
 
 ### Internal
 - Added diagnostic test files for string literal detection debugging

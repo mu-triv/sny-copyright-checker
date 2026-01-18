@@ -9,10 +9,11 @@
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-import pytest
+import yaml
 
 from scripts.init_wizard import (
     generate_copyright_template,
+    create_or_update_precommit_config,
     COPYRIGHT_TEMPLATES,
     EXTENSION_GROUPS,
 )
@@ -242,6 +243,7 @@ class TestInitWizardIntegration:
             "n",  # Don't customize license
             "7",  # Python only (option 7)
             "y",  # Save the file
+            "n",  # Don't create pre-commit config (new prompt)
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -270,6 +272,7 @@ class TestInitWizardIntegration:
             "n",  # Don't customize
             "7",  # Python (option 7)
             "y",  # Save
+            "n",  # Don't create pre-commit config (new prompt)
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -338,5 +341,173 @@ class TestExtensionGroups:
         assert ".hpp" in c_exts
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+class TestPreCommitConfigCreation:
+    """Test .pre-commit-config.yaml creation and update."""
+
+    def test_create_new_precommit_config(self):
+        """Test creating a new .pre-commit-config.yaml file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            config_file = tmppath / ".pre-commit-config.yaml"
+
+            # Change to temp directory
+            import os
+
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(tmppath)
+
+                # Create config
+                result = create_or_update_precommit_config(
+                    "copyright.txt", [".py", ".js", ".ts"]
+                )
+
+                assert result is True
+                assert config_file.exists()
+
+                # Check content
+                with open(config_file, "r") as f:
+                    config = yaml.safe_load(f)
+
+                assert "repos" in config
+                assert len(config["repos"]) == 1
+                assert "sny-copyright-checker" in config["repos"][0]["repo"]
+                assert config["repos"][0]["rev"] == "v1.0.7"
+                assert config["repos"][0]["hooks"][0]["id"] == "sny-copyright-checker"
+                assert (
+                    "--notice=copyright.txt" in config["repos"][0]["hooks"][0]["args"]
+                )
+                assert "files" in config["repos"][0]["hooks"][0]
+                # Check pattern includes selected extensions
+                pattern = config["repos"][0]["hooks"][0]["files"]
+                assert "py" in pattern
+                assert "js" in pattern
+                assert "ts" in pattern
+            finally:
+                os.chdir(old_cwd)
+
+    def test_update_existing_precommit_config(self):
+        """Test updating an existing .pre-commit-config.yaml file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            config_file = tmppath / ".pre-commit-config.yaml"
+
+            # Create initial config with another hook
+            initial_config = {
+                "repos": [
+                    {
+                        "repo": "https://github.com/pre-commit/pre-commit-hooks",
+                        "rev": "v4.0.0",
+                        "hooks": [{"id": "trailing-whitespace"}],
+                    }
+                ]
+            }
+            with open(config_file, "w") as f:
+                yaml.dump(initial_config, f)
+
+            # Change to temp directory
+            import os
+
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(tmppath)
+
+                # Update config
+                result = create_or_update_precommit_config("copyright.txt", [".py"])
+
+                assert result is True
+
+                # Check content
+                with open(config_file, "r") as f:
+                    config = yaml.safe_load(f)
+
+                assert len(config["repos"]) == 2
+                # Original hook should still be there
+                assert (
+                    config["repos"][0]["repo"]
+                    == "https://github.com/pre-commit/pre-commit-hooks"
+                )
+                # New hook should be added
+                assert "sny-copyright-checker" in config["repos"][1]["repo"]
+            finally:
+                os.chdir(old_cwd)
+
+    def test_update_existing_checker_config(self):
+        """Test updating existing sny-copyright-checker configuration."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            config_file = tmppath / ".pre-commit-config.yaml"
+
+            # Create config with old checker version
+            initial_config = {
+                "repos": [
+                    {
+                        "repo": "https://github.com/mu-triv/sny-copyright-checker",
+                        "rev": "v1.0.6",
+                        "hooks": [
+                            {
+                                "id": "sny-copyright-checker",
+                                "args": ["--notice=old_copyright.txt"],
+                            }
+                        ],
+                    }
+                ]
+            }
+            with open(config_file, "w") as f:
+                yaml.dump(initial_config, f)
+
+            # Change to temp directory
+            import os
+
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(tmppath)
+
+                # Update config
+                result = create_or_update_precommit_config(
+                    "new_copyright.txt", [".py", ".js"]
+                )
+
+                assert result is True
+
+                # Check content
+                with open(config_file, "r") as f:
+                    config = yaml.safe_load(f)
+
+                assert len(config["repos"]) == 1
+                # Should be updated to new version
+                assert config["repos"][0]["rev"] == "v1.0.7"
+                # Should use new copyright file
+                assert (
+                    "--notice=new_copyright.txt"
+                    in config["repos"][0]["hooks"][0]["args"]
+                )
+                # Should have files pattern
+                assert "files" in config["repos"][0]["hooks"][0]
+            finally:
+                os.chdir(old_cwd)
+
+    def test_precommit_config_with_no_extensions(self):
+        """Test creating config without specific file extensions."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+
+            import os
+
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(tmppath)
+
+                # Create config with no extensions
+                result = create_or_update_precommit_config("copyright.txt", [])
+
+                assert result is True
+
+                config_file = tmppath / ".pre-commit-config.yaml"
+                with open(config_file, "r") as f:
+                    config = yaml.safe_load(f)
+
+                # Should not have files pattern when no extensions specified
+                assert "files" not in config["repos"][0]["hooks"][0]
+            finally:
+                os.chdir(old_cwd)

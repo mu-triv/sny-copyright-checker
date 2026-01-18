@@ -9,6 +9,7 @@
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
+import yaml
 
 
 # Pre-built copyright templates for common scenarios
@@ -303,6 +304,87 @@ def generate_copyright_template(
     return "\n".join(template_parts)
 
 
+def create_or_update_precommit_config(
+    copyright_file: str, extensions: List[str]
+) -> bool:
+    """
+    Create or update .pre-commit-config.yaml with sny-copyright-checker configuration.
+
+    :param copyright_file: Path to the copyright template file
+    :param extensions: List of file extensions to check
+    :return: True if successful, False otherwise
+    """
+    config_path = Path(".pre-commit-config.yaml")
+
+    # Build file pattern regex from extensions
+    if extensions:
+        # Remove dots and create regex pattern
+        ext_patterns = [ext.lstrip(".") for ext in extensions]
+        files_pattern = "\\." + "(" + "|".join(ext_patterns) + ")$"
+    else:
+        files_pattern = None
+
+    # Create the checker configuration
+    checker_config = {
+        "repo": "https://github.com/mu-triv/sny-copyright-checker",
+        "rev": "v1.0.7",
+        "hooks": [
+            {
+                "id": "sny-copyright-checker",
+                "args": [f"--notice={copyright_file}"],
+            }
+        ],
+    }
+
+    # Add files pattern if we have extensions
+    if files_pattern:
+        checker_config["hooks"][0]["files"] = files_pattern
+
+    try:
+        if config_path.exists():
+            # Load existing config
+            with open(config_path, "r", encoding="utf-8") as f:
+                try:
+                    config = yaml.safe_load(f) or {}
+                except yaml.YAMLError:
+                    config = {}
+
+            # Ensure repos key exists
+            if "repos" not in config or not isinstance(config["repos"], list):
+                config["repos"] = []
+
+            # Check if sny-copyright-checker already exists
+            checker_exists = False
+            for i, repo in enumerate(config["repos"]):
+                if isinstance(repo, dict) and "repo" in repo:
+                    if "sny-copyright-checker" in repo["repo"]:
+                        # Update existing configuration
+                        config["repos"][i] = checker_config
+                        checker_exists = True
+                        break
+
+            # Add if doesn't exist
+            if not checker_exists:
+                config["repos"].append(checker_config)
+
+            # Write back
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+            return True
+        else:
+            # Create new config file
+            config = {"repos": [checker_config]}
+
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+            return True
+    except Exception as e:
+        print(f"\nWarning: Could not update .pre-commit-config.yaml: {e}")
+        return False
+
+
 def run_init_wizard(output_path: Optional[str] = None) -> int:
     """
     Run the interactive initialization wizard.
@@ -399,10 +481,28 @@ def run_init_wizard(output_path: Optional[str] = None) -> int:
         try:
             output_file.write_text(template_content, encoding="utf-8")
             print(f"\n✓ Configuration saved to: {output_path}")
+
+            # Ask about pre-commit config
+            if prompt_yes_no("\nCreate/update .pre-commit-config.yaml?", default=True):
+                if create_or_update_precommit_config(output_path, extensions):
+                    config_path = Path(".pre-commit-config.yaml")
+                    if config_path.exists():
+                        print("✓ Updated .pre-commit-config.yaml")
+                    else:
+                        print("✓ Created .pre-commit-config.yaml")
+
+                    print("\nTo enable pre-commit hooks, run:")
+                    print("  pre-commit install")
+                else:
+                    print("✗ Failed to update .pre-commit-config.yaml")
+
             print("\nNext steps:")
             print(f"  1. Review and customize {output_path} if needed")
             print("  2. Run: sny-copyright-checker --fix <files>")
-            print("  3. Or add to .pre-commit-config.yaml for automatic checking")
+            if not Path(".pre-commit-config.yaml").exists():
+                print(
+                    "  3. Or manually add to .pre-commit-config.yaml for automatic checking"
+                )
             return 0
         except Exception as e:
             print(f"\n✗ Error saving file: {e}")

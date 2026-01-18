@@ -24,6 +24,7 @@ The wizard will guide you through:
 4. Customizing license details if needed
 5. Selecting which file extensions to support
 6. Previewing and saving the configuration
+7. **Automatically creating/updating `.pre-commit-config.yaml`**
 
 ## Usage
 
@@ -159,10 +160,52 @@ Save this configuration? (Y/n): y
 
 ✓ Configuration saved to: copyright.txt
 
+Create/update .pre-commit-config.yaml? (Y/n): y
+✓ Created .pre-commit-config.yaml
+
+To enable pre-commit hooks, run:
+  pre-commit install
+
 Next steps:
   1. Review and customize copyright.txt if needed
   2. Run: sny-copyright-checker --fix <files>
-  3. Or add to .pre-commit-config.yaml for automatic checking
+```
+
+### 7. Pre-commit Configuration (NEW!)
+
+After saving the copyright template, the wizard asks if you want to automatically create or update `.pre-commit-config.yaml`.
+
+**Benefits:**
+- ✅ **Automatic Setup**: No need to manually edit YAML files
+- ✅ **Correct Configuration**: Uses the right file patterns based on your selected extensions
+- ✅ **Updates Existing Config**: If you already have `.pre-commit-config.yaml`, it updates it intelligently
+- ✅ **Common Arguments**: Pre-configured with sensible defaults
+
+**What it does:**
+1. Creates `.pre-commit-config.yaml` if it doesn't exist
+2. Updates the sny-copyright-checker configuration if it already exists
+3. Adds a `files` regex pattern that matches only your selected file extensions
+4. Uses the correct path to your copyright template file
+
+**Example:**
+```
+Create/update .pre-commit-config.yaml? (Y/n): y
+✓ Created .pre-commit-config.yaml
+
+To enable pre-commit hooks, run:
+  pre-commit install
+```
+
+The generated configuration will look like:
+```yaml
+repos:
+- repo: https://github.com/mu-triv/sny-copyright-checker
+  rev: v1.0.7
+  hooks:
+  - id: sny-copyright-checker
+    args:
+    - --notice=copyright.txt
+    files: \.(py|js|ts|c|h|cpp)$
 ```
 
 ## Examples
