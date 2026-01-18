@@ -1,5 +1,6 @@
 # Core dependencies
 pathspec>=0.11.0  # For gitignore-style pattern matching
+PyYAML>=6.0  # For .pre-commit-config.yaml handling
 
 # Development dependencies
 pytest>=7.0.0
