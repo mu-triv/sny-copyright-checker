@@ -41,7 +41,7 @@ Run the interactive setup wizard:
 sny-copyright-checker init
 ```
 
-The wizard will guide you through license selection, company details, file type configuration, and **automatically creates or update`.pre-commit-config.yaml`** for you.
+The wizard will guide you through license selection, company details, file type configuration, and **automatically creates or updates `.pre-commit-config.yaml`** for you.
 
 ### 3. Use
 
