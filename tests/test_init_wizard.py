@@ -243,6 +243,7 @@ class TestInitWizardIntegration:
             "n",  # Don't customize license
             "7",  # Python only (option 7)
             "y",  # Save the file
+            "n",  # Don't create pre-commit config (new prompt)
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -271,6 +272,7 @@ class TestInitWizardIntegration:
             "n",  # Don't customize
             "7",  # Python (option 7)
             "y",  # Save
+            "n",  # Don't create pre-commit config (new prompt)
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
