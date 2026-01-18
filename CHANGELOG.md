@@ -9,14 +9,18 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.7] - 2026-01-16
+## [1.0.7] - 2026-01-18
 
 ### Changed
 - Improved string literal detection for better handling of copyright notices in test code
 - Enhanced test coverage for edge cases involving escaped quotes and multiline strings
 
-### Highlighted Feature
-- **Interactive Init Wizard**: Use `sny-copyright-checker init` for quick setup
+### Documentation
+- **README.md restructured**: Now concise and user-friendly for quick understanding
+  - Original comprehensive documentation moved to USER_GUIDE.md
+  - New README focuses on introduction, features, and quick start
+  - Professional, easy-to-read format for first-time users
+- **Interactive Init Wizard** highlighted: Use `sny-copyright-checker init` for quick setup
   - Guides you through selecting a license (MIT, Apache, GPL, BSD, Proprietary, or Custom)
   - Easy company/organization details entry
   - Automatic file extension selection
