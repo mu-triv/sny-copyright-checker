@@ -146,8 +146,8 @@ MIT License - see [LICENSE](https://github.com/mu-triv/sny-copyright-checker/blo
 
 ## Author
 
-**Tri VU Khac** (khactri.vu@sony.com)
-Sony Group Corporation
+**Tri VU Khac** (khactri.vu@sony.com)<br>
+Sony Group Corporation<br>
 R&D Center Europe Brussels Laboratory
 
 ## Acknowledgments
