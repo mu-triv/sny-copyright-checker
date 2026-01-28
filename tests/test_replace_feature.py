@@ -1575,9 +1575,38 @@ AUTHOR = Test Team
     def tearDown(self):
         """Clean up test fixtures"""
         import shutil
+        import time
+        import sys
 
         if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
+            # On Windows, git may keep file handles open. Try multiple times.
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    # On Windows, make files writable before deletion
+                    if sys.platform == "win32":
+                        for root, dirs, files in os.walk(self.temp_dir):
+                            for dir_name in dirs:
+                                try:
+                                    os.chmod(os.path.join(root, dir_name), 0o777)
+                                except Exception:
+                                    pass
+                            for file_name in files:
+                                try:
+                                    os.chmod(os.path.join(root, file_name), 0o777)
+                                except Exception:
+                                    pass
+
+                    shutil.rmtree(self.temp_dir)
+                    break
+                except (PermissionError, OSError) as e:
+                    if attempt < max_attempts - 1:
+                        time.sleep(0.1)  # Wait a bit for file handles to close
+                    else:
+                        # Last attempt failed, but don't fail the test
+                        import warnings
+
+                        warnings.warn(f"Could not clean up temp dir: {e}")
 
     def test_replace_mode_updates_year_project_wide(self):
         """Test that --replace updates year in project-wide mode (default)"""
