@@ -1070,6 +1070,18 @@ class CopyrightChecker:
             logging.debug("Git is not installed or not available")
             return True  # Assume modified if Git not available
 
+    def _format_year_range(self, start_year: int, end_year: int) -> str:
+        """
+        Format year range string.
+
+        :param start_year: Start year
+        :param end_year: End year
+        :return: Formatted year string (e.g., "2024" or "2020-2024")
+        """
+        if start_year == end_year:
+            return str(start_year)
+        return f"{start_year}-{end_year}"
+
     def _determine_copyright_year(
         self, filepath: str, template: CopyrightTemplate, content: str
     ) -> str:
@@ -1112,24 +1124,15 @@ class CopyrightChecker:
             # Determine end year based on mode
             if not self.per_file_years:
                 # Project-wide mode: always extend to current year
-                if current_year > start_year:
-                    year_str = f"{start_year}-{current_year}"
-                else:
-                    year_str = str(start_year)
+                year_str = self._format_year_range(start_year, current_year)
                 logging.debug(f"Project-wide mode, years: {year_str}")
             elif self._is_file_modified(filepath):
                 # Per-file mode with modified file: extend to current year
-                if current_year > start_year:
-                    year_str = f"{start_year}-{current_year}"
-                else:
-                    year_str = str(start_year)
+                year_str = self._format_year_range(start_year, current_year)
                 logging.debug(f"File modified, updating years to: {year_str}")
             else:
                 # Per-file mode with unchanged file: preserve existing years
-                if end_year:
-                    year_str = f"{start_year}-{end_year}"
-                else:
-                    year_str = str(start_year)
+                year_str = self._format_year_range(start_year, end_year or start_year)
                 logging.debug(f"File unchanged, preserving years: {year_str}")
         else:
             # No existing copyright, determine from Git history
@@ -1139,13 +1142,12 @@ class CopyrightChecker:
 
                 if creation_year:
                     # Per-file mode: check if file is modified before extending year
-                    if (
-                        self._is_file_modified(filepath)
-                        and current_year > creation_year
-                    ):
-                        year_str = f"{creation_year}-{current_year}"
-                    else:
-                        year_str = str(creation_year)
+                    end_year = (
+                        current_year
+                        if self._is_file_modified(filepath)
+                        else creation_year
+                    )
+                    year_str = self._format_year_range(creation_year, end_year)
                     logging.debug(f"New copyright using Git file history: {year_str}")
                 else:
                     # File not in Git, use current year
@@ -1157,10 +1159,7 @@ class CopyrightChecker:
 
                 if creation_year:
                     # Project-wide mode: always extend to current year
-                    if current_year > creation_year:
-                        year_str = f"{creation_year}-{current_year}"
-                    else:
-                        year_str = str(creation_year)
+                    year_str = self._format_year_range(creation_year, current_year)
                     logging.debug(
                         f"New copyright using Git project history: {year_str}"
                     )
@@ -1591,10 +1590,7 @@ class CopyrightChecker:
             # Determine end year based on mode
             if not self.per_file_years:
                 # Project-wide mode: always extend to current year
-                if current_year > old_start:
-                    year_str = f"{old_start}-{current_year}"
-                else:
-                    year_str = str(old_start)
+                year_str = self._format_year_range(old_start, current_year)
                 logging.debug(f"Project-wide mode (replace), years: {year_str}")
             else:
                 # Per-file mode: only extend if file is modified
@@ -1612,10 +1608,9 @@ class CopyrightChecker:
                         )
                     else:
                         # Preserve existing years
-                        if old_end:
-                            year_str = f"{old_start}-{old_end}"
-                        else:
-                            year_str = str(old_start)
+                        year_str = self._format_year_range(
+                            old_start, old_end or old_start
+                        )
                 else:
                     # File is in Git history
                     if is_modified:
@@ -1625,26 +1620,23 @@ class CopyrightChecker:
                         )
                     else:
                         # File unchanged, preserve existing years but ensure range is valid
-                        if old_end:
-                            year_str = f"{old_start}-{old_end}"
-                        else:
-                            year_str = str(old_start)
+                        year_str = self._format_year_range(
+                            old_start, old_end or old_start
+                        )
                 logging.debug(f"Per-file mode (replace), years: {year_str}")
         else:
             # No years found in existing copyright, use standard logic
             if self.per_file_years:
                 creation_year = self._get_file_creation_year(filepath)
-                if creation_year and creation_year < current_year:
-                    year_str = f"{creation_year}-{current_year}"
-                else:
-                    year_str = str(current_year)
+                year_str = self._format_year_range(
+                    creation_year if creation_year else current_year, current_year
+                )
             else:
                 # Use project inception year (project-wide mode)
                 creation_year = self._get_repository_creation_year(filepath)
-                if creation_year and creation_year < current_year:
-                    year_str = f"{creation_year}-{current_year}"
-                else:
-                    year_str = str(current_year)
+                year_str = self._format_year_range(
+                    creation_year if creation_year else current_year, current_year
+                )
 
         logging.debug(f"Using year range: {year_str}")
 
