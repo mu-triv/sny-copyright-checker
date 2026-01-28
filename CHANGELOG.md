@@ -9,6 +9,29 @@ License: For licensing see the License.txt file
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2026-01-28
+
+### Added
+- **Version flag**: Added `--version` flag to display the tool version
+
+### Fixed
+- **Replace mode year update bug**: `--replace` now correctly respects project-wide year mode (default)
+  - Fixed `_replace_copyright_notice()` to check `self.per_file_years` flag
+  - Project-wide mode now properly extends copyright years to current year (e.g., `2025` → `2025-2026`)
+  - Per-file mode correctly uses individual file creation years with `--per-file-years` flag
+  - Year updates now consistent between insert and replace operations
+
+### Changed
+- **Code quality improvements**: Refactored year range formatting logic
+  - Extracted duplicated year formatting code into `_format_year_range()` helper method
+  - Eliminated 5 instances of duplicated if/else logic for year range formatting
+  - Improved code maintainability and consistency
+  - All 121 tests pass (98 replace feature + 23 git-aware year tests)
+
+### Internal
+- Reduced code duplication by ~30 lines in `_determine_copyright_year()` method
+- Simplified year range formatting: single helper handles "YYYY" vs "YYYY-YYYY" logic
+
 ## [1.0.7] - 2026-01-18
 
 ### Added

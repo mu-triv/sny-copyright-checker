@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from .copyright_checker import CopyrightChecker
+from . import __version__
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -76,6 +77,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="sny-copyright-checker",
         description="Check and add copyright notices to source files",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
 
     # Positional arguments for check behavior

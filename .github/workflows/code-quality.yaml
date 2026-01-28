@@ -16,4 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git diff
       - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --from-ref ${{ github.event.before }} --to-ref ${{ github.sha }}

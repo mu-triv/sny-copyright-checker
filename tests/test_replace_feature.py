@@ -1529,5 +1529,304 @@ def test_similarity_metrics_parametrized(
     assert 0.0 <= token_sim <= 1.0, f"Token similarity out of range: {token_sim}"
 
 
+# YEAR UPDATE WITH REPLACE MODE TESTS
+class TestReplaceYearUpdate(unittest.TestCase):
+    """Test that --replace mode updates copyright years for valid copyrights"""
+
+    def setUp(self):
+        """Set up test fixtures with git repo"""
+        self.temp_dir = tempfile.mkdtemp()
+        self.template_file = os.path.join(self.temp_dir, "copyright.txt")
+
+        # Create a template with year pattern
+        template_content = """[VARIABLES]
+COMPANY = Test Corporation
+AUTHOR = Test Team
+
+[.py]
+# Copyright {regex:\\d{4}(-\\d{4})?} {COMPANY}
+# Author: {AUTHOR}
+"""
+        with open(self.template_file, "w", encoding="utf-8") as f:
+            f.write(template_content)
+
+        # Initialize git repo
+        import subprocess
+
+        subprocess.run(
+            ["git", "init"],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+
+    def tearDown(self):
+        """Clean up test fixtures"""
+        import shutil
+        import time
+        import sys
+
+        if os.path.exists(self.temp_dir):
+            # On Windows, git may keep file handles open. Try multiple times.
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    # On Windows, make files writable before deletion
+                    if sys.platform == "win32":
+                        for root, dirs, files in os.walk(self.temp_dir):
+                            for dir_name in dirs:
+                                try:
+                                    os.chmod(os.path.join(root, dir_name), 0o777)
+                                except Exception:
+                                    pass
+                            for file_name in files:
+                                try:
+                                    os.chmod(os.path.join(root, file_name), 0o777)
+                                except Exception:
+                                    pass
+
+                    shutil.rmtree(self.temp_dir)
+                    break
+                except (PermissionError, OSError) as e:
+                    if attempt < max_attempts - 1:
+                        time.sleep(0.1)  # Wait a bit for file handles to close
+                    else:
+                        # Last attempt failed, but don't fail the test
+                        import warnings
+
+                        warnings.warn(f"Could not clean up temp dir: {e}")
+
+    def test_replace_mode_updates_year_project_wide(self):
+        """Test that --replace updates year in project-wide mode (default)"""
+        import subprocess
+        from datetime import datetime
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+
+        # Create file with old copyright (2025)
+        old_copyright = """# Copyright 2025 Test Corporation
+# Author: Test Team
+
+def hello():
+    pass
+"""
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write(old_copyright)
+
+        # Commit it with old date
+        subprocess.run(
+            ["git", "add", test_file],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        env = os.environ.copy()
+        env["GIT_AUTHOR_DATE"] = "2025-01-01T00:00:00"
+        env["GIT_COMMITTER_DATE"] = "2025-01-01T00:00:00"
+        subprocess.run(
+            ["git", "commit", "-m", "Initial commit"],
+            cwd=self.temp_dir,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        # Check with --replace (project-wide mode, default)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=True, replace_mode=True, per_file_years=False
+        )
+        has_notice, was_modified = checker.check_file(test_file)
+
+        # Should update the year
+        assert has_notice is True, "Should have valid copyright"
+        assert was_modified is True, "Should have modified the file to update year"
+
+        # Verify the year was updated to current year
+        with open(test_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        current_year = datetime.now().year
+        expected_year_range = f"2025-{current_year}"
+        assert expected_year_range in content, (
+            f"Year should be updated to {expected_year_range}"
+        )
+
+    def test_no_replace_mode_preserves_old_year(self):
+        """Test that WITHOUT --replace, old years are preserved"""
+        import subprocess
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+
+        # Create file with old copyright (2025)
+        old_copyright = """# Copyright 2025 Test Corporation
+# Author: Test Team
+
+def hello():
+    pass
+"""
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write(old_copyright)
+
+        # Commit it
+        subprocess.run(
+            ["git", "add", test_file],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        env = os.environ.copy()
+        env["GIT_AUTHOR_DATE"] = "2025-01-01T00:00:00"
+        env["GIT_COMMITTER_DATE"] = "2025-01-01T00:00:00"
+        subprocess.run(
+            ["git", "commit", "-m", "Initial commit"],
+            cwd=self.temp_dir,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        # Check WITHOUT --replace
+        checker = CopyrightChecker(
+            self.template_file, git_aware=True, replace_mode=False, per_file_years=False
+        )
+        has_notice, was_modified = checker.check_file(test_file)
+
+        # Should NOT update the year
+        assert has_notice is True, "Should have valid copyright"
+        assert was_modified is False, "Should NOT modify the file"
+
+        # Verify the year stayed as 2025
+        with open(test_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "Copyright 2025 Test Corporation" in content, "Year should stay as 2025"
+        assert "2025-" not in content, "Year should not be extended to range"
+
+    def test_replace_mode_per_file_years_modified_file(self):
+        """Test that --replace with --per-file-years updates year for modified files"""
+        import subprocess
+        from datetime import datetime
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+
+        # Create file with old copyright (2025)
+        old_copyright = """# Copyright 2025 Test Corporation
+# Author: Test Team
+
+def hello():
+    pass
+"""
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write(old_copyright)
+
+        # Commit it
+        subprocess.run(
+            ["git", "add", test_file],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        env = os.environ.copy()
+        env["GIT_AUTHOR_DATE"] = "2025-01-01T00:00:00"
+        env["GIT_COMMITTER_DATE"] = "2025-01-01T00:00:00"
+        subprocess.run(
+            ["git", "commit", "-m", "Initial commit"],
+            cwd=self.temp_dir,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        # Modify the file (uncommitted changes)
+        with open(test_file, "a", encoding="utf-8") as f:
+            f.write("\nprint('world')\n")
+
+        # Check with --replace and --per-file-years
+        checker = CopyrightChecker(
+            self.template_file, git_aware=True, replace_mode=True, per_file_years=True
+        )
+        has_notice, was_modified = checker.check_file(test_file)
+
+        # Should update the year because file is modified
+        assert has_notice is True, "Should have valid copyright"
+        assert was_modified is True, (
+            "Should modify to update year for modified file in per-file mode"
+        )
+
+        # Verify the year was updated
+        with open(test_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        current_year = datetime.now().year
+        expected_year_range = f"2025-{current_year}"
+        assert expected_year_range in content, (
+            f"Year should be updated to {expected_year_range} for modified file"
+        )
+
+    def test_replace_mode_per_file_years_unmodified_file(self):
+        """Test that --replace with --per-file-years preserves year for unmodified files"""
+        import subprocess
+
+        test_file = os.path.join(self.temp_dir, "test.py")
+
+        # Create file with old copyright (2025)
+        old_copyright = """# Copyright 2025 Test Corporation
+# Author: Test Team
+
+def hello():
+    pass
+"""
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write(old_copyright)
+
+        # Commit it
+        subprocess.run(
+            ["git", "add", test_file],
+            cwd=self.temp_dir,
+            check=True,
+            capture_output=True,
+        )
+        env = os.environ.copy()
+        env["GIT_AUTHOR_DATE"] = "2025-01-01T00:00:00"
+        env["GIT_COMMITTER_DATE"] = "2025-01-01T00:00:00"
+        subprocess.run(
+            ["git", "commit", "-m", "Initial commit"],
+            cwd=self.temp_dir,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        # Check with --replace and --per-file-years (file is NOT modified)
+        checker = CopyrightChecker(
+            self.template_file, git_aware=True, replace_mode=True, per_file_years=True
+        )
+        has_notice, was_modified = checker.check_file(test_file)
+
+        # Should NOT update the year because file is not modified in per-file mode
+        assert has_notice is True, "Should have valid copyright"
+        assert was_modified is False, (
+            "Should NOT modify unmodified file in per-file mode"
+        )
+
+        # Verify the year stayed as 2025
+        with open(test_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "Copyright 2025 Test Corporation" in content, "Year should stay as 2025"
+
+
 if __name__ == "__main__":
     unittest.main()

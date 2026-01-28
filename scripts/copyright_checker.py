@@ -365,6 +365,44 @@ class CopyrightChecker:
                     )
                     return False, False
 
+            # Check if year needs updating (only in explicit replace mode)
+            if auto_fix and self.replace_mode and self.git_aware:
+                # Extract current years from the copyright
+                existing_years = template.extract_years(content)
+                if existing_years:
+                    start_year, end_year = existing_years
+
+                    # Determine what the year should be
+                    expected_year_str = self._determine_copyright_year(
+                        filepath, template, content
+                    )
+
+                    # Check if years need updating
+                    current_year_str = (
+                        f"{start_year}-{end_year}" if end_year else str(start_year)
+                    )
+
+                    if current_year_str != expected_year_str:
+                        logging.info(
+                            f"Copyright year needs updating in {filepath}: {current_year_str} -> {expected_year_str}"
+                        )
+                        try:
+                            was_replaced = self._replace_copyright_notice(
+                                filepath, template, content, line_ending
+                            )
+                            if was_replaced:
+                                return True, True
+                            else:
+                                logging.warning(
+                                    f"Could not update copyright year in {filepath}"
+                                )
+                                return False, False
+                        except Exception as e:
+                            logging.error(
+                                f"Failed to update copyright year in {filepath}: {e}"
+                            )
+                            return False, False
+
             logging.debug(f"Valid copyright notice found in: {filepath}")
             return True, False
 
@@ -1072,10 +1110,10 @@ class CopyrightChecker:
 
     def _format_year_range(self, start_year: int, end_year: int) -> str:
         """
-        Format year range string.
+        Format a year range string.
 
-        :param start_year: Start year
-        :param end_year: End year
+        :param start_year: Starting year
+        :param end_year: Ending year
         :return: Formatted year string (e.g., "2024" or "2020-2024")
         """
         if start_year == end_year:
@@ -1142,12 +1180,10 @@ class CopyrightChecker:
 
                 if creation_year:
                     # Per-file mode: check if file is modified before extending year
-                    end_year = (
-                        current_year
-                        if self._is_file_modified(filepath)
-                        else creation_year
-                    )
-                    year_str = self._format_year_range(creation_year, end_year)
+                    if self._is_file_modified(filepath):
+                        year_str = self._format_year_range(creation_year, current_year)
+                    else:
+                        year_str = str(creation_year)
                     logging.debug(f"New copyright using Git file history: {year_str}")
                 else:
                     # File not in Git, use current year
@@ -1194,14 +1230,23 @@ class CopyrightChecker:
         #   "Haptic Europe, Brussels Laboratory" -> "haptic europe"
         #   "NSCE, Brussels Laboratory" -> "nsce"
 
-        # Remove company name to focus on the unit
+        # Remove common company suffixes to focus on the unit/department
+        # Handles various company types: Corporation, Inc., LLC, Ltd, GmbH, etc.
         author_line = re.sub(
-            r",?\s*sony\s+group\s+corporation.*", "", author_line, flags=re.IGNORECASE
+            r",?\s*\b(corporation|corp\.?|inc\.?|llc|ltd\.?|limited|gmbh|ag|sa|plc|group|company|co\.?)(\s+\w+)*$",
+            "",
+            author_line,
+            flags=re.IGNORECASE,
         )
 
-        # Take the part before "Laboratory" or first comma
+        # Take the part before location/facility suffixes or first comma
+        # Splits at: comma OR whitespace + "Laboratory"/"Lab"
+        # Examples:
+        #   "NSCE, Brussels Laboratory" -> "NSCE"
+        #   "NSCE Laboratory, New York" -> "NSCE"
+        #   "R&D Center Europe Brussels Laboratory" -> "R&D Center Europe Brussels"
         parts = re.split(
-            r",|\s+laboratory", author_line, maxsplit=1, flags=re.IGNORECASE
+            r",|\s+(?:laboratory|lab)\b", author_line, maxsplit=1, flags=re.IGNORECASE
         )
         if parts:
             entity = parts[0].strip()
@@ -1590,7 +1635,10 @@ class CopyrightChecker:
             # Determine end year based on mode
             if not self.per_file_years:
                 # Project-wide mode: always extend to current year
-                year_str = self._format_year_range(old_start, current_year)
+                if current_year > old_start:
+                    year_str = f"{old_start}-{current_year}"
+                else:
+                    year_str = str(old_start)
                 logging.debug(f"Project-wide mode (replace), years: {year_str}")
             else:
                 # Per-file mode: only extend if file is modified
@@ -1608,9 +1656,10 @@ class CopyrightChecker:
                         )
                     else:
                         # Preserve existing years
-                        year_str = self._format_year_range(
-                            old_start, old_end or old_start
-                        )
+                        if old_end:
+                            year_str = f"{old_start}-{old_end}"
+                        else:
+                            year_str = str(old_start)
                 else:
                     # File is in Git history
                     if is_modified:
@@ -1620,23 +1669,26 @@ class CopyrightChecker:
                         )
                     else:
                         # File unchanged, preserve existing years but ensure range is valid
-                        year_str = self._format_year_range(
-                            old_start, old_end or old_start
-                        )
+                        if old_end:
+                            year_str = f"{old_start}-{old_end}"
+                        else:
+                            year_str = str(old_start)
                 logging.debug(f"Per-file mode (replace), years: {year_str}")
         else:
             # No years found in existing copyright, use standard logic
             if self.per_file_years:
                 creation_year = self._get_file_creation_year(filepath)
-                year_str = self._format_year_range(
-                    creation_year if creation_year else current_year, current_year
-                )
+                if creation_year and creation_year < current_year:
+                    year_str = f"{creation_year}-{current_year}"
+                else:
+                    year_str = str(current_year)
             else:
                 # Use project inception year (project-wide mode)
                 creation_year = self._get_repository_creation_year(filepath)
-                year_str = self._format_year_range(
-                    creation_year if creation_year else current_year, current_year
-                )
+                if creation_year and creation_year < current_year:
+                    year_str = f"{creation_year}-{current_year}"
+                else:
+                    year_str = str(current_year)
 
         logging.debug(f"Using year range: {year_str}")
 

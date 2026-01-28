@@ -5,7 +5,7 @@ Author: R&D Center Europe Brussels Laboratory, Sony Group Corporation
 License: For licensing see the License.txt file
 -->
 
-# Version 1.0.7 - Release Summary
+# Version 1.0.8 - Release Summary
 
 **Release Date:** January 18, 2026
 
@@ -21,7 +21,7 @@ The `sny-copyright-checker init` wizard now automatically creates and configures
 3. Add the checker configuration by hand
 4. Hope you got the file patterns right
 
-**After (v1.0.7):**
+**After (v1.0.8):**
 1. Run `sny-copyright-checker init`
 2. Answer a few questions
 3. ✨ **Done!** Everything is configured automatically
@@ -70,7 +70,7 @@ The wizard creates a `.pre-commit-config.yaml` like this:
 ```yaml
 repos:
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.7
+  rev: v1.0.8
   hooks:
   - id: sny-copyright-checker
     args:
