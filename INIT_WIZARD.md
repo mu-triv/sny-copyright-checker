@@ -200,7 +200,7 @@ The generated configuration will look like:
 ```yaml
 repos:
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.7
+  rev: v1.0.8
   hooks:
   - id: sny-copyright-checker
     args:
@@ -340,7 +340,7 @@ Once you've created your `copyright.txt` file:
    ```yaml
    repos:
      - repo: https://github.com/mu-triv/sny-copyright-checker
-       rev: v1.0.7
+       rev: v1.0.8
        hooks:
          - id: sny-copyright-checker
            args: [--notice=copyright.txt]

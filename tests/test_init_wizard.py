@@ -372,7 +372,7 @@ class TestPreCommitConfigCreation:
                 assert "repos" in config
                 assert len(config["repos"]) == 1
                 assert "sny-copyright-checker" in config["repos"][0]["repo"]
-                assert config["repos"][0]["rev"] == "v1.0.7"
+                assert config["repos"][0]["rev"] == "v1.0.8"
                 assert config["repos"][0]["hooks"][0]["id"] == "sny-copyright-checker"
                 assert (
                     "--notice=copyright.txt" in config["repos"][0]["hooks"][0]["args"]
@@ -476,7 +476,7 @@ class TestPreCommitConfigCreation:
 
                 assert len(config["repos"]) == 1
                 # Should be updated to new version
-                assert config["repos"][0]["rev"] == "v1.0.7"
+                assert config["repos"][0]["rev"] == "v1.0.8"
                 # Should use new copyright file
                 assert (
                     "--notice=new_copyright.txt"

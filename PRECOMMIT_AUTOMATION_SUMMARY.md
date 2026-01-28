@@ -66,7 +66,7 @@ Added new test class `TestPreCommitConfigCreation` with 4 test methods:
 #### Updated Files:
 - **README.md**: Added mention of automatic `.pre-commit-config.yaml` creation
 - **INIT_WIZARD.md**: New section "7. Pre-commit Configuration" with examples
-- **CHANGELOG.md**: Documented new feature under v1.0.7
+- **CHANGELOG.md**: Documented new feature under v1.0.8
 - **PRE_RELEASE_CHECKLIST.md**: Added new items for this feature
 
 #### New Files:
@@ -89,7 +89,7 @@ sny-copyright-checker init
   ```yaml
   repos:
   - repo: https://github.com/mu-triv/sny-copyright-checker
-    rev: v1.0.7
+    rev: v1.0.8
     hooks:
     - id: sny-copyright-checker
       args:
@@ -116,7 +116,7 @@ repos:
   hooks:
   - id: black
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.7
+  rev: v1.0.8
   hooks:
   - id: sny-copyright-checker
     args:
@@ -141,7 +141,7 @@ repos:
 ```yaml
 repos:
 - repo: https://github.com/mu-triv/sny-copyright-checker
-  rev: v1.0.7  # Updated!
+  rev: v1.0.8  # Updated!
   hooks:
   - id: sny-copyright-checker
     args:
@@ -258,7 +258,7 @@ Created:
 
 ## Version Information
 
-- **Feature Version**: 1.0.7
+- **Feature Version**: 1.0.8
 - **Release Date**: January 18, 2026
 - **Python Requirement**: >=3.10
 - **New Dependency**: PyYAML>=6.0
