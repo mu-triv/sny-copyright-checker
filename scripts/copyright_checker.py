@@ -365,6 +365,44 @@ class CopyrightChecker:
                     )
                     return False, False
 
+            # Check if year needs updating (in replace mode or always for git-aware)
+            if auto_fix and self.git_aware:
+                # Extract current years from the copyright
+                existing_years = template.extract_years(content)
+                if existing_years:
+                    start_year, end_year = existing_years
+
+                    # Determine what the year should be
+                    expected_year_str = self._determine_copyright_year(
+                        filepath, template, content
+                    )
+
+                    # Check if years need updating
+                    current_year_str = (
+                        f"{start_year}-{end_year}" if end_year else str(start_year)
+                    )
+
+                    if current_year_str != expected_year_str:
+                        logging.info(
+                            f"Copyright year needs updating in {filepath}: {current_year_str} -> {expected_year_str}"
+                        )
+                        try:
+                            was_replaced = self._replace_copyright_notice(
+                                filepath, template, content, line_ending
+                            )
+                            if was_replaced:
+                                return True, True
+                            else:
+                                logging.warning(
+                                    f"Could not update copyright year in {filepath}"
+                                )
+                                return False, False
+                        except Exception as e:
+                            logging.error(
+                                f"Failed to update copyright year in {filepath}: {e}"
+                            )
+                            return False, False
+
             logging.debug(f"Valid copyright notice found in: {filepath}")
             return True, False
 
