@@ -1195,14 +1195,23 @@ class CopyrightChecker:
         #   "Haptic Europe, Brussels Laboratory" -> "haptic europe"
         #   "NSCE, Brussels Laboratory" -> "nsce"
 
-        # Remove company name to focus on the unit
+        # Remove common company suffixes to focus on the unit/department
+        # Handles various company types: Corporation, Inc., LLC, Ltd, GmbH, etc.
         author_line = re.sub(
-            r",?\s*sony\s+group\s+corporation.*", "", author_line, flags=re.IGNORECASE
+            r",?\s*\b(corporation|corp\.?|inc\.?|llc|ltd\.?|limited|gmbh|ag|sa|plc|group|company|co\.?)(\s+\w+)*$",
+            "",
+            author_line,
+            flags=re.IGNORECASE,
         )
 
-        # Take the part before "Laboratory" or first comma
+        # Take the part before location/facility suffixes or first comma
+        # Splits at: comma OR whitespace + "Laboratory"/"Lab"
+        # Examples:
+        #   "NSCE, Brussels Laboratory" -> "NSCE"
+        #   "NSCE Laboratory, New York" -> "NSCE"
+        #   "R&D Center Europe Brussels Laboratory" -> "R&D Center Europe Brussels"
         parts = re.split(
-            r",|\s+laboratory", author_line, maxsplit=1, flags=re.IGNORECASE
+            r",|\s+(?:laboratory|lab)\b", author_line, maxsplit=1, flags=re.IGNORECASE
         )
         if parts:
             entity = parts[0].strip()
@@ -1574,47 +1583,77 @@ class CopyrightChecker:
 
         # Determine the new year range
         current_year = datetime.now().year
-        creation_year = self._get_file_creation_year(filepath)
-        is_modified = self._is_file_modified(filepath)
 
         if existing_years:
             # Merge existing years with current context
             old_start, old_end = existing_years
 
-            # For files not in Git history (creation_year is None),
-            # preserve the existing years and extend if "modified" (which for new files means "use current year")
-            if creation_year is None:
-                # File not tracked by Git yet
-                if is_modified:
-                    # Extend the range to current year
-                    year_str = self._merge_year_ranges(
-                        existing_years, old_start, current_year
+            # When using project-wide years, consider project inception year
+            if not self.per_file_years:
+                repo_year = self._get_repository_creation_year(filepath)
+                if repo_year and repo_year < old_start:
+                    logging.debug(
+                        f"Using project year {repo_year} instead of existing {old_start}"
                     )
+                    old_start = repo_year
+
+            # Determine end year based on mode
+            if not self.per_file_years:
+                # Project-wide mode: always extend to current year
+                if current_year > old_start:
+                    year_str = f"{old_start}-{current_year}"
                 else:
-                    # Preserve existing years
-                    if old_end:
-                        year_str = f"{old_start}-{old_end}"
-                    else:
-                        year_str = str(old_start)
+                    year_str = str(old_start)
+                logging.debug(f"Project-wide mode (replace), years: {year_str}")
             else:
-                # File is in Git history
-                if is_modified:
-                    # File is modified, extend to current year
-                    year_str = self._merge_year_ranges(
-                        existing_years, creation_year, current_year
-                    )
-                else:
-                    # File unchanged, preserve existing years but ensure range is valid
-                    if old_end:
-                        year_str = f"{old_start}-{old_end}"
+                # Per-file mode: only extend if file is modified
+                creation_year = self._get_file_creation_year(filepath)
+                is_modified = self._is_file_modified(filepath)
+
+                # For files not in Git history (creation_year is None),
+                # preserve the existing years and extend if "modified"
+                if creation_year is None:
+                    # File not tracked by Git yet
+                    if is_modified:
+                        # Extend the range to current year
+                        year_str = self._merge_year_ranges(
+                            existing_years, old_start, current_year
+                        )
                     else:
-                        year_str = str(old_start)
+                        # Preserve existing years
+                        if old_end:
+                            year_str = f"{old_start}-{old_end}"
+                        else:
+                            year_str = str(old_start)
+                else:
+                    # File is in Git history
+                    if is_modified:
+                        # File is modified, extend to current year
+                        year_str = self._merge_year_ranges(
+                            existing_years, creation_year, current_year
+                        )
+                    else:
+                        # File unchanged, preserve existing years but ensure range is valid
+                        if old_end:
+                            year_str = f"{old_start}-{old_end}"
+                        else:
+                            year_str = str(old_start)
+                logging.debug(f"Per-file mode (replace), years: {year_str}")
         else:
             # No years found in existing copyright, use standard logic
-            if creation_year and creation_year < current_year:
-                year_str = f"{creation_year}-{current_year}"
+            if self.per_file_years:
+                creation_year = self._get_file_creation_year(filepath)
+                if creation_year and creation_year < current_year:
+                    year_str = f"{creation_year}-{current_year}"
+                else:
+                    year_str = str(current_year)
             else:
-                year_str = str(current_year)
+                # Use project inception year (project-wide mode)
+                creation_year = self._get_repository_creation_year(filepath)
+                if creation_year and creation_year < current_year:
+                    year_str = f"{creation_year}-{current_year}"
+                else:
+                    year_str = str(current_year)
 
         logging.debug(f"Using year range: {year_str}")
 
