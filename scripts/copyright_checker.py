@@ -1118,8 +1118,7 @@ class CopyrightChecker:
         """
         if start_year == end_year:
             return str(start_year)
-        else:
-            return f"{start_year}-{end_year}"
+        return f"{start_year}-{end_year}"
 
     def _determine_copyright_year(
         self, filepath: str, template: CopyrightTemplate, content: str
