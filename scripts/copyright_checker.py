@@ -365,8 +365,8 @@ class CopyrightChecker:
                     )
                     return False, False
 
-            # Check if year needs updating (in replace mode or always for git-aware)
-            if auto_fix and self.git_aware:
+            # Check if year needs updating (only in explicit replace mode)
+            if auto_fix and self.replace_mode and self.git_aware:
                 # Extract current years from the copyright
                 existing_years = template.extract_years(content)
                 if existing_years:
