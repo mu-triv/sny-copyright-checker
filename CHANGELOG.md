@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.8] - 2026-01-28
 
+### Added
+- **Version flag**: Added `--version` flag to display the tool version
+
 ### Fixed
 - **Replace mode year update bug**: `--replace` now correctly respects project-wide year mode (default)
   - Fixed `_replace_copyright_notice()` to check `self.per_file_years` flag
